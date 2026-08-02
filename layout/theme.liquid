@@ -1,36 +1,187 @@
+{% liquid
+  assign document_language = request.locale.iso_code
+  if request.page_type == 'article' and article.metafields.custom.language_code.value != blank
+    assign document_language = article.metafields.custom.language_code.value
+  endif
+%}
 <!doctype html>
-<html lang="{{ request.locale.iso_code }}">
+<html lang="{{ document_language | escape }}">
   <head>
+    {% # Encoding, viewport, social metadata, and title should be parsed first. %}
+    {% render 'meta-tags' %}
+
     {% # Inlined CSS Variables %}
     {% render 'css-variables' %}
 
-    {% comment %}
-      Font preloading:
-      1. Preconnect to font CDN for faster connection
-      2. Preload only the critical font variant (base weight)
-      3. Additional variants load on-demand via @font-face
-    {% endcomment %}
-    {% unless settings.type_primary_font.system? %}
-      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
-
-      {% comment %} Preload the base font variant for initial page render {% endcomment %}
-      {{ settings.type_primary_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
+    {% comment %}Preload the brand font faces used above the fold: body, its bold cut (buttons, chips, eyebrows), and headings.{% endcomment %}
+    {% unless settings.type_body_font.system? %}
+      {{ settings.type_body_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
+      {% assign body_font_bold = settings.type_body_font | font_modify: 'weight', 'bold' %}
+      {% if body_font_bold %}
+        {{ body_font_bold | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
+      {% endif %}
+    {% endunless %}
+    {% unless settings.type_heading_font.system? %}
+      {{ settings.type_heading_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
     {% endunless %}
 
-    {% # Load and preload the critical CSS %}
-    {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
+    {% # Critical CSS is inlined so first paint never waits on a stylesheet request. %}
+    {% render 'critical-styles' %}
 
-    {% # Social, title, etc. %}
-    {% render 'meta-tags' %}
+    {% # Shopify policy routes do not consistently expose policy through template.name. %}
+    {% if request.page_type == 'policy' %}
+      {{ 'legal.css' | asset_url | stylesheet_tag: preload: true }}
+    {% endif %}
+
+    {% # Route styles belong in the head so Shopify can advertise them in Early Hints. %}
+    {% case template.name %}
+      {% when 'index' %}
+        {{ 'home.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'product-card.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'cart-notification.css' | asset_url | stylesheet_tag: preload: true }}
+        <script src="{{ 'deferred-images.js' | asset_url }}" defer></script>
+        <script src="{{ 'product-card.js' | asset_url }}" defer></script>
+      {% when 'product' %}
+        {{ 'product.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'upsells.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'cart-notification.css' | asset_url | stylesheet_tag: preload: true }}
+        <script src="{{ 'product-card.js' | asset_url }}" defer></script>
+        {% liquid
+          assign product_lcp_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media
+          assign product_lcp_image = product_lcp_media.preview_image
+          assign product_lcp_widths = '360,480,540,640,672,720,800,900,1088,1280,1600,1800,2200' | split: ','
+          capture product_lcp_srcset
+            for product_lcp_width in product_lcp_widths
+              assign product_lcp_width_number = product_lcp_width | plus: 0
+              echo product_lcp_image | image_url: width: product_lcp_width_number
+              echo ' '
+              echo product_lcp_width
+              echo 'w'
+              unless forloop.last
+                echo ', '
+              endunless
+            endfor
+          endcapture
+        %}
+        {% if product_lcp_image != blank %}
+          {% comment %}The manual link supplies responsive imagesrcset/imagesizes, which preload_tag cannot express.{% endcomment %}
+          {% # theme-check-disable AssetPreload %}
+          <link
+            rel="preload"
+            as="image"
+            href="{{ product_lcp_image | image_url: width: 1280 }}"
+            imagesrcset="{{ product_lcp_srcset | escape }}"
+            imagesizes="(min-width: 1280px) 544px, (min-width: 1024px) calc((100vw - 192px) / 2), (min-width: 768px) calc(100vw - 160px), calc(100vw - 32px)"
+            fetchpriority="high"
+          >
+          {% # theme-check-enable AssetPreload %}
+        {% endif %}
+      {% when 'collection' %}
+        {{ 'catalog.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'product-card.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'cart-notification.css' | asset_url | stylesheet_tag: preload: true }}
+        {% unless canonical_url contains 'page=' %}
+          {% liquid
+            assign collection_lcp_widths = '180,240,320,360,400,440,480,540,640,720,960,1200,1600' | split: ','
+            assign collection_lcp_sort_by = collection.sort_by | default: collection.default_sort_by
+            assign collection_lcp_products = collection.products
+            if collection_lcp_sort_by == collection.default_sort_by
+              assign collection_lcp_available_products = collection.products | where: 'available', true
+              assign collection_lcp_sold_out_products = collection.products | where: 'available', false
+              assign collection_lcp_products = collection_lcp_available_products | concat: collection_lcp_sold_out_products
+            endif
+          %}
+          {% for collection_lcp_product in collection_lcp_products limit: 2 %}
+            {% assign collection_lcp_image = collection_lcp_product.featured_image %}
+            {% if collection_lcp_image != blank %}
+              {% liquid
+                capture collection_lcp_srcset
+                  for collection_lcp_width in collection_lcp_widths
+                    assign collection_lcp_width_number = collection_lcp_width | plus: 0
+                    echo collection_lcp_image | image_url: width: collection_lcp_width_number
+                    echo ' '
+                    echo collection_lcp_width
+                    echo 'w'
+                    unless forloop.last
+                      echo ', '
+                    endunless
+                  endfor
+                endcapture
+              %}
+              {% comment %}Both mobile first-row cards can become LCP, so preload their responsive candidates.{% endcomment %}
+              {% # theme-check-disable AssetPreload %}
+              <link
+                rel="preload"
+                as="image"
+                href="{{ collection_lcp_image | image_url: width: 480 }}"
+                imagesrcset="{{ collection_lcp_srcset | escape }}"
+                imagesizes="(min-width: 1200px) 251px, (min-width: 1088px) calc((100vw - 196px) / 4), (min-width: 768px) calc((100vw - 174px) / 3), (min-width: 369px) calc((100vw - 48px) / 2), calc(100vw - 34px)"
+                fetchpriority="high"
+              >
+              {% # theme-check-enable AssetPreload %}
+            {% endif %}
+          {% endfor %}
+        {% endunless %}
+        <script src="{{ 'deferred-images.js' | asset_url }}" defer></script>
+        <script src="{{ 'product-card.js' | asset_url }}" defer></script>
+      {% when 'list-collections' %}
+        {{ 'catalog.css' | asset_url | stylesheet_tag: preload: true }}
+      {% when 'search' %}
+        {% if template.suffix == 'wishlist' %}
+          {{ 'wishlist.css' | asset_url | stylesheet_tag: preload: true }}
+          <script src="{{ 'wishlist.js' | asset_url }}" defer></script>
+        {% else %}
+          {{ 'search.css' | asset_url | stylesheet_tag: preload: true }}
+          {{ 'product-card.css' | asset_url | stylesheet_tag: preload: true }}
+          {{ 'cart-notification.css' | asset_url | stylesheet_tag: preload: true }}
+          <script src="{{ 'deferred-images.js' | asset_url }}" defer></script>
+          <script src="{{ 'product-card.js' | asset_url }}" defer></script>
+        {% endif %}
+      {% when 'blog' %}
+        {{ 'editorial.css' | asset_url | stylesheet_tag: preload: true }}
+      {% when 'article' %}
+        {{ 'editorial.css' | asset_url | stylesheet_tag: preload: true }}
+        <script src="{{ 'editorial.js' | asset_url }}" defer></script>
+      {% when 'cart' %}
+        {{ 'cart.css' | asset_url | stylesheet_tag: preload: true }}
+        {{ 'upsells.css' | asset_url | stylesheet_tag: preload: true }}
+      {% when 'page' %}
+        {% if template.suffix == 'contact' %}
+          {{ 'contact.css' | asset_url | stylesheet_tag: preload: true }}
+          <script src="{{ 'contact.js' | asset_url }}" defer></script>
+        {% elsif template.suffix == 'about' or template.suffix == 'faq' %}
+          {{ 'trust-pages.css' | asset_url | stylesheet_tag: preload: true }}
+        {% else %}
+          {{ 'legal.css' | asset_url | stylesheet_tag: preload: true }}
+        {% endif %}
+    {% endcase %}
 
     {{ content_for_header }}
   </head>
 
   <body>
+    <nav aria-label="{{ 'general.accessibility.skip_navigation' | t }}">
+      <a class="skip-to-content-link" href="#MainContent">{{ 'general.accessibility.skip_to_content' | t }}</a>
+    </nav>
+
     {% sections 'header-group' %}
 
-    {{ content_for_layout }}
+    <main id="MainContent" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
 
     {% sections 'footer-group' %}
+
+    {% liquid
+      assign show_cart_notification = false
+      if template.name == 'product' or template.name == 'index' or template.name == 'collection'
+        assign show_cart_notification = true
+      elsif template.name == 'search' and template.suffix != 'wishlist'
+        assign show_cart_notification = true
+      endif
+    %}
+    {% if show_cart_notification %}
+      {% render 'cart-notification' %}
+    {% endif %}
   </body>
 </html>

@@ -1,0 +1,610 @@
+{% comment %}
+  Homepage social-proof band for real customer quotes.
+{% endcomment %}
+
+{% liquid
+  # The `t` filter HTML-escapes its output, so escape the raw branches here
+  # and print these variables without a second escape.
+  assign testimonials_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == 'Loved by families'
+    assign testimonials_eyebrow = 'sections.home.testimonials.eyebrow' | t
+  endif
+  assign testimonials_heading = section.settings.heading | escape
+  if section.settings.heading == 'What parents say'
+    assign testimonials_heading = 'sections.home.testimonials.heading' | t
+  endif
+  assign testimonials_text = section.settings.text
+  if section.settings.text == '<p>Real experiences from families who shop with us.</p>'
+    assign testimonials_text = 'sections.home.testimonials.intro' | t
+  endif
+
+  # Per-review translations: 'nl' and 'fr' fall back to the base fields
+  # because `default` treats an empty string as blank.
+  assign testimonials_lang = request.locale.iso_code | slice: 0, 2
+
+  # Aggregate rating across blocks that show stars (rating > 0).
+  assign rated_count = 0
+  assign rating_sum = 0
+  for block in section.blocks
+    if block.settings.rating > 0
+      assign rated_count = rated_count | plus: 1
+      assign rating_sum = rating_sum | plus: block.settings.rating
+    endif
+  endfor
+  assign show_summary = false
+  if section.blocks.size >= 3 and rated_count > 0
+    assign show_summary = true
+    assign rating_average = rating_sum | times: 10.0 | divided_by: rated_count | round | divided_by: 10.0
+  endif
+%}
+
+{% if section.blocks.size > 0 or request.design_mode %}
+  <section
+    id="LoemiesTestimonialsRoot-{{ section.id }}"
+    class="loemies-testimonials full-width"
+    style="
+      --loemies-testimonials-background: {{ section.settings.background_color }};
+      --loemies-testimonials-card: {{ section.settings.card_color }};
+      --loemies-testimonials-text: {{ section.settings.text_color }};
+      --loemies-testimonials-accent: {{ section.settings.accent_color }};
+      --loemies-testimonials-padding: {{ section.settings.vertical_padding }}px;
+    "
+    aria-labelledby="LoemiesTestimonials-{{ section.id }}"
+  >
+    <div class="loemies-testimonials__inner">
+      <div class="loemies-testimonials__header">
+        <div class="loemies-testimonials__intro">
+          {% if testimonials_eyebrow != blank %}
+            <p class="loemies-testimonials__eyebrow">{{ testimonials_eyebrow }}</p>
+          {% endif %}
+          <h2 id="LoemiesTestimonials-{{ section.id }}">{{ testimonials_heading }}</h2>
+          {% if show_summary %}
+            <p class="loemies-testimonials__summary">
+              <span
+                class="loemies-testimonial__stars"
+                role="img"
+                aria-label="{{ 'products.reviews.stars_label' | t: rating: rating_average }}"
+              >
+                <span aria-hidden="true">★★★★★</span>
+                <span
+                  class="loemies-testimonial__stars-fill"
+                  style="width: {{ rating_average | times: 20 }}%"
+                  aria-hidden="true"
+                >★★★★★</span>
+              </span>
+              <span class="loemies-testimonials__summary-label">
+                {{- 'sections.home.testimonials.summary' | t: rating: rating_average, count: rated_count -}}
+              </span>
+            </p>
+          {% endif %}
+          {% if testimonials_text != blank %}
+            <div class="loemies-testimonials__text">{{ testimonials_text }}</div>
+          {% endif %}
+        </div>
+
+        {% if section.blocks.size > 0 %}
+          <div class="loemies-testimonials__controls">
+            <span class="loemies-testimonials__counter" data-testimonials-counter hidden>1 / {{ section.blocks.size }}</span>
+            <button
+              class="loemies-testimonials__control is-previous"
+              type="button"
+              data-testimonials-previous
+              aria-label="{{ 'general.accessibility.previous_page' | t }}"
+              aria-controls="LoemiesTestimonialsList-{{ section.id }}"
+              hidden
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button
+              class="loemies-testimonials__control is-next"
+              type="button"
+              data-testimonials-next
+              aria-label="{{ 'general.accessibility.next_page' | t }}"
+              aria-controls="LoemiesTestimonialsList-{{ section.id }}"
+              hidden
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if section.blocks.size > 0 %}
+        <ul
+          id="LoemiesTestimonialsList-{{ section.id }}"
+          class="loemies-testimonials__grid"
+          role="list"
+          data-testimonials-row
+        >
+          {% for block in section.blocks %}
+            {% liquid
+              if testimonials_lang == 'nl'
+                assign testimonial_quote = block.settings.quote_nl | default: block.settings.quote
+                assign testimonial_context = block.settings.context_nl | default: block.settings.context
+              elsif testimonials_lang == 'fr'
+                assign testimonial_quote = block.settings.quote_fr | default: block.settings.quote
+                assign testimonial_context = block.settings.context_fr | default: block.settings.context
+              else
+                assign testimonial_quote = block.settings.quote
+                assign testimonial_context = block.settings.context
+              endif
+            %}
+            <li class="loemies-testimonial" {{ block.shopify_attributes }}>
+              {% if block.settings.rating > 0 %}
+                <span
+                  class="loemies-testimonial__stars"
+                  role="img"
+                  aria-label="{{ 'products.reviews.stars_label' | t: rating: block.settings.rating }}"
+                >
+                  <span aria-hidden="true">★★★★★</span>
+                  <span
+                    class="loemies-testimonial__stars-fill"
+                    style="width: {{ block.settings.rating | times: 20 }}%"
+                    aria-hidden="true"
+                  >★★★★★</span>
+                </span>
+              {% endif %}
+
+              {% if testimonial_quote != blank %}
+                <blockquote class="loemies-testimonial__quote">
+                  <p>{{ testimonial_quote | escape | newline_to_br }}</p>
+                </blockquote>
+              {% endif %}
+
+              {% if block.settings.author != blank or testimonial_context != blank %}
+                <footer class="loemies-testimonial__meta">
+                  {% if block.settings.author != blank %}
+                    <cite class="loemies-testimonial__author">{{ block.settings.author | escape }}</cite>
+                  {% endif %}
+                  {% if testimonial_context != blank %}
+                    <span class="loemies-testimonial__context">{{ testimonial_context | escape }}</span>
+                  {% endif %}
+                </footer>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="loemies-testimonials__editor-note">Add testimonial blocks with real customer quotes in this section's settings.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if section.blocks.size > 0 %}
+    <script>
+      (() => {
+        const root = document.getElementById('LoemiesTestimonialsRoot-{{ section.id }}');
+        if (!root || root.dataset.sliderReady === 'true') return;
+        root.dataset.sliderReady = 'true';
+
+        const row = root.querySelector('[data-testimonials-row]');
+        const previousButton = root.querySelector('[data-testimonials-previous]');
+        const nextButton = root.querySelector('[data-testimonials-next]');
+        const counter = root.querySelector('[data-testimonials-counter]');
+        if (!row || !previousButton || !nextButton) return;
+        const total = row.querySelectorAll('.loemies-testimonial').length;
+
+        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        const cardScrollWidth = () => {
+          const card = row.querySelector('.loemies-testimonial');
+          if (!card) return row.clientWidth;
+          const gap = parseFloat(window.getComputedStyle(row).columnGap) || 0;
+          return card.getBoundingClientRect().width + gap;
+        };
+
+        const updateButtons = () => {
+          const maxScroll = row.scrollWidth - row.clientWidth;
+          previousButton.disabled = row.scrollLeft <= 4;
+          nextButton.disabled = row.scrollLeft >= maxScroll - 4;
+          if (counter) {
+            const index = Math.min(total, Math.round(row.scrollLeft / cardScrollWidth()) + 1);
+            counter.textContent = `${index} / ${total}`;
+          }
+        };
+
+        const scrollByCard = (direction) => {
+          row.scrollBy({
+            left: direction * cardScrollWidth(),
+            behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
+          });
+        };
+
+        previousButton.addEventListener('click', () => scrollByCard(-1));
+        nextButton.addEventListener('click', () => scrollByCard(1));
+        row.addEventListener('scroll', updateButtons, { passive: true });
+        window.addEventListener('resize', updateButtons);
+
+        previousButton.hidden = false;
+        nextButton.hidden = false;
+        if (counter) counter.hidden = false;
+        updateButtons();
+      })();
+    </script>
+  {% endif %}
+{% endif %}
+
+{% stylesheet %}
+  .loemies-testimonials {
+    display: grid;
+    grid-template-columns: var(--content-grid);
+    padding-block: var(--loemies-testimonials-padding);
+    background: var(--loemies-testimonials-background);
+    color: var(--loemies-testimonials-text);
+  }
+
+  .loemies-testimonials__inner {
+    width: min(100%, 67rem);
+    margin-inline: auto;
+    grid-column: 2;
+  }
+
+  .loemies-testimonials__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .loemies-testimonials__intro {
+    max-width: 46rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .loemies-testimonials__eyebrow {
+    margin: 0 0 0.5rem;
+    color: var(--loemies-testimonials-accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .loemies-testimonials h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 1.85rem);
+    font-weight: 900;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .loemies-testimonials__summary {
+    display: flex;
+    align-items: center;
+    margin: 0.6rem 0 0;
+    gap: 0.6rem;
+  }
+
+  .loemies-testimonials__summary-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .loemies-testimonials__text {
+    max-width: 52ch;
+    margin-top: 0.5rem;
+    color: color-mix(in srgb, var(--loemies-testimonials-text) 84%, transparent);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .loemies-testimonials__text p {
+    margin: 0;
+  }
+
+  .loemies-testimonials__controls {
+    display: flex;
+    align-items: center;
+    min-width: 6rem;
+    min-height: 2.75rem;
+    flex: none;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .loemies-testimonials__counter {
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0.7;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    margin-inline-end: 0.25rem;
+  }
+
+  .loemies-testimonials__control {
+    display: inline-grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-height: 0;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--loemies-testimonials-text) 22%, transparent);
+    border-radius: 50%;
+    background: var(--loemies-testimonials-card);
+    box-shadow: var(--shadow-small);
+    color: var(--loemies-testimonials-text);
+    cursor: pointer;
+    place-items: center;
+  }
+
+  .loemies-testimonials__control[hidden] {
+    display: none;
+  }
+
+  .loemies-testimonials__control svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .loemies-testimonials__control:not(:disabled):hover {
+    border-color: var(--loemies-testimonials-text);
+  }
+
+  .loemies-testimonials__control:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+  }
+
+  .loemies-testimonials__grid {
+    display: flex;
+    margin: 0;
+    padding: 0 0 0.35rem;
+    gap: 1rem;
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .loemies-testimonials__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .loemies-testimonial {
+    display: flex;
+    min-width: 0;
+    flex: 0 0 clamp(16rem, 80vw, 21rem);
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: clamp(1.15rem, 2.5vw, 1.5rem);
+    border-radius: 1rem;
+    background: var(--loemies-testimonials-card);
+    scroll-snap-align: start;
+    transition: transform 0.2s ease;
+  }
+
+  .loemies-testimonial:hover {
+    transform: translateY(-0.15rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loemies-testimonials__grid {
+      scroll-behavior: auto;
+    }
+
+    .loemies-testimonial {
+      transition: none;
+    }
+
+    .loemies-testimonial:hover {
+      transform: none;
+    }
+  }
+
+  .loemies-testimonial__stars {
+    position: relative;
+    display: inline-block;
+    align-self: start;
+    color: color-mix(in srgb, var(--loemies-testimonials-text) 22%, transparent);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .loemies-testimonial__stars-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    color: var(--loemies-testimonials-accent);
+  }
+
+  .loemies-testimonial__quote {
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  .loemies-testimonial__quote p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .loemies-testimonial__meta {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .loemies-testimonial__author {
+    font-size: 0.9rem;
+    font-style: normal;
+    font-weight: 800;
+  }
+
+  .loemies-testimonial__context {
+    color: color-mix(in srgb, var(--loemies-testimonials-text) 70%, transparent);
+    font-size: 0.8rem;
+  }
+
+  .loemies-testimonials__editor-note {
+    margin: 0;
+    padding: clamp(1.5rem, 4vw, 2.5rem) 1.5rem;
+    border: 1px dashed color-mix(in srgb, var(--loemies-testimonials-text) 22%, transparent);
+    border-radius: 1rem;
+    opacity: 0.68;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Testimonials",
+  "max_blocks": 30,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Loved by families"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "What parents say"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Eyebrow and stars",
+      "default": "#B04F38"
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical spacing",
+      "min": 0,
+      "max": 96,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "quote",
+          "label": "Quote",
+          "info": "Only use real customer quotes, with permission."
+        },
+        {
+          "type": "textarea",
+          "id": "quote_nl",
+          "label": "Quote (Dutch)",
+          "info": "Leave empty to reuse the main quote."
+        },
+        {
+          "type": "textarea",
+          "id": "quote_fr",
+          "label": "Quote (French)",
+          "info": "Leave empty to reuse the main quote."
+        },
+        {
+          "type": "text",
+          "id": "author",
+          "label": "Author"
+        },
+        {
+          "type": "text",
+          "id": "context",
+          "label": "Context",
+          "info": "For example: Parent of a 2-year-old"
+        },
+        {
+          "type": "text",
+          "id": "context_nl",
+          "label": "Context (Dutch)",
+          "info": "Leave empty to reuse the main context."
+        },
+        {
+          "type": "text",
+          "id": "context_fr",
+          "label": "Context (French)",
+          "info": "Leave empty to reuse the main context."
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Rating",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "info": "Set to 0 to hide the stars."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Testimonials",
+      "blocks": [
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Example — replace with a real customer quote.",
+            "author": "Example name",
+            "context": "Example — replace with real context",
+            "rating": 5
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Example — replace with a real customer quote.",
+            "author": "Example name",
+            "context": "Example — replace with real context",
+            "rating": 5
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Example — replace with a real customer quote.",
+            "author": "Example name",
+            "context": "Example — replace with real context",
+            "rating": 5
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

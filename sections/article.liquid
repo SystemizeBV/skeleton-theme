@@ -1,68 +1,440 @@
-{% comment %}
-  This section is used in the article template to render the article page, which
-  displays the full content of the blog post and can optionally include a
-  comments section for customers (not shown in this example).
+{% liquid
+  assign article_words = article.content | strip_html | split: ' ' | size
+  assign reading_time = article_words | plus: 199 | divided_by: 200
+  assign article_language = article.metafields.custom.language_code.value | default: request.locale.iso_code
+  if reading_time < 1
+    assign reading_time = 1
+  endif
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign article_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'Loemies journal'
+    assign article_eyebrow = 'blog.defaults.topic' | t
+  endif
+  assign related_eyebrow = section.settings.related_eyebrow | escape
+  if section.settings.related_eyebrow == blank or section.settings.related_eyebrow == 'Keep exploring'
+    assign related_eyebrow = 'blog.defaults.related_eyebrow' | t
+  endif
+  assign related_heading = section.settings.related_heading | escape
+  if section.settings.related_heading == blank or section.settings.related_heading == 'More from the journal'
+    assign related_heading = 'blog.defaults.related_heading' | t
+  endif
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/article
-{% endcomment %}
+  assign faq_entries = article.metafields.custom.faqs.value
+  assign fallback_faq_schema = article.metafields.custom.faq_schema.value
+  assign fallback_faq_entries = fallback_faq_schema.mainEntity
+  assign has_article_faqs = false
+  if faq_entries != blank or fallback_faq_entries != blank
+    assign has_article_faqs = true
+  endif
 
-{% if article.image %}
-  {{ article.image | image_url: width: 1000 | image_tag }}
-{% endif %}
+  assign faq_eyebrow = section.settings.faq_eyebrow | escape
+  if section.settings.faq_eyebrow == blank or section.settings.faq_eyebrow == 'Good to know'
+    assign faq_eyebrow = 'blog.defaults.faq_eyebrow' | t
+  endif
+  assign faq_heading = section.settings.faq_heading | escape
+  if section.settings.faq_heading == blank or section.settings.faq_heading == 'Frequently asked questions'
+    assign faq_heading = 'blog.defaults.faq_heading' | t
+  endif
 
-<h1>{{ article.title }}</h1>
+  assign related_collections = article.metafields.custom.related_collections.value
+  assign collections_eyebrow = section.settings.collections_eyebrow | escape
+  if section.settings.collections_eyebrow == blank or section.settings.collections_eyebrow == 'Continue browsing'
+    assign collections_eyebrow = 'blog.defaults.collections_eyebrow' | t
+  endif
+  assign collections_heading = section.settings.collections_heading | escape
+  if section.settings.collections_heading == blank or section.settings.collections_heading == 'Explore the collection'
+    assign collections_heading = 'blog.defaults.collections_heading' | t
+  endif
 
-{% assign date = article.published_at | time_tag: format: 'date' %}
-<p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
+  assign published_day = article.published_at | date: '%Y-%m-%d'
+  assign updated_day = article.updated_at | date: '%Y-%m-%d'
+  assign article_was_updated = false
+  if article.published_at != blank and article.updated_at != blank and updated_day != published_day
+    assign article_was_updated = true
+  endif
+  assign published_time = article.published_at | time_tag: format: 'date'
+  assign updated_time = article.updated_at | time_tag: format: 'date'
+  assign has_author_profile = false
+  if article.user.bio != blank or article.user.image != blank
+    assign has_author_profile = true
+  endif
+%}
 
-{{ article.content }}
+<article
+  class="loemies-article full-width"
+  lang="{{ article_language | escape }}"
+  style="
+    --article-background: {{ section.settings.background_color }};
+    --article-card: {{ section.settings.card_color }};
+    --article-text: {{ section.settings.text_color }};
+    --article-accent: {{ section.settings.accent_color }};
+    --article-accent-soft: {{ section.settings.accent_soft_color }};
+  "
+>
+  <div class="loemies-article__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="loemies-editorial__breadcrumb" aria-label="{{ 'general.accessibility.breadcrumb' | t }}">
+        <a href="{{ routes.root_url }}">{{ 'general.accessibility.home' | t }}</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ blog.url }}">{{ blog.title | escape }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ article.title | escape }}</span>
+      </nav>
+    {% endif %}
 
-{% if blog.comments_enabled? %}
-  <h2>{{ 'blog.article_comments' | t }}</h2>
-
-  <div id="comments">
-    {% paginate article.comments by 10 %}
-      {% for comment in article.comments %}
-        <div>
-          <p>{{ comment.author }}</p>
-          <p>
-            {{- comment.created_at | time_tag: format: 'date' -}}
-          </p>
-          <p>{{ comment.content }}</p>
+    <header class="loemies-article__header">
+      {% if article.tags.size > 0 and section.settings.show_tags %}
+        <div class="loemies-article__tags">
+          {% for tag in article.tags limit: 3 %}
+            <span>{{ tag | link_to_tag: tag }}</span>
+          {% endfor %}
         </div>
-      {% endfor %}
+      {% elsif article_eyebrow != blank %}
+        <p class="loemies-editorial__eyebrow">{{ article_eyebrow }}</p>
+      {% endif %}
 
-      {{ paginate | default_pagination: anchor: 'comments' }}
-    {% endpaginate %}
+      <h1>{{ article.title | escape }}</h1>
+
+      {% if article.excerpt != blank and section.settings.show_excerpt %}
+        <div class="loemies-article__standfirst">{{ article.excerpt }}</div>
+      {% endif %}
+
+      <div class="loemies-article__meta">
+        {% assign has_article_meta = false %}
+        {% if section.settings.show_author and article.author != blank %}
+          <span>{{ 'blog.by_author' | t: author: article.author }}</span>
+          {% assign has_article_meta = true %}
+        {% endif %}
+        {% if article.published_at != blank %}
+          {% if has_article_meta %}<span aria-hidden="true">·</span>{% endif %}
+          <span>{{ 'blog.published_html' | t: date: published_time }}</span>
+          {% assign has_article_meta = true %}
+        {% endif %}
+        {% if section.settings.show_updated_date and article_was_updated %}
+          {% if has_article_meta %}<span aria-hidden="true">·</span>{% endif %}
+          <span>{{ 'blog.updated_html' | t: date: updated_time }}</span>
+          {% assign has_article_meta = true %}
+        {% endif %}
+        {% if section.settings.show_read_time %}
+          {% if has_article_meta %}<span aria-hidden="true">·</span>{% endif %}
+          <span>{{ 'blog.reading_time' | t: count: reading_time }}</span>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if article.image %}
+      <figure class="loemies-article__hero">
+        {{ article.image
+          | image_url: width: 1800
+          | image_tag:
+            widths: '480, 640, 800, 1000, 1200, 1400, 1600, 1800',
+            sizes: '(min-width: 1088px) 1072px, (min-width: 768px) calc(100vw - 128px), calc(100vw - 32px)',
+            loading: 'eager',
+            fetchpriority: 'high'
+        }}
+      </figure>
+    {% endif %}
+
+    <div class="loemies-article__body">
+      {% if section.settings.show_toc %}
+        <nav
+          class="loemies-article__toc"
+          aria-labelledby="ArticleToc-{{ section.id }}"
+          data-article-toc
+          hidden
+        >
+          <details class="loemies-article__toc-disclosure" data-article-toc-disclosure open>
+            <summary id="ArticleToc-{{ section.id }}" class="loemies-article__toc-title">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              {{ 'blog.table_of_contents' | t }}
+            </summary>
+            <ol class="loemies-article__toc-list" data-article-toc-list></ol>
+          </details>
+        </nav>
+      {% endif %}
+
+      <div
+        class="loemies-article__content rte"
+        data-article-content
+        data-toc-min-headings="{{ section.settings.toc_min_headings }}"
+        data-toc-include-h3="{{ section.settings.toc_include_h3 }}"
+      >
+        {{ article.content }}
+      </div>
+
+      {% if section.settings.show_author_bio and article.author != blank and has_author_profile %}
+        <aside class="loemies-article__author" aria-labelledby="ArticleAuthor-{{ section.id }}">
+          {% if article.user.image != blank %}
+            <div class="loemies-article__author-image">
+              {{ article.user.image
+                | image_url: width: 240
+                | image_tag:
+                  widths: '96, 144, 192, 240',
+                  sizes: '96px',
+                  loading: 'lazy'
+              }}
+            </div>
+          {% else %}
+            <div class="loemies-article__author-initial" aria-hidden="true">{{ article.author | slice: 0 | upcase }}</div>
+          {% endif %}
+          <div>
+            <p class="loemies-editorial__eyebrow">{{ 'blog.about_author' | t }}</p>
+            <h2 id="ArticleAuthor-{{ section.id }}">{{ article.author | escape }}</h2>
+            {% if article.user.bio != blank %}<p>{{ article.user.bio | escape }}</p>{% endif %}
+            {% if article.user.homepage != blank %}
+              <a href="{{ article.user.homepage }}">{{ 'blog.author_website' | t }} <span aria-hidden="true">→</span></a>
+            {% endif %}
+          </div>
+        </aside>
+      {% endif %}
+
+      <footer class="loemies-article__footer">
+        {% if article.tags.size > 0 and section.settings.show_tags %}
+          <div class="loemies-article__footer-tags" aria-label="{{ 'blog.article_topics' | t }}">
+            <span>{{ 'blog.article_topics' | t }}</span>
+            {% for tag in article.tags %}
+              {{ tag | link_to_tag: tag }}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <a class="loemies-article__back" href="{{ blog.url }}">
+          <span aria-hidden="true">←</span>
+          {{ 'blog.back_to_blog' | t: title: blog.title }}
+        </a>
+      </footer>
+    </div>
+
+    {% if section.settings.show_faqs and has_article_faqs %}
+      <section class="loemies-article__faqs" aria-labelledby="ArticleFaqs-{{ section.id }}">
+        <header class="loemies-article__section-heading">
+          <p class="loemies-editorial__eyebrow">{{ faq_eyebrow }}</p>
+          <h2 id="ArticleFaqs-{{ section.id }}">{{ faq_heading }}</h2>
+        </header>
+
+        <div class="loemies-article__faq-list">
+          {% if faq_entries != blank %}
+            {% for faq in faq_entries %}
+              {% liquid
+                assign faq_question = faq.question.value | default: faq.question
+                assign faq_answer = faq.answer.value | default: faq.answer
+              %}
+              <details class="loemies-article__faq"{% if forloop.first %} open{% endif %}>
+                <summary>
+                  <span>{{ faq_question | escape }}</span>
+                  <span class="loemies-article__faq-icon" aria-hidden="true"></span>
+                </summary>
+                <div class="loemies-article__faq-answer">{{ faq_answer | escape | newline_to_br }}</div>
+              </details>
+            {% endfor %}
+          {% else %}
+            {% for faq in fallback_faq_entries %}
+              <details class="loemies-article__faq"{% if forloop.first %} open{% endif %}>
+                <summary>
+                  <span>{{ faq.name | escape }}</span>
+                  <span class="loemies-article__faq-icon" aria-hidden="true"></span>
+                </summary>
+                <div class="loemies-article__faq-answer">{{ faq.acceptedAnswer.text | strip_html | escape | newline_to_br }}</div>
+              </details>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        {% render 'article-faq-structured-data', faq_entries: faq_entries, fallback_faq_schema: fallback_faq_schema, canonical_url: canonical_url, language: article_language %}
+      </section>
+    {% endif %}
+
+    {% if section.settings.show_related_collections and related_collections != blank %}
+      <aside class="loemies-article__collections" aria-labelledby="ArticleCollections-{{ section.id }}">
+        <header class="loemies-article__section-heading">
+          <p class="loemies-editorial__eyebrow">{{ collections_eyebrow }}</p>
+          <h2 id="ArticleCollections-{{ section.id }}">{{ collections_heading }}</h2>
+        </header>
+
+        <div class="loemies-article__collection-grid">
+          {% for related_collection in related_collections limit: 4 %}
+            {% assign related_collection_image = related_collection.image | default: related_collection.products.first.featured_image %}
+            <a class="loemies-article__collection-card" href="{{ related_collection.url }}">
+              <span class="loemies-article__collection-media">
+                {% if related_collection_image != blank %}
+                  {{ related_collection_image
+                    | image_url: width: 800
+                    | image_tag:
+                      widths: '240, 360, 480, 640, 800',
+                      sizes: '(min-width: 768px) 250px, calc(100vw - 66px)',
+                      loading: 'lazy'
+                  }}
+                {% else %}
+                  <span aria-hidden="true"></span>
+                {% endif %}
+              </span>
+              <span class="loemies-article__collection-content">
+                <strong>{{ related_collection.title | escape }}</strong>
+                <span>{{ 'blog.explore_collection' | t }} <span aria-hidden="true">→</span></span>
+              </span>
+            </a>
+          {% endfor %}
+        </div>
+      </aside>
+    {% endif %}
+
+    {% if section.settings.show_related %}
+      {% assign related_count = 0 %}
+      {% capture related_articles %}
+        {% for related_article in blog.articles %}
+          {% unless related_article.id == article.id %}
+            {% assign related_count = related_count | plus: 1 %}
+            <article class="loemies-related-card">
+              <a href="{{ related_article.url }}">
+                <div class="loemies-related-card__media">
+                  {% if related_article.image %}
+                    {{ related_article.image
+                      | image_url: width: 800
+                      | image_tag:
+                        widths: '240, 360, 480, 640, 800',
+                        sizes: '(min-width: 768px) 328px, calc(100vw - 66px)',
+                        loading: 'lazy'
+                    }}
+                  {% else %}
+                    <span aria-hidden="true"></span>
+                  {% endif %}
+                </div>
+                <div class="loemies-related-card__content">
+                  {{ related_article.published_at | time_tag: format: 'date' }}
+                  <h3>{{ related_article.title | escape }}</h3>
+                  <span>{{ 'blog.read_article' | t }} →</span>
+                </div>
+              </a>
+            </article>
+            {% if related_count >= 3 %}{% break %}{% endif %}
+          {% endunless %}
+        {% endfor %}
+      {% endcapture %}
+
+      {% if related_count > 0 %}
+        <aside class="loemies-article__related" aria-labelledby="RelatedArticles-{{ section.id }}">
+          <div class="loemies-article__related-heading">
+            <div>
+              <p class="loemies-editorial__eyebrow">{{ related_eyebrow }}</p>
+              <h2 id="RelatedArticles-{{ section.id }}">{{ related_heading }}</h2>
+            </div>
+            <a href="{{ blog.url }}">{{ 'blog.view_all' | t }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="loemies-article__related-grid">{{ related_articles }}</div>
+        </aside>
+      {% endif %}
+    {% endif %}
+
+    {% if blog.comments_enabled? %}
+      <section id="comments" class="loemies-comments" aria-labelledby="ArticleComments-{{ section.id }}">
+        <div class="loemies-comments__heading">
+          <p class="loemies-editorial__eyebrow">{{ 'blog.conversation' | t }}</p>
+          <h2 id="ArticleComments-{{ section.id }}">{{ 'blog.article_comments' | t }}</h2>
+        </div>
+
+        {% paginate article.comments by 10 %}
+          {% if article.comments_count > 0 %}
+            <div class="loemies-comments__list">
+              {% for comment in article.comments %}
+                <article class="loemies-comment">
+                  <div class="loemies-comment__avatar" aria-hidden="true">{{ comment.author | slice: 0 | upcase }}</div>
+                  <div>
+                    <div class="loemies-comment__meta">
+                      <strong>{{ comment.author | escape }}</strong>
+                      {{ comment.created_at | time_tag: format: 'date' }}
+                    </div>
+                    <div class="loemies-comment__content">{{ comment.content }}</div>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if paginate.pages > 1 %}
+            <nav class="loemies-editorial__pagination" aria-label="{{ 'blog.comment_pagination' | t }}">
+              {% if paginate.previous %}<a href="{{ paginate.previous.url }}#comments" aria-label="{{ 'general.accessibility.previous_page' | t }}">←</a>{% endif %}
+              {% for part in paginate.parts %}
+                {% if part.is_link %}
+                  <a href="{{ part.url }}#comments">{{ part.title }}</a>
+                {% else %}
+                  <span{% if part.title == paginate.current_page %} class="is-current" aria-current="page"{% endif %}>{{ part.title }}</span>
+                {% endif %}
+              {% endfor %}
+              {% if paginate.next %}<a href="{{ paginate.next.url }}#comments" aria-label="{{ 'general.accessibility.next_page' | t }}">→</a>{% endif %}
+            </nav>
+          {% endif %}
+        {% endpaginate %}
+
+        {% form 'new_comment', article, class: 'loemies-comment-form' %}
+          <h3>{{ 'blog.comment_form_title' | t }}</h3>
+
+          {% if form.posted_successfully? %}
+            <p class="loemies-comment-form__success" tabindex="-1">{{ 'blog.comment_success' | t }}</p>
+          {% else %}
+            {% if form.errors %}
+              <div class="loemies-comment-form__errors" role="alert">{{ form.errors | default_errors }}</div>
+            {% endif %}
+
+            <div class="loemies-comment-form__fields">
+              <div>
+                <label for="CommentAuthor-{{ section.id }}">{{ 'blog.comment_form_name' | t }}</label>
+                <input id="CommentAuthor-{{ section.id }}" type="text" name="comment[author]" value="{{ form.author | escape }}" autocomplete="name" required>
+              </div>
+              <div>
+                <label for="CommentEmail-{{ section.id }}">{{ 'blog.comment_form_email' | t }}</label>
+                <input id="CommentEmail-{{ section.id }}" type="email" name="comment[email]" value="{{ form.email | escape }}" autocomplete="email" autocapitalize="off" required>
+              </div>
+            </div>
+            <div>
+              <label for="CommentBody-{{ section.id }}">{{ 'blog.comment_form_body' | t }}</label>
+              <textarea id="CommentBody-{{ section.id }}" name="comment[body]" rows="5" required>{{ form.body | escape }}</textarea>
+            </div>
+            {% if blog.moderated? %}<p class="loemies-comment-form__note">{{ 'blog.comment_moderated' | t }}</p>{% endif %}
+            <button type="submit">{{ 'blog.comment_form_submit' | t }}</button>
+          {% endif %}
+        {% endform %}
+      </section>
+    {% endif %}
   </div>
-
-  {% form 'new_comment', article %}
-    <h2>{{ 'blog.comment_form_title' | t }}</h2>
-
-    {{ form.errors | default_errors }}
-
-    <div>
-      <label for="author">{{ 'blog.comment_form_name' | t }}</label>
-      <input type="text" name="comment[author]" id="author" value="{{ form.author }}" required>
-    </div>
-
-    <div>
-      <label for="email">{{ 'blog.comment_form_email' | t }}</label>
-      <input type="email" name="comment[email]" id="email" value="{{ form.email }}" required>
-    </div>
-
-    <div>
-      <label for="body">{{ 'blog.comment_form_body' | t }}</label>
-      <textarea name="comment[body]" id="body" required>{{ form.body }}</textarea>
-    </div>
-
-    <input type="submit" value="{{ 'blog.comment_form_submit' | t }}">
-  {% endform %}
-{% endif %}
+</article>
 
 {% schema %}
 {
-  "name": "t:general.article",
-  "settings": []
+  "name": "Loemies article",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Fallback eyebrow", "default": "Loemies journal" },
+    { "type": "checkbox", "id": "show_breadcrumbs", "label": "Show breadcrumbs", "default": true },
+    { "type": "checkbox", "id": "show_excerpt", "label": "Show article excerpt", "default": true },
+    { "type": "checkbox", "id": "show_author", "label": "Show author", "default": true },
+    { "type": "checkbox", "id": "show_author_bio", "label": "Show author biography when available", "default": true },
+    { "type": "checkbox", "id": "show_updated_date", "label": "Show updated date", "default": true },
+    { "type": "checkbox", "id": "show_read_time", "label": "Show reading time", "default": true },
+    { "type": "checkbox", "id": "show_tags", "label": "Show topics", "default": true },
+    { "type": "header", "content": "Table of contents" },
+    { "type": "checkbox", "id": "show_toc", "label": "Generate table of contents", "default": true },
+    { "type": "range", "id": "toc_min_headings", "label": "Minimum headings", "min": 2, "max": 6, "step": 1, "default": 3 },
+    { "type": "checkbox", "id": "toc_include_h3", "label": "Include subsection headings", "default": false },
+    { "type": "header", "content": "Frequently asked questions" },
+    { "type": "checkbox", "id": "show_faqs", "label": "Show FAQs from article metafields", "default": true },
+    { "type": "text", "id": "faq_eyebrow", "label": "Eyebrow", "default": "Good to know" },
+    { "type": "text", "id": "faq_heading", "label": "Heading", "default": "Frequently asked questions" },
+    { "type": "header", "content": "Related collections" },
+    { "type": "checkbox", "id": "show_related_collections", "label": "Show related collections", "default": true },
+    { "type": "text", "id": "collections_eyebrow", "label": "Eyebrow", "default": "Continue browsing" },
+    { "type": "text", "id": "collections_heading", "label": "Heading", "default": "Explore the collection" },
+    { "type": "header", "content": "Related articles" },
+    { "type": "checkbox", "id": "show_related", "label": "Show related articles", "default": true },
+    { "type": "text", "id": "related_eyebrow", "label": "Eyebrow", "default": "Keep exploring" },
+    { "type": "text", "id": "related_heading", "label": "Heading", "default": "More from the journal" },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#F7F3EC" },
+    { "type": "color", "id": "card_color", "label": "Cards", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#2B241F" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#B04F38" },
+    { "type": "color", "id": "accent_soft_color", "label": "Soft accent", "default": "#F6E6DF" }
+  ]
 }
 {% endschema %}

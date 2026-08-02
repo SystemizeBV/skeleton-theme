@@ -1,18 +1,67 @@
 {% style %}
-  {% # Loads all font variantions with display: swap %}
-  {{ settings.type_primary_font | font_face: font_display: 'swap' }}
-  {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
-  {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
-  {{ settings.type_primary_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+  {% # Body font variants load with font-display swap. %}
+  {{ settings.type_body_font | font_face: font_display: 'swap' }}
+  {{ settings.type_body_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+  {{ settings.type_body_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+  {{ settings.type_body_font | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+
+  {% # Heading font and its bold variant. %}
+  {{ settings.type_heading_font | font_face: font_display: 'swap' }}
 
   :root {
-    --font-primary--family: {{ settings.type_primary_font.family }}, {{ settings.type_primary_font.fallback_families }};
-    --font-primary--style: {{ settings.type_primary_font.style }};
-    --font-primary--weight: {{ settings.type_primary_font.weight }};
+    --font-body--family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    --font-body--style: {{ settings.type_body_font.style }};
+    --font-body--weight: {{ settings.type_body_font.weight }};
+    --font-heading--family: {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    --font-heading--style: {{ settings.type_heading_font.style }};
+    --font-heading--weight: {{ settings.type_heading_font.weight }};
+
+    /* Skeleton compatibility alias for existing components. */
+    --font-primary--family: var(--font-body--family);
+    --font-primary--style: var(--font-body--style);
+    --font-primary--weight: var(--font-body--weight);
+
     --page-width: {{ settings.max_page_width }};
-    --page-margin: {{ settings.min_page_margin }}px;
-    --color-background: {{ settings.background_color }};
-    --color-foreground: {{ settings.foreground_color }};
+    --page-margin: max(clamp(1rem, 4vw, {{ settings.min_page_margin }}px), env(safe-area-inset-left));
+    --section-spacing: {{ settings.section_spacing }}px;
+    --style-border-radius-cards: {{ settings.card_corner_radius }}px;
+    --style-border-radius-buttons: {{ settings.button_corner_radius }}px;
     --style-border-radius-inputs: {{ settings.input_corner_radius }}px;
+
+    --color-cream: {{ settings.color_cream }};
+    --color-blush: {{ settings.color_blush }};
+    --color-lavender: {{ settings.color_lavender }};
+    --color-sage: {{ settings.color_sage }};
+    --color-butter: {{ settings.color_butter }};
+    --color-ink: {{ settings.color_ink }};
+    --color-plum: {{ settings.color_plum }};
+
+    /* Exact Loemies storefront system. Keep the legacy palette aliases above so
+       Skeleton sections remain compatible while newer sections use semantic names. */
+    --color-body: #4c443c;
+    --color-muted: #786c61;
+    --color-border: #eadfd2;
+    --color-surface: #ffffff;
+    --color-surface-alt: #fdfbf7;
+    --color-brand: var(--color-plum);
+    --color-brand-dark: #96432f;
+    --color-brand-soft: #f6e6df;
+    --color-sand: #ecd9b8;
+    --color-pine: #2f6b4f;
+    --color-sky: #bedcf1;
+    --color-peach: #f9cdb0;
+    --color-photo: #eef0e9;
+    --color-success: #1e7a4c;
+    --color-success-soft: #e7f3ec;
+    --color-rating: #e2a33c;
+    --radius-card: 1rem;
+    --radius-small: 0.75rem;
+
+    /* Skeleton compatibility aliases. */
+    --color-background: var(--color-cream);
+    --color-foreground: var(--color-ink);
+    --color-accent: var(--color-plum);
+    --shadow-soft: 0 0.6rem 1rem -0.2rem rgba(43, 36, 31, 0.14), 0 0.25rem 0.4rem -0.3rem rgba(43, 36, 31, 0.1);
+    --shadow-small: 0 0.0625rem 0.125rem rgba(43, 36, 31, 0.06);
   }
 {% endstyle %}

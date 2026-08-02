@@ -1,0 +1,352 @@
+.loemies-product-card {
+  position: relative;
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid #eadfd2;
+  border-radius: 1rem;
+  background: var(--loemies-featured-card);
+  box-shadow: 0 0.0625rem 0.125rem rgba(43, 36, 31, 0.06);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+
+.loemies-product-card__wishlist {
+  position: absolute;
+  z-index: 3;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: grid;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(234, 223, 210, 0.94);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0.2rem 0.7rem rgba(43, 36, 31, 0.1);
+  color: #2b241f;
+  place-items: center;
+}
+
+.loemies-product-card__wishlist svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.loemies-product-card__wishlist:hover,
+.loemies-product-card__wishlist[aria-pressed='true'] {
+  border-color: #b04f38;
+  background: #f6e6df;
+  box-shadow: 0 0.2rem 0.7rem rgba(43, 36, 31, 0.1);
+  color: #b04f38;
+  transform: none;
+}
+
+.loemies-product-card__wishlist[aria-pressed='true'] svg {
+  fill: currentcolor;
+}
+
+.loemies-product-card__wishlist:focus-visible {
+  outline: 0.2rem solid #2b241f;
+  outline-offset: 0.15rem;
+}
+
+.loemies-product-card:hover {
+  border-color: var(--loemies-featured-text);
+}
+
+.loemies-product-card:focus-within {
+  border-color: var(--loemies-featured-text);
+}
+
+.loemies-product-card__media-link:focus-visible,
+.loemies-product-card__title a:focus-visible,
+.loemies-product-card__action :is(a, button):focus-visible {
+  outline: 0.2rem solid currentcolor;
+  outline-offset: -0.2rem;
+}
+
+.loemies-product-card__media-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.loemies-product-card__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: #ffffff;
+}
+
+.loemies-product-card__image {
+  display: block;
+  width: calc(100% + 0.125rem);
+  max-width: none;
+  height: calc(100% + 0.125rem);
+  margin: -0.0625rem;
+  object-fit: cover;
+  object-position: center;
+}
+
+.loemies-product-card__image--noscript {
+  position: absolute;
+  inset: 0;
+}
+
+.loemies-product-card__image-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 18%, #fff4bb 0 12%, transparent 12.5%),
+    radial-gradient(circle at 78% 76%, #c7dfce 0 20%, transparent 20.5%),
+    var(--loemies-featured-accent);
+}
+
+.loemies-product-card__image-fallback span {
+  width: 38%;
+  aspect-ratio: 1;
+  border: 0.18rem solid var(--loemies-featured-text);
+  border-radius: 48% 52% 42% 58%;
+  transform: rotate(12deg);
+}
+
+.loemies-product-card__content {
+  display: grid;
+  min-height: 13.25rem;
+  flex: 1 0 13.25rem;
+  gap: 0.4rem;
+  grid-template-rows: 1.6rem minmax(2.92rem, 1fr) 1.2rem auto 3rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+}
+
+.loemies-product-card__rating-row {
+  display: flex;
+  min-width: 0;
+  min-height: 1.2rem;
+  align-items: center;
+}
+
+.loemies-product-card__rating {
+  color: #665b52;
+  font-size: 0.72rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.loemies-product-card__rating .loemies-rating__stars {
+  font-size: 0.75rem;
+}
+
+.loemies-product-card__guidance {
+  display: flex;
+  min-width: 0;
+  min-height: 1.6rem;
+  align-items: start;
+  overflow: hidden;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+}
+
+.loemies-product-card__guidance span {
+  overflow: hidden;
+  max-width: 100%;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999rem;
+  background: #f4eee7;
+  color: #665b52;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loemies-product-card__title {
+  min-height: 2.7em;
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.loemies-product-card__title a {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: inherit;
+  text-decoration: none;
+}
+
+.loemies-product-card__title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.loemies-product-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.4rem;
+}
+
+.loemies-product-card__price {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.loemies-product-card__price s {
+  opacity: 0.58;
+  font-weight: 400;
+}
+
+.loemies-product-card__availability {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999rem;
+  background: #e7f3ec;
+  color: #1e7a4c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.loemies-product-card__availability.is-sold-out {
+  background: #f9ecec;
+  color: #8c2f3b;
+}
+
+.loemies-product-card__action {
+  min-height: 3rem;
+}
+
+.loemies-product-card__form,
+.loemies-product-card__action :is(a, button, span) {
+  width: 100%;
+}
+
+.loemies-product-card__action :is(a, button, span) {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #b04f38;
+  border-radius: 999rem;
+  background: #b04f38;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.loemies-product-card__action :is(a, button):hover {
+  border-color: #96432f;
+  background: #96432f;
+}
+
+.loemies-product-card__action button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.loemies-product-card__action > span {
+  border-color: #eadfd2;
+  background: #f4eee7;
+  color: #665b52;
+}
+
+@media (max-width: 46.99rem) {
+  .loemies-product-card__content {
+    min-height: 13rem;
+    flex-basis: 13rem;
+    gap: 0.3rem;
+    grid-template-rows: 1.5rem minmax(2.57rem, 1fr) 1.1rem auto 3rem;
+    padding: 0.8rem 0.85rem 0.95rem;
+  }
+
+  .loemies-product-card__title {
+    font-size: 0.95rem;
+  }
+
+  .loemies-product-card__price {
+    font-size: 1.02rem;
+  }
+
+  .loemies-product-card__availability {
+    padding: 0.16rem 0.4rem;
+    font-size: 0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loemies-product-card {
+    transition: none;
+  }
+}
+
+.loemies-product-card__rating,
+.loemies-product-card__availability {
+  font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Collection-page card upgrades (CRO audit 2026-08-02)
+   Appended block — new selectors only, nothing above this line is modified.
+   1. Second product image on hover, desktop pointers only.
+   2. Sold-out cards read as unavailable before the badge is read.
+   --------------------------------------------------------------------------- */
+
+/* Hidden by default, and hidden means no layout box, so the lazy image is
+   never fetched on touch devices. */
+.loemies-product-card__image--hover {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .loemies-product-card__image--hover {
+    position: absolute;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+
+  .loemies-product-card:hover .loemies-product-card__image--hover,
+  .loemies-product-card:focus-within .loemies-product-card__image--hover {
+    opacity: 1;
+  }
+}
+
+.loemies-product-card--sold-out .loemies-product-card__image {
+  filter: grayscale(0.55);
+  opacity: 0.78;
+}
+
+.loemies-product-card--sold-out:hover .loemies-product-card__image {
+  filter: grayscale(0.35);
+  opacity: 0.88;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loemies-product-card__image--hover {
+    transition: none;
+  }
+}

@@ -1,25 +1,37 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
   "type": "footer",
-  "name": "t:general.footer",
+  "name": "Footer group",
   "sections": {
     "footer": {
       "type": "footer",
       "settings": {
-        "menu": "",
-        "show_payment_icons": true
+        "wordmark": "Loemies",
+        "tagline": "Thoughtfully chosen for purposeful play and curious little ones.",
+        "menu": "footer",
+        "about_url": "",
+        "customer_service_menu": "",
+        "shipping_returns_url": "",
+        "returns_url": "",
+        "faq_url": "",
+        "payment_url": "",
+        "imprint_url": "",
+        "show_trust_bar": true,
+        "show_payment_icons": true,
+        "legal_name": "Systemize BV",
+        "enterprise_number": "1004.376.305",
+        "business_email": "support@loemies.com",
+        "vat_label": "VAT",
+        "vat_number": "BE 1004.376.305",
+        "street_address": "Taboralaan 6",
+        "postal_code": "2820",
+        "city": "Bonheiden",
+        "country_name": "Belgium",
+        "country_code": "BE",
+        "show_market_message": false,
+        "market_message": "Ordering will be enabled when this market is ready.",
+        "show_powered_by": false
       }
     }
   },
-  "order": [
-    "footer"
-  ]
+  "order": ["footer"]
 }

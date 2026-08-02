@@ -1,83 +1,285 @@
-{% comment %}
-  This section is used in the list-collections template to render a list of
-  collections.
+{% liquid
+  assign visible_collection_count = 0
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign collections_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'Categories'
+    assign collections_eyebrow = 'collections.content.eyebrow' | t
+  endif
+  assign collections_heading = section.settings.heading
+  if collections_heading == blank or collections_heading == 'Shop by category'
+    assign collections_heading = 'collections.content.heading' | t
+  endif
+  assign collections_intro = section.settings.text
+  if collections_intro == blank or collections_intro == '<p>Find the right kind of play for every little personality and stage.</p>'
+    assign collections_intro = 'collections.content.intro' | t
+  endif
+  assign use_curated_collections = false
+  if section.blocks.size > 0
+    assign use_curated_collections = true
+    for block in section.blocks
+      if block.settings.collection != blank
+        assign visible_collection_count = visible_collection_count | plus: 1
+      endif
+    endfor
+  else
+    for collection_item in collections
+      assign include_collection = true
+      if section.settings.hide_frontpage and collection_item.handle == 'frontpage'
+        assign include_collection = false
+      endif
+      if include_collection
+        assign visible_collection_count = visible_collection_count | plus: 1
+      endif
+    endfor
+  endif
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/collection
-{% endcomment %}
+  assign collection_desktop_gaps = section.settings.columns_desktop | minus: 1 | times: 20
+  assign collection_desktop_offset = collection_desktop_gaps | plus: 128
+  assign collection_desktop_card_width = 1072 | minus: collection_desktop_gaps | divided_by: section.settings.columns_desktop
+  assign collection_desktop_inner_offset = section.settings.columns_desktop | times: 2
+  assign collection_desktop_offset = collection_desktop_offset | plus: collection_desktop_inner_offset
+  assign collection_desktop_card_width = collection_desktop_card_width | minus: 2
+  capture collection_image_sizes
+    echo '(min-width: 1200px) '
+    echo collection_desktop_card_width
+    echo 'px, (min-width: 1088px) calc((100vw - '
+    echo collection_desktop_offset
+    echo 'px) / '
+    echo section.settings.columns_desktop
+    echo '), (min-width: 768px) calc((100vw - 174px) / 3), (min-width: 369px) calc((100vw - 48px) / 2), calc(100vw - 34px)'
+  endcapture
+  assign visible_collection_index = 0
+%}
 
-<h1>{{ 'collections.title' | t }}</h1>
-
-<div
-  class="collections {{ section.settings.grid_item_width }}"
-  style="--grid-gap: {{ section.settings.grid_gap }}px"
+<section
+  class="loemies-catalog full-width"
+  style="
+    --catalog-background: {{ section.settings.background_color }};
+    --catalog-card: {{ section.settings.card_color }};
+    --catalog-text: {{ section.settings.text_color }};
+    --catalog-accent: {{ section.settings.accent_color }};
+    --catalog-accent-dark: {{ section.settings.accent_dark_color }};
+    --catalog-accent-soft: {{ section.settings.accent_soft_color }};
+    --catalog-columns: {{ section.settings.columns_desktop }};
+    --catalog-padding: {{ section.settings.vertical_padding }}px;
+  "
 >
-  {% for collection in collections %}
-    <a class="collection-card" href="{{ collection.url }}">
-      {% if collection.featured_image %}
-        {% render 'image',
-          class: 'collection-card__image',
-          image: collection.featured_image,
-          width: 600,
-          height: 600,
-          crop: 'center'
-        %}
+  <div class="loemies-catalog__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="loemies-catalog__breadcrumb" aria-label="{{ 'sections.catalog.breadcrumb' | t }}">
+        <a href="{{ routes.root_url }}">{{ 'sections.catalog.home' | t }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ collections_heading | strip_html | escape }}</span>
+      </nav>
+    {% endif %}
+
+    <header class="loemies-catalog__header">
+      {% if collections_eyebrow != blank %}
+        <p class="loemies-catalog__eyebrow">{{ collections_eyebrow }}</p>
       {% endif %}
 
-      <div class="collection-card__content">
-        <p>{{ collection.title }}</p>
+      {% if collections_heading != blank %}
+        <h1 class="loemies-catalog__title">{{ collections_heading }}</h1>
+      {% endif %}
 
-        {% if collection.description %}
-          <p>{{ collection.description | strip_html | truncatewords: 15 }}</p>
+      {% if collections_intro != blank or section.settings.show_collection_count %}
+        <div class="loemies-catalog__intro-row">
+          {% if collections_intro != blank %}
+            <div class="loemies-catalog__description">{{ collections_intro }}</div>
+          {% endif %}
+
+          {% if section.settings.show_collection_count %}
+            <p class="loemies-catalog__count">
+              {{ 'sections.catalog.category_count' | t: count: visible_collection_count }}
+            </p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </header>
+
+    <div class="loemies-catalog__divider" aria-hidden="true"></div>
+
+    {% if visible_collection_count > 0 %}
+      <div class="loemies-collection-grid">
+        {% if use_curated_collections %}
+          {% for block in section.blocks %}
+            {% assign collection_item = block.settings.collection %}
+            {% if collection_item != blank %}
+              {% assign visible_collection_index = visible_collection_index | plus: 1 %}
+              {% render 'loemies-collection-card',
+                collection_item: collection_item,
+                card_index: visible_collection_index,
+                image_sizes: collection_image_sizes,
+                show_descriptions: section.settings.show_descriptions,
+                show_product_counts: section.settings.show_product_counts,
+                shopify_attributes: block.shopify_attributes
+              %}
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          {% for collection_item in collections %}
+            {% liquid
+              assign include_collection = true
+              if section.settings.hide_frontpage and collection_item.handle == 'frontpage'
+                assign include_collection = false
+              endif
+            %}
+            {% if include_collection %}
+              {% assign visible_collection_index = visible_collection_index | plus: 1 %}
+              {% render 'loemies-collection-card',
+                collection_item: collection_item,
+                card_index: visible_collection_index,
+                image_sizes: collection_image_sizes,
+                show_descriptions: section.settings.show_descriptions,
+                show_product_counts: section.settings.show_product_counts
+              %}
+            {% endif %}
+          {% endfor %}
         {% endif %}
       </div>
-    </a>
-  {% endfor %}
-</div>
-
-{% stylesheet %}
-  .collections {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--collection-card-size), 100%), 1fr));
-    gap: var(--grid-gap);
-  }
-  .collections--compact {
-    --collection-card-size: 160px;
-  }
-  .collections--full {
-    --collection-card-size: 280px;
-  }
-  .collection-card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-{% endstylesheet %}
+    {% else %}
+      <div class="loemies-catalog__empty">
+        <h2>{{ 'sections.catalog.no_categories_heading' | t }}</h2>
+        <p>{{ 'sections.catalog.no_categories_text' | t }}</p>
+        <div class="loemies-catalog__empty-actions">
+          <a class="loemies-catalog__empty-primary" href="{{ routes.all_products_collection_url }}">{{ 'sections.catalog.browse_all' | t }}</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
 
 {% schema %}
 {
-  "name": "t:general.collections_grid",
+  "name": "Loemies category list",
   "settings": [
     {
-      "type": "select",
-      "id": "grid_item_width",
-      "label": "t:labels.grid_item_width",
-      "options": [
-        { "value": "collections--compact", "label": "t:options.size.small" },
-        { "value": "collections--full", "label": "t:options.size.large" }
-      ],
-      "default": "collections--full"
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Categories"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Shop by category"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Find the right kind of play for every little personality and stage.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "Show breadcrumbs",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_count",
+      "label": "Show category count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_descriptions",
+      "label": "Show collection descriptions",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_counts",
+      "label": "Show product counts",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_frontpage",
+      "label": "Hide the internal Home page collection",
+      "default": true
     },
     {
       "type": "range",
-      "id": "grid_gap",
-      "label": "t:labels.grid_gap",
-      "min": 0,
-      "max": 50,
-      "step": 5,
+      "id": "columns_desktop",
+      "label": "Desktop columns",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical spacing",
+      "min": 24,
+      "max": 96,
+      "step": 8,
       "unit": "px",
-      "default": 10
+      "default": 48
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#B04F38"
+    },
+    {
+      "type": "color",
+      "id": "accent_dark_color",
+      "label": "Accent hover",
+      "default": "#96432F"
+    },
+    {
+      "type": "color",
+      "id": "accent_soft_color",
+      "label": "Soft accent",
+      "default": "#F9E4DC"
     }
   ],
-  "presets": [{ "name": "t:general.collections_grid" }]
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "Category",
+      "limit": 12,
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies category list"
+    }
+  ]
 }
 {% endschema %}

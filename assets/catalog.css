@@ -1,0 +1,938 @@
+.loemies-catalog {
+  --catalog-border: color-mix(in srgb, var(--catalog-text) 14%, transparent);
+
+  display: grid;
+  grid-template-columns: var(--content-grid);
+  padding-block: var(--catalog-padding);
+  background: var(--catalog-background);
+  color: var(--catalog-text);
+}
+
+.loemies-catalog__inner {
+  width: min(100%, 67rem);
+  margin-inline: auto;
+  grid-column: 2;
+}
+
+.loemies-catalog__breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  /* Halved from 2.75rem: the breadcrumb is orientation, not a spacer, and
+     every pixel here pushes the first product row below the fold. */
+  margin-bottom: 1.35rem;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.loemies-catalog__breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.loemies-catalog__breadcrumb a:hover {
+  color: var(--catalog-accent);
+  text-decoration: underline;
+}
+
+.loemies-catalog__eyebrow {
+  margin: 0 0 0.45rem;
+  color: var(--catalog-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.loemies-catalog__title {
+  max-width: 22ch;
+  margin: 0;
+  color: var(--catalog-text);
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.loemies-catalog__intro-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: 0.6rem;
+}
+
+.loemies-catalog__description {
+  max-width: 47rem;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.loemies-catalog__description p + p {
+  margin-top: 0.75rem;
+}
+
+.loemies-catalog__count {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.82rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.loemies-catalog__divider {
+  height: 1px;
+  margin: 0.9rem 0 0.75rem;
+  background: var(--catalog-border);
+}
+
+.loemies-catalog__browse {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--catalog-border);
+  border-radius: 0.9rem 0.9rem 0 0;
+  background: var(--catalog-card);
+}
+
+.loemies-catalog__browse-heading {
+  display: contents;
+}
+
+.loemies-catalog__browse-label {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--catalog-text) 92%, transparent);
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.loemies-catalog__browse-scroll-hint {
+  display: none;
+}
+
+.loemies-catalog__browse-links {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  padding-bottom: 0.1rem;
+  scrollbar-width: thin;
+}
+
+.loemies-catalog__browse-links a {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--catalog-border);
+  border-radius: 999rem;
+  background: var(--catalog-card);
+  color: var(--catalog-text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.loemies-catalog__browse-links a:hover,
+.loemies-catalog__browse-links a.is-active {
+  border-color: var(--catalog-accent);
+  background: var(--catalog-accent-soft);
+  color: var(--catalog-accent-dark);
+}
+
+.loemies-catalog__filters {
+  width: 100%;
+}
+
+.loemies-catalog__filter-form {
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--catalog-border);
+  border-top: 0;
+  border-radius: 0 0 0.9rem 0.9rem;
+  background: color-mix(in srgb, var(--catalog-card) 82%, var(--catalog-background));
+}
+
+.loemies-catalog__filter-toggle {
+  display: flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--catalog-border);
+  border-radius: 0.75rem;
+  background: var(--catalog-card);
+  color: var(--catalog-text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 850;
+  list-style: none;
+}
+
+.loemies-catalog__filter-toggle::-webkit-details-marker,
+.loemies-catalog__filter-summary::-webkit-details-marker {
+  display: none;
+}
+
+.loemies-catalog__filter-toggle::after,
+.loemies-catalog__filter-summary::after {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-right: 0.12rem solid currentcolor;
+  border-bottom: 0.12rem solid currentcolor;
+  content: '';
+  transform: rotate(45deg) translateY(-0.15rem);
+  transition: transform 150ms ease;
+}
+
+.loemies-catalog__filters[open] > .loemies-catalog__filter-toggle::after,
+.loemies-catalog__filter-group[open] > .loemies-catalog__filter-summary::after {
+  transform: rotate(225deg) translate(-0.1rem, -0.1rem);
+}
+
+.loemies-catalog__filter-count {
+  display: inline-grid;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin-left: 0.25rem;
+  place-items: center;
+  border-radius: 99rem;
+  background: var(--catalog-accent-soft);
+  color: var(--catalog-accent-dark);
+  font-size: 0.75rem;
+}
+
+.loemies-catalog__filter-result-count {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.75rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.loemies-catalog__filter-panel {
+  padding: 0.75rem;
+  border: 1px solid var(--catalog-border);
+  border-top: 0;
+  border-radius: 0 0 0.75rem 0.75rem;
+  background: var(--catalog-card);
+}
+
+.loemies-catalog__filter-controls {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.loemies-catalog__filter-group {
+  min-width: 0;
+  border: 1px solid var(--catalog-border);
+  border-radius: 0.65rem;
+  background: var(--catalog-card);
+}
+
+.loemies-catalog__filter-summary {
+  display: flex;
+  min-height: 2.9rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--catalog-text);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.loemies-catalog__group-count {
+  display: inline-grid;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  margin-left: auto;
+  place-items: center;
+  border-radius: 99rem;
+  background: var(--catalog-accent-soft);
+  color: var(--catalog-accent-dark);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.loemies-catalog__filter-options {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.2rem 0.85rem 0.85rem;
+  border-top: 1px solid var(--catalog-border);
+}
+
+.loemies-catalog__filter-group:not([open]) > .loemies-catalog__filter-options {
+  display: none;
+}
+
+.loemies-catalog__filter-option {
+  display: grid;
+  min-height: 2rem;
+  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  color: var(--catalog-text);
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.loemies-catalog__filter-option:first-child {
+  margin-top: 0.6rem;
+}
+
+.loemies-catalog__filter-option input {
+  width: 1rem;
+  min-height: 1rem;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--catalog-accent);
+}
+
+.loemies-catalog__filter-option.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.loemies-catalog__filter-option-count {
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.72rem;
+}
+
+.loemies-catalog__sort-select {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.65rem 2.25rem 0.65rem 0.85rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background-color: transparent;
+  color: var(--catalog-text);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.loemies-catalog__sort-label {
+  display: block;
+  padding: 0.45rem 0.85rem 0;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.loemies-catalog__price-fields {
+  display: grid;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.55rem;
+  padding-top: 0.6rem;
+}
+
+.loemies-catalog__price-field {
+  display: grid;
+  gap: 0.25rem;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.loemies-catalog__price-field input {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.55rem 0.65rem;
+  border-color: var(--catalog-border);
+  border-radius: 0.5rem;
+}
+
+.loemies-catalog__price-separator {
+  padding-bottom: 0.65rem;
+  color: color-mix(in srgb, var(--catalog-text) 45%, transparent);
+}
+
+.loemies-catalog__filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.loemies-catalog__apply {
+  min-height: 2.75rem;
+  flex: 1;
+  padding: 0.65rem 1rem;
+  background: var(--catalog-accent);
+  border-color: var(--catalog-accent);
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+}
+
+.loemies-catalog__apply:hover {
+  background: var(--catalog-accent-dark);
+  border-color: var(--catalog-accent-dark);
+}
+
+/* Price is committed inside its own dropdown, next to the fields it applies
+   to. On mobile the panel-level Apply already covers it, so this copy only
+   exists from the tablet breakpoint up. */
+.loemies-catalog__apply--price {
+  display: none;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.loemies-catalog__reset {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.9rem;
+  color: var(--catalog-text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.loemies-catalog__active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.loemies-catalog__active-filter {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--catalog-accent) 32%, transparent);
+  border-radius: 99rem;
+  background: var(--catalog-accent-soft);
+  color: var(--catalog-text);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.loemies-catalog__active-filter:hover {
+  border-color: var(--catalog-accent);
+}
+
+.loemies-catalog__active-filter span {
+  color: var(--catalog-accent);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.loemies-catalog__product-grid,
+.loemies-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--catalog-columns), minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+  /* Breathing room when catalog.js scrolls the results into view after a
+     filter or sort change. */
+  scroll-margin-top: 1rem;
+}
+
+.loemies-catalog__empty {
+  margin-top: 1.5rem;
+  scroll-margin-top: 1rem;
+  padding: clamp(2.5rem, 7vw, 5rem) 1.5rem;
+  border: 1px dashed color-mix(in srgb, var(--catalog-accent) 45%, var(--catalog-border));
+  border-radius: 1rem;
+  background: var(--catalog-card);
+  text-align: center;
+}
+
+.loemies-catalog__empty h2 {
+  color: var(--catalog-text);
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+}
+
+.loemies-catalog__empty p {
+  max-width: 38rem;
+  margin: 0.65rem auto 0;
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+}
+
+.loemies-catalog__empty a {
+  color: var(--catalog-accent);
+  font-weight: 800;
+}
+
+.loemies-catalog__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1.25rem;
+}
+
+.loemies-catalog__empty-actions a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--catalog-border);
+  border-radius: 99rem;
+  background: var(--catalog-card);
+  color: var(--catalog-text);
+  text-decoration: none;
+}
+
+.loemies-catalog__empty-actions a:hover {
+  border-color: var(--catalog-accent);
+}
+
+.loemies-catalog__empty-actions .loemies-catalog__empty-primary {
+  border-color: var(--catalog-accent);
+  background: var(--catalog-accent);
+  color: #fff;
+}
+
+.loemies-catalog__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 2.75rem;
+}
+
+.loemies-catalog__pagination a,
+.loemies-catalog__pagination span {
+  display: inline-grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding: 0.45rem;
+  border: 1px solid var(--catalog-border);
+  border-radius: 0.65rem;
+  background: var(--catalog-card);
+  color: var(--catalog-text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.loemies-catalog__pagination a:hover,
+.loemies-catalog__pagination .is-current {
+  border-color: var(--catalog-accent);
+  background: var(--catalog-accent-soft);
+  color: var(--catalog-accent-dark);
+}
+
+.loemies-collection-card {
+  min-width: 0;
+}
+
+.loemies-collection-card__link {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--catalog-border);
+  border-radius: 1rem;
+  background: var(--catalog-card);
+  box-shadow: 0 0.0625rem 0.125rem rgba(43, 36, 31, 0.06);
+  color: var(--catalog-text);
+  text-decoration: none;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.loemies-collection-card__link:hover {
+  border-color: var(--catalog-accent);
+  transform: translateY(-0.15rem);
+}
+
+.loemies-collection-card__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--catalog-accent-soft);
+}
+
+.loemies-collection-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 250ms ease;
+}
+
+.loemies-collection-card__link:hover .loemies-collection-card__image {
+  transform: scale(1.025);
+}
+
+.loemies-collection-card__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 24% 22%, #f7dc8d 0 11%, transparent 11.5%),
+    radial-gradient(circle at 76% 74%, #c4e4c9 0 20%, transparent 20.5%),
+    var(--catalog-accent-soft);
+}
+
+.loemies-collection-card__fallback::before {
+  width: 38%;
+  aspect-ratio: 1;
+  border: 0.18rem solid var(--catalog-text);
+  border-radius: 48% 52% 42% 58%;
+  content: '';
+  transform: rotate(12deg);
+}
+
+.loemies-collection-card__content {
+  display: grid;
+  flex: 1;
+  gap: 0.45rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+}
+
+.loemies-collection-card__title {
+  margin: 0;
+  color: var(--catalog-text);
+  font-size: 1.08rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.loemies-collection-card__description {
+  color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.loemies-collection-card__count {
+  padding-top: 0.2rem;
+  color: var(--catalog-accent);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.loemies-collection-card__action {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  align-self: end;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
+  color: var(--catalog-text);
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.loemies-collection-card__action span {
+  color: var(--catalog-accent);
+  transition: transform 150ms ease;
+}
+
+.loemies-collection-card__link:hover .loemies-collection-card__action span {
+  transform: translateX(0.2rem);
+}
+
+.loemies-catalog .loemies-product-card__title {
+  color: var(--catalog-text);
+}
+
+@media (min-width: 48rem) {
+  .loemies-catalog__filter-toggle {
+    display: none;
+  }
+
+  .loemies-catalog__filters > .loemies-catalog__filter-panel {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .loemies-catalog__filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .loemies-catalog__filter-group {
+    position: relative;
+    min-width: 9.5rem;
+    border-radius: 999rem;
+  }
+
+  .loemies-catalog__filter-group--sort {
+    margin-left: auto;
+    min-width: 11rem;
+  }
+
+  .loemies-catalog__filter-group--sort .loemies-catalog__sort-label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .loemies-catalog__filter-summary,
+  .loemies-catalog__sort-select {
+    min-height: 2.75rem;
+    border-radius: 999rem;
+  }
+
+  .loemies-catalog__filter-options {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.45rem);
+    left: 0;
+    width: max(100%, 15rem);
+    max-height: 20rem;
+    overflow-y: auto;
+    padding: 0.2rem 0.85rem 0.85rem;
+    border: 1px solid var(--catalog-border);
+    border-radius: 0.65rem;
+    background: var(--catalog-card);
+    box-shadow: 0 0.75rem 2rem rgba(43, 36, 31, 0.12);
+  }
+
+  .loemies-catalog__filter-options--price {
+    width: 18rem;
+  }
+
+  .loemies-catalog__filter-actions {
+    margin-top: 0;
+  }
+
+  .loemies-catalog__apply {
+    flex: 0 0 auto;
+  }
+
+  .loemies-catalog__apply--price {
+    display: block;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.78rem;
+  }
+
+  /* With JS, every desktop control commits itself: checkbox facets and sort
+     submit on change, price submits from inside its dropdown. The detached
+     toolbar Apply would only be a button that appears to do nothing, so it is
+     hidden — but only once catalog.js has flagged the form, so a no-JS
+     shopper keeps a working Apply. */
+  .loemies-catalog__filter-form[data-catalog-enhanced] .loemies-catalog__apply--toolbar {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 67.99rem) {
+  .loemies-catalog__product-grid,
+  .loemies-collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .loemies-catalog {
+    /* Phone screens spend this padding twice over — once here and once under
+       the site header — so the multiplier and the floor both come down a
+       step. Still generous, just not two thumb-scrolls of nothing. */
+    padding-block: max(1.5rem, calc(var(--catalog-padding) * 0.55));
+  }
+
+  .loemies-catalog__breadcrumb {
+    margin-bottom: 1rem;
+  }
+
+  .loemies-catalog__title {
+    font-size: 2rem;
+  }
+
+  .loemies-catalog__intro-row {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .loemies-catalog__divider {
+    margin: 0.75rem 0 0.6rem;
+  }
+
+  .loemies-catalog__browse {
+    position: relative;
+    display: block;
+    margin-inline: -1rem;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .loemies-catalog__filter-form {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .loemies-catalog__browse-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 1rem 0.5rem;
+  }
+
+  .loemies-catalog__browse-label {
+    display: block;
+    margin: 0;
+  }
+
+  .loemies-catalog__browse-scroll-hint {
+    display: inline;
+    color: color-mix(in srgb, var(--catalog-text) 88%, transparent);
+    font-size: 0.7rem;
+    font-weight: 750;
+  }
+
+  .loemies-catalog__browse:not(.is-overflowing) .loemies-catalog__browse-scroll-hint,
+  .loemies-catalog__browse.has-reached-end .loemies-catalog__browse-scroll-hint {
+    visibility: hidden;
+  }
+
+  .loemies-catalog__browse-links {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0 1rem 0.35rem;
+    scrollbar-width: thin;
+    scroll-padding-inline: 1rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .loemies-catalog__browse-links a {
+    min-height: 2.75rem;
+    scroll-snap-align: start;
+  }
+
+  .loemies-catalog__filter-option,
+  .loemies-catalog__active-filter {
+    min-height: 2.75rem;
+  }
+
+  .loemies-catalog__browse.is-overflowing:not(.has-reached-end)::after {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: 0.35rem;
+    width: 2rem;
+    height: 2.25rem;
+    background: linear-gradient(90deg, transparent, var(--catalog-background));
+    content: '';
+    pointer-events: none;
+  }
+
+  .loemies-catalog__filters[open] > .loemies-catalog__filter-panel {
+    display: block;
+  }
+
+  .loemies-catalog__filters:not([open]) > .loemies-catalog__filter-panel {
+    display: none;
+  }
+
+  .loemies-catalog__filter-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .loemies-catalog__reset {
+    min-height: 2.25rem;
+  }
+
+  .loemies-catalog__product-grid,
+  .loemies-collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .loemies-collection-card__content {
+    gap: 0.3rem;
+    padding: 0.8rem 0.85rem 0.95rem;
+  }
+
+  .loemies-collection-card__title {
+    font-size: 0.95rem;
+  }
+
+  .loemies-collection-card__description {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .loemies-collection-card__action {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 23rem) {
+  .loemies-catalog__product-grid,
+  .loemies-collection-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loemies-catalog__filter-toggle::after,
+  .loemies-catalog__filter-summary::after,
+  .loemies-collection-card__link,
+  .loemies-collection-card__image,
+  .loemies-collection-card__action span {
+    transition: none;
+  }
+}
+
+/* Mobile fold reclaim (audit follow-up): the eyebrow duplicates the H1's
+   context and the description can run long — hide one, clamp the other so
+   the first product row lands higher on small screens. */
+@media (max-width: 47.99rem) {
+  .loemies-catalog__eyebrow {
+    display: none;
+  }
+
+  .loemies-catalog__description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}

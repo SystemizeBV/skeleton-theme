@@ -1,37 +1,1178 @@
 {% comment %}
-  This section is used in the cart template to render /cart page with an
-  overview of the items in customer's cart.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/cart
+  Branded Loemies cart with native Shopify cart submission, complete line-item
+  metadata, and progressive quantity controls.
 {% endcomment %}
 
-<h1>{{ 'cart.title' | t }}</h1>
+{% liquid
+  assign cart_form_id = 'CartForm-' | append: section.id
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+  assign continue_url = section.settings.continue_link
+  if continue_url == blank
+    assign continue_url = catalog_url
+  endif
 
-<form action="{{ routes.cart_url }}" method="post">
-  <table>
-    {% for item in cart.items %}
-      <tr>
-        <td>
-          {% render 'image', image: item.image, url: item.url %}
-        </td>
-        <td>
-          <p>{{ item.product.title }}</p>
-          {{ 'cart.remove' | t | link_to: item.url_to_remove }}
-        </td>
-        <td>
-          <input type="text" name="updates[]" value="{{ item.quantity }}">
-          <input type="submit" value="{{ 'cart.update' | t }}">
-        </td>
-      </tr>
-    {% endfor %}
-  </table>
+  assign empty_url = section.settings.empty_button_link
+  if empty_url == blank
+    assign empty_url = catalog_url
+  endif
 
-  <input type="submit" name="checkout" value="{{ 'cart.checkout' | t }}">
-</form>
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign cart_heading = section.settings.heading | escape
+  if section.settings.heading == blank or section.settings.heading == 'Cart'
+    assign cart_heading = 'cart.title' | t
+  endif
+
+  assign cart_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'Shop'
+    assign cart_eyebrow = 'cart.content.eyebrow' | t
+  endif
+
+  assign cart_intro = section.settings.intro | escape
+  if section.settings.intro == blank or section.settings.intro == 'Prices and availability are checked live — safe and transparent.'
+    assign cart_intro = 'cart.content.intro' | t
+  endif
+
+  assign continue_label = section.settings.continue_label | escape
+  if section.settings.continue_label == blank or section.settings.continue_label == 'Continue shopping'
+    assign continue_label = 'cart.content.continue_shopping' | t
+  endif
+
+  assign summary_heading = section.settings.summary_heading | escape
+  if section.settings.summary_heading == blank or section.settings.summary_heading == 'Order summary'
+    assign summary_heading = 'cart.content.summary_heading' | t
+  endif
+
+  assign shipping_message = section.settings.shipping_message | escape
+  if section.settings.shipping_message == blank or section.settings.shipping_message == 'Carefully packed and ready for its new home.'
+    assign shipping_message = 'cart.content.shipping_message' | t: threshold: settings.free_shipping_threshold
+  endif
+
+  comment
+    Dynamic free-shipping progress. The numeric threshold setting powers this;
+    the legacy text setting (free_shipping_threshold) stays for other sections.
+  endcomment
+  assign free_shipping_threshold_cents = 0
+  if settings.free_shipping_enabled
+    assign free_shipping_threshold_cents = settings.free_shipping_threshold_amount | default: 0 | times: 100
+  else
+    assign shipping_message = 'sections.promises.tracked_shipping_detail' | t
+  endif
+  assign free_shipping_unlocked = false
+  assign free_shipping_remaining_money = ''
+  if free_shipping_threshold_cents > 0
+    if cart.total_price >= free_shipping_threshold_cents
+      assign free_shipping_unlocked = true
+    else
+      assign free_shipping_remaining_money = free_shipping_threshold_cents | minus: cart.total_price | money
+    endif
+  endif
+
+  assign note_label = section.settings.note_label | escape
+  if section.settings.note_label == blank or section.settings.note_label == 'Add a note to your order'
+    assign note_label = 'cart.content.note_label' | t
+  endif
+
+  assign note_placeholder = section.settings.note_placeholder | escape
+  if section.settings.note_placeholder == blank or section.settings.note_placeholder == 'Gift message, delivery note, or anything else we should know…'
+    assign note_placeholder = 'cart.content.note_placeholder' | t
+  endif
+
+  assign checkout_reassurance = section.settings.checkout_reassurance | escape
+  if section.settings.checkout_reassurance == blank or section.settings.checkout_reassurance == 'Secure checkout · Encrypted payment'
+    assign checkout_reassurance = 'cart.content.checkout_reassurance' | t
+  endif
+
+  assign quantity_update_message = section.settings.quantity_update_message | escape
+  if section.settings.quantity_update_message == blank or section.settings.quantity_update_message == 'Quantity changed. Select Update cart to refresh your total.'
+    assign quantity_update_message = 'cart.quantity_update_message' | t
+  endif
+
+  assign empty_heading = section.settings.empty_heading | escape
+  if section.settings.empty_heading == blank or section.settings.empty_heading == 'Your cart is ready for something lovely'
+    assign empty_heading = 'cart.content.empty_heading' | t
+  endif
+
+  assign empty_text = section.settings.empty_text | escape
+  if section.settings.empty_text == blank or section.settings.empty_text == 'Discover thoughtful toys, playful storage, and little favorites made for growing imaginations.'
+    assign empty_text = 'cart.content.empty_text' | t
+  endif
+
+  assign empty_button_label = section.settings.empty_button_label | escape
+  if section.settings.empty_button_label == blank or section.settings.empty_button_label == 'Discover our collection'
+    assign empty_button_label = 'cart.content.empty_button' | t
+  endif
+
+  assign cart_upsell_block = false
+  for block in section.blocks
+    if block.type == 'upsell'
+      assign cart_upsell_block = block
+      break
+    endif
+  endfor
+%}
+
+<script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
+
+<loemies-cart
+  class="loemies-cart full-width"
+  data-section-id="{{ section.id }}"
+  data-money-format="{{ shop.money_format | strip_html | escape }}"
+  data-quantity-message="{{ quantity_update_message }}"
+  data-upsell-error="{{ 'products.upsell.error' | t }}"
+  data-updated-message="{{ 'cart.updated' | t }}"
+  data-error-message="{{ 'cart.update_error' | t }}"
+  data-cart-label-template="{{ 'general.accessibility.cart_count' | t: count: '__COUNT__' }}"
+  style="
+    --cart-background: {{ section.settings.background_color }};
+    --cart-card: {{ section.settings.card_color }};
+    --cart-accent: {{ section.settings.accent_color }};
+    --cart-accent-soft: {{ section.settings.accent_soft_color }};
+    --cart-text: {{ section.settings.text_color }};
+    --cart-padding-top: {{ section.settings.padding_top }}px;
+    --cart-padding-bottom: {{ section.settings.padding_bottom }}px;
+  "
+>
+  <div class="loemies-cart__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="loemies-cart__breadcrumbs" aria-label="{{ 'general.accessibility.breadcrumb' | t }}">
+        <a href="{{ routes.root_url }}">{{ 'cart.home' | t }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ cart_heading }}</span>
+      </nav>
+    {% endif %}
+
+    <header class="loemies-cart__header">
+      <div class="loemies-cart__heading-group">
+        {% if cart_eyebrow != blank %}
+          <p class="loemies-cart__eyebrow">{{ cart_eyebrow }}</p>
+        {% endif %}
+        <div class="loemies-cart__title-row">
+          <h1 class="loemies-cart__title">{{ cart_heading }}</h1>
+          {% if cart.item_count > 0 %}
+            <span class="loemies-cart__count">
+              {{ 'cart.item_count' | t: count: cart.item_count }}
+            </span>
+          {% endif %}
+        </div>
+        {% if cart_intro != blank %}
+          <p class="loemies-cart__intro">{{ cart_intro }}</p>
+        {% endif %}
+      </div>
+
+      {% if cart.item_count > 0 and continue_label != blank %}
+        <a class="loemies-cart__continue" href="{{ continue_url }}">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="m11.8 4.5-5.5 5.5 5.5 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>{{ continue_label }}</span>
+        </a>
+      {% endif %}
+    </header>
+
+    {% if cart.item_count > 0 %}
+      <form
+        class="loemies-cart__form"
+        action="{{ routes.cart_url }}"
+        method="post"
+        id="{{ cart_form_id }}"
+      >
+        <section class="loemies-cart__items" aria-labelledby="CartItemsHeading-{{ section.id }}">
+          <div class="loemies-cart__items-heading">
+            <h2 id="CartItemsHeading-{{ section.id }}">{{ 'cart.selection_heading' | t }}</h2>
+            <p>{{ 'cart.selection_intro' | t }}</p>
+          </div>
+
+          <p
+            class="loemies-cart__status"
+            id="CartStatus-{{ section.id }}"
+            data-cart-status
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          ></p>
+
+          <div class="loemies-cart__lines">
+            {% for item in cart.items %}
+              {% liquid
+                assign item_title = item.product.title | default: item.title
+                assign item_alt = item.image.alt | default: item_title
+                assign item_price_money = item.final_price | money
+                assign image_loading = 'lazy'
+                if forloop.first
+                  assign image_loading = 'eager'
+                endif
+
+                assign quantity_min = item.variant.quantity_rule.min | default: 1
+                assign quantity_step = item.variant.quantity_rule.increment | default: 1
+                assign quantity_max = item.variant.quantity_rule.max
+                assign storefront_quantity_cap = settings.max_items_per_product | default: 10
+                if quantity_max == blank or quantity_max > storefront_quantity_cap
+                  assign quantity_max = storefront_quantity_cap
+                endif
+                assign can_update_quantity = true
+                assign can_remove = true
+                if item.instructions.can_update_quantity == false
+                  assign can_update_quantity = false
+                endif
+                if item.instructions.can_remove == false
+                  assign can_remove = false
+                endif
+
+                assign item_is_child = false
+                if item.parent_relationship != blank
+                  assign item_is_child = true
+                endif
+              %}
+
+              <article
+                class="loemies-cart__line{% if item_is_child %} is-child{% endif %}"
+                data-cart-line
+                data-line="{{ forloop.index }}"
+                data-key="{{ item.key | escape }}"
+              >
+                <div class="loemies-cart__media">
+                  {% if item.image != blank %}
+                    {% render 'image',
+                      image: item.image,
+                      url: item.url,
+                      width: 360,
+                      widths: '88, 112, 176, 224, 288, 360',
+                      sizes: '(min-width: 768px) 112px, 88px',
+                      loading: image_loading,
+                      fetchpriority: 'low',
+                      alt: item_alt
+                    %}
+                  {% else %}
+                    <span class="loemies-cart__media-placeholder" aria-hidden="true">
+                      <svg viewBox="0 0 48 48" fill="none">
+                        <path d="M14 17.5h20v19H14zM18.5 17.5a5.5 5.5 0 0 1 11 0" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="m18 28 4-4 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  {% endif %}
+                </div>
+
+                <div class="loemies-cart__details">
+                  {% if item.product.vendor != blank and section.settings.show_vendor %}
+                    <p class="loemies-cart__vendor">{{ item.product.vendor | escape }}</p>
+                  {% endif %}
+
+                  <h3 class="loemies-cart__product-title">
+                    {% if item.url != blank %}
+                      <a href="{{ item.url }}">{{ item_title | escape }}</a>
+                    {% else %}
+                      {{ item_title | escape }}
+                    {% endif %}
+                  </h3>
+
+                  {% unless item.product.has_only_default_variant %}
+                    <dl class="loemies-cart__options">
+                      {% for option in item.options_with_values %}
+                        <div>
+                          <dt>{{ option.name | escape }}:</dt>
+                          <dd>{{ option.value | escape }}</dd>
+                        </div>
+                      {% endfor %}
+                    </dl>
+                  {% endunless %}
+
+                  {% if item.selling_plan_allocation != blank %}
+                    <p class="loemies-cart__selling-plan">
+                      {{ item.selling_plan_allocation.selling_plan.name | escape }}
+                    </p>
+                  {% endif %}
+
+                  {% assign visible_properties = false %}
+                  {% for property in item.properties %}
+                    {% assign property_first_character = property.first | slice: 0 %}
+                    {% if property.last != blank and property_first_character != '_' %}
+                      {% assign visible_properties = true %}
+                    {% endif %}
+                  {% endfor %}
+                  {% if visible_properties %}
+                    <dl class="loemies-cart__properties">
+                      {% for property in item.properties %}
+                        {% assign property_first_character = property.first | slice: 0 %}
+                        {% if property.last != blank and property_first_character != '_' %}
+                          <div>
+                            <dt>{{ property.first | escape }}:</dt>
+                            <dd>
+                              {% if property.last contains '/uploads/' %}
+                                <a href="{{ property.last }}" target="_blank">
+                                  {{ property.last | split: '/' | last | escape }}
+                                </a>
+                              {% else %}
+                                {{ property.last | escape }}
+                              {% endif %}
+                            </dd>
+                          </div>
+                        {% endif %}
+                      {% endfor %}
+                    </dl>
+                  {% endif %}
+
+                  <div class="loemies-cart__unit-price-row">
+                    {% if item.original_price != item.final_price %}
+                      <s>{{ item.original_price | money }}</s>
+                    {% endif %}
+                    <span>{{ 'cart.each' | t: price: item_price_money }}</span>
+                  </div>
+
+                  {% if item.unit_price_measurement %}
+                    <p class="loemies-cart__unit-measurement">
+                      {{ item.unit_price | money }} /
+                      {% if item.unit_price_measurement.reference_value != 1 %}
+                        {{ item.unit_price_measurement.reference_value }}
+                      {% endif %}
+                      {{ item.unit_price_measurement.reference_unit }}
+                    </p>
+                  {% endif %}
+
+                  {% if item.line_level_discount_allocations.size > 0 %}
+                    <ul class="loemies-cart__discounts" role="list">
+                      {% for discount_allocation in item.line_level_discount_allocations %}
+                        <li>
+                          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path d="M3.5 5.5v4.2l6.8 6.8 6.2-6.2-6.8-6.8H5.5a2 2 0 0 0-2 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                          </svg>
+                          <span>{{ discount_allocation.discount_application.title | escape }}</span>
+                          <span>-{{ discount_allocation.amount | money }}</span>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+
+                  {% if item.error_message != blank %}
+                    <p class="loemies-cart__line-error" role="alert">{{ item.error_message | escape }}</p>
+                  {% endif %}
+                </div>
+
+                <div class="loemies-cart__line-total">
+                  <span class="visually-hidden">{{ 'cart.line_total' | t }}</span>
+                  {% if item.original_line_price != item.final_line_price %}
+                    <s>{{ item.original_line_price | money }}</s>
+                  {% endif %}
+                  <strong>{{ item.final_line_price | money }}</strong>
+                </div>
+
+                <div class="loemies-cart__line-actions">
+                  <div class="loemies-cart__quantity-wrap">
+                    <span class="loemies-cart__quantity-label">{{ 'cart.quantity' | t }}</span>
+                    {% if can_update_quantity %}
+                      <div class="loemies-cart__quantity" data-cart-quantity>
+                        <button
+                          type="button"
+                          data-cart-quantity-button
+                          data-direction="-1"
+                          aria-label="{{ 'cart.decrease_quantity' | t: product: item_title }}"
+                          {% if item.quantity <= quantity_min %}disabled{% endif %}
+                        >
+                          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M3 8h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+                        <input
+                          id="CartQuantity-{{ section.id }}-{{ forloop.index }}"
+                          type="number"
+                          name="updates[{{ item.key }}]"
+                          value="{{ item.quantity }}"
+                          min="{{ quantity_min }}"
+                          step="{{ quantity_step }}"
+                          {% if quantity_max != blank %}max="{{ quantity_max }}"{% endif %}
+                          inputmode="numeric"
+                          autocomplete="off"
+                          aria-label="{{ 'cart.quantity_for' | t: product: item_title }}"
+                          aria-describedby="CartStatus-{{ section.id }}"
+                          data-cart-quantity-input
+                        >
+                        <button
+                          type="button"
+                          data-cart-quantity-button
+                          data-direction="1"
+                          aria-label="{{ 'cart.increase_quantity' | t: product: item_title }}"
+                          {% if quantity_max != blank and item.quantity >= quantity_max %}disabled{% endif %}
+                        >
+                          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    {% else %}
+                      <span class="loemies-cart__fixed-quantity">{{ item.quantity }}</span>
+                      <input type="hidden" name="updates[{{ item.key }}]" value="{{ item.quantity }}">
+                    {% endif %}
+                  </div>
+
+                  {% if can_remove %}
+                    <a class="loemies-cart__remove" href="{{ item.url_to_remove }}" data-cart-remove>
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M4.5 6h11M8 3.5h4M6.5 6l.6 10h5.8l.6-10M8.4 8.5v5M11.6 8.5v5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>{{ 'cart.remove' | t }}</span>
+                    </a>
+                  {% endif %}
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+
+        {% comment %}
+          Direct grid child of the form so the summary can be ordered before it
+          on small screens (checkout access beats cross-sell).
+        {% endcomment %}
+        {% if cart_upsell_block %}
+          {% liquid
+            assign cart_upsell_eyebrow = cart_upsell_block.settings.eyebrow | escape
+            if cart_upsell_block.settings.eyebrow == blank or cart_upsell_block.settings.eyebrow == 'Complete the play'
+              assign cart_upsell_eyebrow = 'cart.upsell.eyebrow' | t
+            endif
+            assign cart_upsell_heading = cart_upsell_block.settings.heading | escape
+            if cart_upsell_block.settings.heading == blank or cart_upsell_block.settings.heading == 'A useful addition'
+              assign cart_upsell_heading = 'cart.upsell.heading' | t
+            endif
+            assign cart_upsell_text = cart_upsell_block.settings.text | escape
+            if cart_upsell_block.settings.text == blank or cart_upsell_block.settings.text == 'Chosen to complement what is already in your cart.'
+              assign cart_upsell_text = 'cart.upsell.text' | t
+            endif
+
+            comment
+              Products whose titles match up to the first ":" (e.g. "Kids' Cocoon
+              Swing: Cow Print") belong to one family; a family already in the cart
+              or already recommended is never offered again.
+            endcomment
+            assign cart_product_handles = '|'
+            assign cart_family_keys = '|'
+            assign cart_source_product_ids = ''
+            for item in cart.items
+              assign cart_product_handles = cart_product_handles | append: item.product.handle | append: '|'
+              assign item_family_key = item.product.title | default: item.title | split: ':' | first | strip | downcase
+              assign cart_family_keys = cart_family_keys | append: item_family_key | append: '|'
+              unless item.product.metafields.custom.disable_upsells.value
+                if cart_source_product_ids != blank
+                  assign cart_source_product_ids = cart_source_product_ids | append: ','
+                endif
+                assign cart_source_product_ids = cart_source_product_ids | append: item.product.id
+              endunless
+            endfor
+
+            assign rendered_upsell_handles = '|'
+            assign rendered_upsell_families = '|'
+            assign cart_upsell_count = 0
+            capture cart_upsell_cards
+              for recommendation_round in (1..3)
+                if cart_upsell_count >= cart_upsell_block.settings.maximum
+                  break
+                endif
+
+                for item in cart.items
+                  if cart_upsell_count >= cart_upsell_block.settings.maximum
+                    break
+                  endif
+
+                  unless item.product.metafields.custom.disable_upsells.value
+                    assign item_upsells = item.product.metafields['shopify--discovery--product_recommendation'].complementary_products.value
+                    if item_upsells == blank
+                      assign item_upsells = item.product.metafields.custom.upsell_products.value
+                    endif
+
+                    assign item_upsell_selected = false
+                    for upsell_product in item_upsells
+                      unless item_upsell_selected
+                        assign upsell_key = upsell_product.handle | prepend: '|' | append: '|'
+                        assign upsell_family = upsell_product.title | split: ':' | first | strip | downcase
+                        assign upsell_family_key = upsell_family | prepend: '|' | append: '|'
+                        unless cart_product_handles contains upsell_key or rendered_upsell_handles contains upsell_key or cart_family_keys contains upsell_family_key or rendered_upsell_families contains upsell_family_key
+                          if upsell_product.available
+                            render 'loemies-upsell-card', upsell_product: upsell_product, context: 'cart', enable_quick_add: cart_upsell_block.settings.quick_add, source_product_id: item.product.id
+                            assign rendered_upsell_handles = rendered_upsell_handles | append: upsell_product.handle | append: '|'
+                            assign rendered_upsell_families = rendered_upsell_families | append: upsell_family | append: '|'
+                            assign cart_upsell_count = cart_upsell_count | plus: 1
+                            assign item_upsell_selected = true
+                          endif
+                        endunless
+                      endunless
+                    endfor
+                  endunless
+                endfor
+              endfor
+            endcapture
+          %}
+
+          <section
+            class="loemies-upsell loemies-upsell--cart"
+            aria-labelledby="CartUpsellHeading-{{ section.id }}"
+            data-cart-upsells
+            data-maximum="{{ cart_upsell_block.settings.maximum }}"
+            data-source-product-ids="{{ cart_source_product_ids }}"
+            data-cart-product-handles="{{ cart_product_handles | escape }}"
+            data-cart-family-keys="{{ cart_family_keys | escape }}"
+            data-automatic-fallback="{{ cart_upsell_block.settings.automatic_fallback }}"
+            data-quick-add="{{ cart_upsell_block.settings.quick_add }}"
+            data-currency="{{ cart.currency.iso_code | default: localization.country.currency.iso_code | escape }}"
+            data-from-price-template="{{ 'products.card.from_price' | t: price: '__PRICE__' }}"
+            style="--upsell-background: {{ cart_upsell_block.settings.background }}; --upsell-text: {{ cart_upsell_block.settings.text_color }}; --upsell-accent: {{ cart_upsell_block.settings.accent }};"
+            {% if cart_upsell_count == 0 %}hidden{% endif %}
+            {{ cart_upsell_block.shopify_attributes }}
+          >
+            <header class="loemies-upsell__header">
+              {% if cart_upsell_eyebrow != blank %}
+                <p class="loemies-upsell__eyebrow">{{ cart_upsell_eyebrow }}</p>
+              {% endif %}
+              <h2 id="CartUpsellHeading-{{ section.id }}">{{ cart_upsell_heading }}</h2>
+              {% if cart_upsell_text != blank %}
+                <p>{{ cart_upsell_text }}</p>
+              {% endif %}
+            </header>
+            <div class="loemies-upsell__cards" data-cart-upsell-cards>
+              {{ cart_upsell_cards }}
+            </div>
+
+            <template data-cart-upsell-template>
+              <article class="loemies-upsell-card" data-upsell-handle="">
+                <a class="loemies-upsell-card__image-link" href="" aria-label="" data-upsell-link>
+                  <div class="loemies-upsell-card__image-wrap">
+                    <img
+                      class="loemies-upsell-card__image"
+                      src="{{ 'favicon.svg' | asset_url }}"
+                      width="160"
+                      height="160"
+                      loading="lazy"
+                      alt=""
+                      data-upsell-image
+                    >
+                  </div>
+                </a>
+                <div class="loemies-upsell-card__content">
+                  <p class="loemies-upsell-card__detail" data-upsell-detail hidden></p>
+                  <h3><a href="" data-upsell-title></a></h3>
+                  <p class="loemies-upsell-card__price" data-upsell-price></p>
+                </div>
+                <div class="loemies-upsell-card__action">
+                  <button
+                    type="button"
+                    data-cart-upsell-add
+                    data-variant-id=""
+                    data-loading-label="{{ 'products.upsell.adding' | t }}"
+                  >
+                    {{ 'products.upsell.add' | t }}
+                  </button>
+                  <a href="" data-upsell-options hidden>{{ 'products.card.choose_options' | t }}</a>
+                </div>
+              </article>
+            </template>
+          </section>
+        {% endif %}
+
+        <aside class="loemies-cart__summary" aria-labelledby="CartSummaryHeading-{{ section.id }}">
+          <div class="loemies-cart__summary-card">
+            <div class="loemies-cart__summary-heading">
+              <span class="loemies-cart__summary-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M6.5 8.5h11l-1 11h-9l-1-11Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                  <path d="M9 9V7a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <div>
+                <p>{{ 'cart.summary_eyebrow' | t }}</p>
+                <h2 id="CartSummaryHeading-{{ section.id }}">{{ summary_heading }}</h2>
+              </div>
+            </div>
+
+            {% if free_shipping_threshold_cents > 0 or shipping_message != blank %}
+              <div class="loemies-cart__shipping-note{% if free_shipping_unlocked %} is-unlocked{% endif %}">
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M3.5 6.5h11v10h-11zM14.5 10h3.3l2.7 3v3.5h-6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17" r="1.8" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                </span>
+                <p>
+                  {%- if free_shipping_threshold_cents > 0 -%}
+                    {%- if free_shipping_unlocked -%}
+                      {{ 'cart.free_shipping_unlocked' | t }}
+                    {%- else -%}
+                      {%- liquid
+                        # Braces inside {{ }} outputs trip Shopify's parser, so the
+                        # "{amount}" placeholder is assembled in a tag instead.
+                        assign amount_open = '{'
+                        assign amount_placeholder = amount_open | append: 'amount}'
+                        assign free_shipping_note = 'cart.free_shipping_remaining' | t | replace: amount_placeholder, free_shipping_remaining_money
+                      -%}
+                      {{ free_shipping_note }}
+                    {%- endif -%}
+                  {%- else -%}
+                    {{ shipping_message }}
+                  {%- endif -%}
+                </p>
+              </div>
+            {% endif %}
+
+            <div class="loemies-cart__totals">
+              <div class="loemies-cart__total-row">
+                <span>{{ 'cart.subtotal' | t }}</span>
+                <strong>{{ cart.items_subtotal_price | money }}</strong>
+              </div>
+
+              {% for discount_application in cart.cart_level_discount_applications %}
+                <div class="loemies-cart__total-row is-discount">
+                  <span>{{ discount_application.title | escape }}</span>
+                  <strong>-{{ discount_application.total_allocated_amount | money }}</strong>
+                </div>
+              {% endfor %}
+
+              <div class="loemies-cart__total-row is-grand-total">
+                <span>{{ 'cart.estimated_total' | t }}</span>
+                <strong>{{ cart.total_price | money_with_currency }}</strong>
+              </div>
+            </div>
+
+            <p class="loemies-cart__tax-note">
+              {% if cart.taxes_included and cart.duties_included %}
+                {{ 'cart.taxes_duties_included' | t }}
+              {% elsif cart.taxes_included %}
+                {{ 'cart.taxes_included' | t }}
+              {% elsif cart.duties_included %}
+                {{ 'cart.duties_included' | t }}
+              {% endif %}
+              {% if shop.shipping_policy.body != blank %}
+                {{ 'cart.shipping_calculated' | t }}
+                <a href="{{ shop.shipping_policy.url }}">{{ 'cart.view_shipping_policy' | t }}</a>.
+              {% else %}
+                {{ 'cart.shipping_taxes_calculated' | t }}
+              {% endif %}
+            </p>
+
+            {% if section.settings.show_order_note %}
+              <details class="loemies-cart__note">
+                <summary>
+                  <span>{{ note_label }}</span>
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </summary>
+                <label class="visually-hidden" for="CartNote-{{ section.id }}">
+                  {{ note_label }}
+                </label>
+                <textarea
+                  id="CartNote-{{ section.id }}"
+                  name="note"
+                  form="{{ cart_form_id }}"
+                  placeholder="{{ note_placeholder }}"
+                >{{ cart.note | escape }}</textarea>
+              </details>
+            {% endif %}
+
+            <div class="loemies-cart__actions">
+              <button class="loemies-cart__update" type="submit" name="update">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M15.5 7.2A6 6 0 1 0 16 11M15.5 7.2V3.8M15.5 7.2h-3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>{{ 'cart.update_cart' | t }}</span>
+              </button>
+              <button class="loemies-cart__checkout" type="submit" name="checkout" data-cart-checkout>
+                <span>{{ 'cart.checkout' | t }}</span>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {% if checkout_reassurance != blank %}
+              <p class="loemies-cart__reassurance">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <rect x="4.5" y="8.5" width="11" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M7 8.5V6.8a3 3 0 0 1 6 0v1.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span>{{ checkout_reassurance }}</span>
+              </p>
+            {% endif %}
+
+            {% if additional_checkout_buttons and section.settings.show_dynamic_checkout %}
+              <div class="loemies-cart__dynamic-checkout">
+                {{ content_for_additional_checkout_buttons }}
+              </div>
+            {% endif %}
+
+            {% if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0 %}
+              <div class="loemies-cart__payments">
+                <span>{{ 'cart.we_accept' | t }}</span>
+                <ul role="list">
+                  {% for payment_type in shop.enabled_payment_types %}
+                    <li>{{ payment_type | payment_type_svg_tag: class: 'loemies-cart__payment-icon' }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            {% assign benefit_count = 0 %}
+            {% for block in section.blocks %}
+              {% if block.type == 'benefit' %}
+                {% assign benefit_count = benefit_count | plus: 1 %}
+              {% endif %}
+            {% endfor %}
+            {% if benefit_count > 0 %}
+              <div class="loemies-cart__benefits">
+                {% for block in section.blocks %}
+                  {% if block.type == 'benefit' %}
+                    {% liquid
+                      assign benefit_title = block.settings.title | escape
+                      assign benefit_text = block.settings.text | escape
+                      case block.settings.icon
+                        when 'delivery'
+                          if block.settings.title == blank or block.settings.title == 'Thoughtful delivery' or block.settings.title == 'Tracked EU delivery'
+                            assign benefit_title = 'cart.benefits.delivery_title' | t
+                          endif
+                          if block.settings.text == blank or block.settings.text == 'Packed with care' or block.settings.text == 'Tracking included with every parcel'
+                            assign benefit_text = 'cart.benefits.delivery_text' | t
+                          endif
+                        when 'returns'
+                          if block.settings.title == blank or block.settings.title == 'Easy returns'
+                            assign benefit_title = 'cart.benefits.returns_title' | t
+                          endif
+                          if block.settings.text == blank or block.settings.text == 'A simple, friendly process'
+                            assign benefit_text = 'cart.benefits.returns_text' | t
+                          endif
+                        when 'secure'
+                          if block.settings.title == blank or block.settings.title == 'Secure payment'
+                            assign benefit_title = 'cart.benefits.secure_title' | t
+                          endif
+                          if block.settings.text == blank or block.settings.text == 'Your details stay protected'
+                            assign benefit_text = 'cart.benefits.secure_text' | t
+                          endif
+                      endcase
+                    %}
+                    <div class="loemies-cart__benefit" {{ block.shopify_attributes }}>
+                      <span class="loemies-cart__benefit-icon" aria-hidden="true">
+                        {% case block.settings.icon %}
+                          {% when 'returns' %}
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path d="M7.5 8H4V4.5M4.5 8a8 8 0 1 1-.2 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          {% when 'secure' %}
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path d="m12 3 7 3v5c0 4.5-2.8 8-7 10-4.2-2-7-5.5-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                              <path d="m9 12 2 2 4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          {% when 'gift' %}
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path d="M4 10h16v10H4zM3 7h18v3H3zM12 7v13" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                              <path d="M12 7H8.8A2.3 2.3 0 1 1 12 3.8V7Zm0 0h3.2A2.3 2.3 0 1 0 12 3.8V7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                            </svg>
+                          {% else %}
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path d="M3.5 6.5h11v10h-11zM14.5 10h3.3l2.7 3v3.5h-6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                              <circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17" r="1.8" stroke="currentColor" stroke-width="1.6"/>
+                            </svg>
+                        {% endcase %}
+                      </span>
+                      <div>
+                        <strong>{{ benefit_title }}</strong>
+                        {% if benefit_text != blank %}
+                          <span>{{ benefit_text }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </aside>
+      </form>
+
+      {% comment %}
+        Mobile-only sticky checkout bar. Hidden and inert until cart.js observes
+        the real checkout button leaving the viewport; submits the cart form.
+      {% endcomment %}
+      <div class="loemies-cart__sticky-checkout" data-cart-sticky-checkout inert>
+        <button
+          class="loemies-cart__sticky-checkout-button"
+          type="submit"
+          name="checkout"
+          form="{{ cart_form_id }}"
+        >
+          <span>{{ 'cart.checkout' | t }} · {{ cart.total_price | money }}</span>
+        </button>
+      </div>
+
+      {% assign has_app_blocks = false %}
+      {% for block in section.blocks %}
+        {% if block.type == '@app' %}
+          {% assign has_app_blocks = true %}
+        {% endif %}
+      {% endfor %}
+      {% if has_app_blocks %}
+        <div class="loemies-cart__app-blocks">
+          {% for block in section.blocks %}
+            {% if block.type == '@app' %}
+              <div class="loemies-cart__app-block" {{ block.shopify_attributes }}>
+                {% render block %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="loemies-cart__empty">
+        <div class="loemies-cart__empty-copy">
+          <span class="loemies-cart__empty-label">{{ 'cart.empty_eyebrow' | t }}</span>
+          <h2>{{ empty_heading }}</h2>
+          {% if empty_text != blank %}
+            <p>{{ empty_text }}</p>
+          {% endif %}
+          {% if empty_button_label != blank %}
+            <a class="button loemies-cart__empty-button" href="{{ empty_url }}">
+              <span>{{ empty_button_label }}</span>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          {% endif %}
+        </div>
+
+        <div class="loemies-cart__empty-art" aria-hidden="true">
+          <span class="loemies-cart__spark is-one">&#10022;</span>
+          <span class="loemies-cart__spark is-two">&#10022;</span>
+          <svg viewBox="0 0 260 220" fill="none">
+            <path d="M41 174c0-53 39-96 88-96s88 43 88 96" stroke="#F4CDBA" stroke-width="25" stroke-linecap="round"/>
+            <path d="M66 174c0-38 28-69 63-69s63 31 63 69" stroke="#D9D9EE" stroke-width="23" stroke-linecap="round"/>
+            <path d="M91 174c0-23 17-42 38-42s38 19 38 42" stroke="#D8E4D5" stroke-width="22" stroke-linecap="round"/>
+            <path d="M76 91h108l-10 103H86L76 91Z" fill="#FFF" stroke="#2B241F" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M101 94V76a29 29 0 0 1 58 0v18" stroke="#2B241F" stroke-width="3" stroke-linecap="round"/>
+            <path d="M113 131c7-8 15-4 17 2 2-6 10-10 17-2 8 10-7 22-17 29-10-7-25-19-17-29Z" fill="#B04F38"/>
+          </svg>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</loemies-cart>
 
 {% schema %}
 {
   "name": "t:general.cart",
-  "settings": []
+  "settings": [
+    {
+      "type": "header",
+      "content": "Page heading"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "Show breadcrumbs",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Shop"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Cart"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro text",
+      "default": "Prices and availability are checked live — safe and transparent."
+    },
+    {
+      "type": "text",
+      "id": "continue_label",
+      "label": "Continue shopping label",
+      "default": "Continue shopping"
+    },
+    {
+      "type": "url",
+      "id": "continue_link",
+      "label": "Continue shopping link"
+    },
+    {
+      "type": "header",
+      "content": "Order summary"
+    },
+    {
+      "type": "text",
+      "id": "summary_heading",
+      "label": "Heading",
+      "default": "Order summary"
+    },
+    {
+      "type": "text",
+      "id": "shipping_message",
+      "label": "Shipping message",
+      "default": "Carefully packed and ready for its new home."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_order_note",
+      "label": "Show order note",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "note_label",
+      "label": "Order note label",
+      "default": "Add a note to your order"
+    },
+    {
+      "type": "text",
+      "id": "note_placeholder",
+      "label": "Order note placeholder",
+      "default": "Gift message, delivery note, or anything else we should know…"
+    },
+    {
+      "type": "text",
+      "id": "checkout_reassurance",
+      "label": "Checkout reassurance",
+      "default": "Secure checkout · Encrypted payment"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dynamic_checkout",
+      "label": "Show accelerated checkout buttons",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Show payment icons",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "quantity_update_message",
+      "label": "Quantity update message",
+      "default": "Quantity changed. Select Update cart to refresh your total."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show product vendor",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Empty cart"
+    },
+    {
+      "type": "text",
+      "id": "empty_heading",
+      "label": "Heading",
+      "default": "Your cart is ready for something lovely"
+    },
+    {
+      "type": "textarea",
+      "id": "empty_text",
+      "label": "Text",
+      "default": "Discover thoughtful toys, playful storage, and little favorites made for growing imaginations."
+    },
+    {
+      "type": "text",
+      "id": "empty_button_label",
+      "label": "Button label",
+      "default": "Discover our collection"
+    },
+    {
+      "type": "url",
+      "id": "empty_button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Colors and spacing"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#f7f3ec"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#b04f38"
+    },
+    {
+      "type": "color",
+      "id": "accent_soft_color",
+      "label": "Soft accent",
+      "default": "#f6e6df"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2b241f"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 16,
+      "max": 96,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 32,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 72
+    }
+  ],
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "upsell",
+      "name": "Complementary products",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Eyebrow",
+          "default": "Complete the play"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "A useful addition"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text",
+          "default": "Chosen to complement what is already in your cart."
+        },
+        {
+          "type": "range",
+          "id": "maximum",
+          "label": "Maximum products",
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "default": 2
+        },
+        {
+          "type": "checkbox",
+          "id": "quick_add",
+          "label": "Enable quick add",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "automatic_fallback",
+          "label": "Use automatic recommendations as fallback",
+          "info": "Fills empty positions with Shopify-generated related products after configured complementary products are considered.",
+          "default": true
+        },
+        {
+          "type": "color",
+          "id": "background",
+          "label": "Background",
+          "default": "#FFF8F2"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Text color",
+          "default": "#2B241F"
+        },
+        {
+          "type": "color",
+          "id": "accent",
+          "label": "Accent",
+          "default": "#B04F38"
+        }
+      ]
+    },
+    {
+      "type": "benefit",
+      "name": "Cart benefit",
+      "limit": 3,
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            { "value": "delivery", "label": "Delivery" },
+            { "value": "returns", "label": "Returns" },
+            { "value": "secure", "label": "Secure payment" },
+            { "value": "gift", "label": "Gift" }
+          ],
+          "default": "delivery"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Tracked EU delivery"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Tracking included with every parcel"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies cart",
+      "blocks": [
+        {
+          "type": "upsell"
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "delivery",
+            "title": "Tracked EU delivery",
+            "text": "Tracking included with every parcel"
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "returns",
+            "title": "Easy returns",
+            "text": "A simple, friendly process"
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "secure",
+            "title": "Secure payment",
+            "text": "Your details stay protected"
+          }
+        }
+      ]
+    }
+  ]
 }
 {% endschema %}

@@ -1,0 +1,60 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "contact",
+      "blocks": {
+        "orders": {
+          "type": "quick_link",
+          "settings": {
+            "icon": "order",
+            "heading": "Your orders",
+            "text": "View your order history and account details.",
+            "link_label": "View account",
+            "link": "/account",
+            "background_color": "#f7edc8"
+          }
+        },
+        "shipping": {
+          "type": "quick_link",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Shipping information",
+            "text": "Tracked EU delivery. Ask us anytime about delivery timing or costs.",
+            "link_label": "Ask about delivery",
+            "link": "/policies/shipping-policy",
+            "background_color": "#dcebdc"
+          }
+        },
+        "returns": {
+          "type": "quick_link",
+          "settings": {
+            "icon": "returns",
+            "heading": "Returns & refunds",
+            "text": "You have 30 days to let us know if something isn’t right.",
+            "link_label": "Ask about a return",
+            "link": "/policies/refund-policy",
+            "background_color": "#e9e3f5"
+          }
+        }
+      },
+      "block_order": [
+        "orders",
+        "shipping",
+        "returns"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

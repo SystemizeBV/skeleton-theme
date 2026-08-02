@@ -1,0 +1,82 @@
+{% doc %}
+  Renders an editable Loemies heading block.
+
+  @example
+  {% content_for 'block', type: 'loemies-heading', id: 'heading' %}
+{% enddoc %}
+
+{% liquid
+  assign localized_heading = block.settings.heading
+  if localized_heading == 'Purposeful play, thoughtfully chosen.'
+    assign localized_heading = 'sections.home.hero.heading' | t
+  endif
+%}
+
+{% if localized_heading != blank %}
+  <{{ block.settings.heading_tag }}
+    class="loemies-heading loemies-heading--{{ block.settings.size }}"
+    {{ block.shopify_attributes }}
+  >
+    {{ localized_heading }}
+  </{{ block.settings.heading_tag }}>
+{% endif %}
+
+{% stylesheet %}
+  .loemies-heading {
+    max-width: 16ch;
+    margin: 0;
+    color: var(--loemies-heading-color, currentcolor);
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .loemies-heading--medium {
+    font-size: clamp(1.9rem, 4vw, 2.4rem);
+  }
+
+  .loemies-heading--large {
+    font-size: clamp(2rem, 4.5vw, 2.8rem);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loemies heading",
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "A little joy, thoughtfully made."
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading level",
+      "default": "h2",
+      "options": [
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "Size",
+      "default": "large",
+      "options": [
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies heading"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,1091 @@
+{% comment %}
+  Loemies contact page using Shopify's native contact form. The section keeps
+  support details and quick-help links editable in the Theme Editor.
+{% endcomment %}
+
+{% liquid
+  assign contact_form_id = 'ContactForm-' | append: section.id
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign contact_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'We’re here to help'
+    assign contact_eyebrow = 'sections.contact.eyebrow' | t
+  endif
+  assign contact_heading = section.settings.heading | escape
+  if section.settings.heading == blank or section.settings.heading == 'Contact'
+    assign contact_heading = 'sections.contact.heading' | t
+  endif
+  assign contact_intro = section.settings.intro | escape
+  if section.settings.intro == blank or section.settings.intro == 'Questions about an order, a product or a return? We are happy to help.'
+    assign contact_intro = 'sections.contact.intro' | t
+  endif
+  assign response_heading = section.settings.response_heading | escape
+  if section.settings.response_heading == blank or section.settings.response_heading == 'Usually within 24 hours'
+    assign response_heading = 'sections.contact.response_heading' | t
+  endif
+  assign response_text = section.settings.response_text | escape
+  if section.settings.response_text == blank or section.settings.response_text == 'We reply every working day'
+    assign response_text = 'sections.contact.response_text' | t
+  endif
+  assign form_eyebrow = section.settings.form_eyebrow | escape
+  if section.settings.form_eyebrow == blank or section.settings.form_eyebrow == 'Send us a message'
+    assign form_eyebrow = 'sections.contact.form_eyebrow' | t
+  endif
+  assign form_heading = section.settings.form_heading | escape
+  if section.settings.form_heading == blank or section.settings.form_heading == 'How can we help?'
+    assign form_heading = 'sections.contact.form_heading' | t
+  endif
+  assign form_intro = section.settings.form_intro | escape
+  if section.settings.form_intro == blank or section.settings.form_intro == 'Tell us what you need and our team will come back to you as soon as possible.' or section.settings.form_intro == 'Tell us what you need and our team will get back to you as soon as possible.'
+    assign form_intro = 'sections.contact.form_intro' | t
+  endif
+  assign name_label = section.settings.name_label | escape
+  if section.settings.name_label == blank or section.settings.name_label == 'Name'
+    assign name_label = 'sections.contact.name_label' | t
+  endif
+  assign name_placeholder = section.settings.name_placeholder | escape
+  if section.settings.name_placeholder == blank or section.settings.name_placeholder == 'Your name'
+    assign name_placeholder = 'sections.contact.name_placeholder' | t
+  endif
+  assign email_label = section.settings.email_label | escape
+  if section.settings.email_label == blank or section.settings.email_label == 'Email address'
+    assign email_label = 'sections.contact.email_label' | t
+  endif
+  assign email_placeholder = section.settings.email_placeholder | escape
+  if section.settings.email_placeholder == blank or section.settings.email_placeholder == 'you@example.com'
+    assign email_placeholder = 'sections.contact.email_placeholder' | t
+  endif
+  assign phone_label = section.settings.phone_label | escape
+  if section.settings.phone_label == blank or section.settings.phone_label == 'Phone (optional)'
+    assign phone_label = 'sections.contact.phone_label' | t
+  endif
+  assign phone_placeholder = section.settings.phone_placeholder | escape
+  if section.settings.phone_placeholder == blank or section.settings.phone_placeholder == '+32 …'
+    assign phone_placeholder = 'sections.contact.phone_placeholder' | t
+  endif
+  assign order_label = section.settings.order_label | escape
+  if section.settings.order_label == blank or section.settings.order_label == 'Order number (optional)'
+    assign order_label = 'sections.contact.order_label' | t
+  endif
+  assign order_placeholder = section.settings.order_placeholder | escape
+  if section.settings.order_placeholder == blank or section.settings.order_placeholder == 'For example #1001'
+    assign order_placeholder = 'sections.contact.order_placeholder' | t
+  endif
+  assign topic_label = section.settings.topic_label | escape
+  if section.settings.topic_label == blank or section.settings.topic_label == 'What can we help with?'
+    assign topic_label = 'sections.contact.topic_label' | t
+  endif
+  assign topic_placeholder = section.settings.topic_placeholder | escape
+  if section.settings.topic_placeholder == blank or section.settings.topic_placeholder == 'Choose a topic'
+    assign topic_placeholder = 'sections.contact.topic_placeholder' | t
+  endif
+  assign topic_order = section.settings.topic_order | escape
+  if section.settings.topic_order == blank or section.settings.topic_order == 'An existing order'
+    assign topic_order = 'sections.contact.topic_order' | t
+  endif
+  assign topic_product = section.settings.topic_product | escape
+  if section.settings.topic_product == blank or section.settings.topic_product == 'A product question'
+    assign topic_product = 'sections.contact.topic_product' | t
+  endif
+  assign topic_shipping = section.settings.topic_shipping | escape
+  if section.settings.topic_shipping == blank or section.settings.topic_shipping == 'Shipping or returns'
+    assign topic_shipping = 'sections.contact.topic_shipping' | t
+  endif
+  assign topic_other = section.settings.topic_other | escape
+  if section.settings.topic_other == blank or section.settings.topic_other == 'Something else'
+    assign topic_other = 'sections.contact.topic_other' | t
+  endif
+  assign message_label = section.settings.message_label | escape
+  if section.settings.message_label == blank or section.settings.message_label == 'Your message'
+    assign message_label = 'sections.contact.message_label' | t
+  endif
+  assign message_placeholder = section.settings.message_placeholder | escape
+  if section.settings.message_placeholder == blank or section.settings.message_placeholder == 'Share any details that will help us answer your question…'
+    assign message_placeholder = 'sections.contact.message_placeholder' | t
+  endif
+  assign submit_label = section.settings.submit_label | escape
+  if section.settings.submit_label == blank or section.settings.submit_label == 'Send message'
+    assign submit_label = 'sections.contact.submit_label' | t
+  endif
+  assign privacy_note = section.settings.privacy_note
+  if privacy_note == blank or privacy_note == '<p>We’ll only use your details to answer your question.</p>'
+    assign privacy_note = 'sections.contact.privacy_note' | t
+  endif
+  assign success_heading = section.settings.success_heading | escape
+  if section.settings.success_heading == blank or section.settings.success_heading == 'Your message is on its way'
+    assign success_heading = 'sections.contact.success_heading' | t
+  endif
+  assign success_text = section.settings.success_text | escape
+  if section.settings.success_text == blank or section.settings.success_text == 'Thank you for reaching out. We’ll get back to you as soon as we can.'
+    assign success_text = 'sections.contact.success_text' | t
+  endif
+  assign success_link_label = section.settings.success_link_label | escape
+  if section.settings.success_link_label == blank or section.settings.success_link_label == 'Continue shopping'
+    assign success_link_label = 'sections.contact.success_link_label' | t
+  endif
+  assign error_heading = section.settings.error_heading | escape
+  if section.settings.error_heading == blank or section.settings.error_heading == 'Please check the highlighted details'
+    assign error_heading = 'sections.contact.error_heading' | t
+  endif
+
+  assign support_email = section.settings.support_email
+  if support_email == blank
+    assign support_email = shop.email
+  endif
+  assign support_eyebrow = section.settings.support_eyebrow | escape
+  if section.settings.support_eyebrow == blank or section.settings.support_eyebrow == 'Customer service'
+    assign support_eyebrow = 'sections.contact.support_eyebrow' | t
+  endif
+  assign support_heading = section.settings.support_heading | escape
+  if section.settings.support_heading == blank or section.settings.support_heading == 'Prefer email?'
+    assign support_heading = 'sections.contact.support_heading' | t
+  endif
+  assign support_text = section.settings.support_text | escape
+  if section.settings.support_text == blank or section.settings.support_text == 'We reply every working day, usually within 24 hours.'
+    assign support_text = 'sections.contact.support_text' | t
+  endif
+  assign order_tip = section.settings.order_tip | escape
+  if section.settings.order_tip == blank or section.settings.order_tip == 'Include your order number if your question is about an order — it helps us help you faster.'
+    assign order_tip = 'sections.contact.order_tip' | t
+  endif
+  assign company_heading = section.settings.company_heading | escape
+  if section.settings.company_heading == blank or section.settings.company_heading == 'Company details'
+    assign company_heading = 'sections.contact.company_heading' | t
+  endif
+  assign company_intro = section.settings.company_intro | escape
+  if section.settings.company_intro == blank or section.settings.company_intro == 'Loemies is a brand of Systemize BV.'
+    assign company_intro = 'sections.contact.company_intro' | t
+  endif
+  assign company_address_is_default = false
+  if section.settings.company_address == blank
+    assign company_address_is_default = true
+  elsif section.settings.company_address contains 'Taboralaan 6' and section.settings.company_address contains '2820 Bonheiden' and section.settings.company_address contains 'Belgium'
+    assign company_address_is_default = true
+  endif
+  assign company_vat_is_default = false
+  if section.settings.company_vat == blank or section.settings.company_vat == 'VAT BE 1004.376.305'
+    assign company_vat_is_default = true
+  endif
+  assign quick_eyebrow = section.settings.quick_eyebrow | escape
+  if section.settings.quick_eyebrow == blank or section.settings.quick_eyebrow == 'Useful shortcuts'
+    assign quick_eyebrow = 'sections.contact.quick_eyebrow' | t
+  endif
+  assign quick_heading = section.settings.quick_heading | escape
+  if section.settings.quick_heading == blank or section.settings.quick_heading == 'You may find your answer here'
+    assign quick_heading = 'sections.contact.quick_heading' | t
+  endif
+%}
+
+<section
+  class="contact-page full-width"
+  style="
+    --contact-background: {{ section.settings.background_color }};
+    --contact-card: {{ section.settings.card_color }};
+    --contact-accent: {{ section.settings.accent_color }};
+    --contact-accent-soft: {{ section.settings.accent_soft_color }};
+    --contact-text: {{ section.settings.text_color }};
+    --contact-padding-top: {{ section.settings.padding_top }}px;
+    --contact-padding-bottom: {{ section.settings.padding_bottom }}px;
+  "
+>
+  <div class="contact-page__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="contact-page__breadcrumbs" aria-label="{{ 'general.accessibility.breadcrumb' | t }}">
+        <a href="{{ routes.root_url }}">{{ 'general.accessibility.home' | t }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ contact_heading }}</span>
+      </nav>
+    {% endif %}
+
+    <header class="contact-page__header">
+      <div class="contact-page__heading-group">
+        {% if contact_eyebrow != blank %}
+          <p class="contact-page__eyebrow">{{ contact_eyebrow }}</p>
+        {% endif %}
+        <h1>{{ contact_heading }}</h1>
+        {% if contact_intro != blank %}
+          <p class="contact-page__intro">{{ contact_intro }}</p>
+        {% endif %}
+      </div>
+
+      {% if response_heading != blank or response_text != blank %}
+        <div class="contact-page__response-badge">
+          <span aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12 7.5v5l3.2 1.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div>
+            {% if response_heading != blank %}
+              <strong>{{ response_heading }}</strong>
+            {% endif %}
+            {% if response_text != blank %}
+              <small>{{ response_text }}</small>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </header>
+
+    <div class="contact-page__layout">
+      <div class="contact-page__form-card" id="ContactForm">
+        <div class="contact-page__form-heading">
+          <span class="contact-page__form-mark" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none">
+              <path d="M4.5 7.5h19v14h-19z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="m5 8 9 7 9-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div>
+            {% if form_eyebrow != blank %}
+              <p>{{ form_eyebrow }}</p>
+            {% endif %}
+            <h2>{{ form_heading }}</h2>
+          </div>
+        </div>
+
+        {% if form_intro != blank %}
+          <p class="contact-page__form-intro">{{ form_intro }}</p>
+        {% endif %}
+
+        <template data-contact-success-template>
+          <div class="contact-page__success" role="status" tabindex="-1">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="2"/>
+                <path d="m10 16.2 4 4L22.5 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <div>
+              <h3>{{ success_heading }}</h3>
+              <p>{{ success_text }}</p>
+            </div>
+            {% if success_link_label != blank %}
+              <a class="button" href="{{ catalog_url }}">
+                <span>{{ success_link_label }}</span>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            {% endif %}
+          </div>
+        </template>
+
+        {% form 'contact', return_to: 'back', id: contact_form_id, class: 'contact-page__form' %}
+          {% if form.posted_successfully? %}
+            <div class="contact-page__success" role="status" tabindex="-1">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="2"/>
+                  <path d="m10 16.2 4 4L22.5 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <div>
+                <h3>{{ success_heading }}</h3>
+                <p>{{ success_text }}</p>
+              </div>
+              {% if success_link_label != blank %}
+                <a class="button" href="{{ catalog_url }}">
+                  <span>{{ success_link_label }}</span>
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              {% endif %}
+            </div>
+          {% else %}
+            {% if form.errors %}
+              <div class="contact-page__errors" role="alert" tabindex="-1">
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="M12 7.5v5.2M12 16.2v.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <div>
+                  <strong>{{ error_heading }}</strong>
+                  {{ form.errors | default_errors }}
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="contact-page__fields">
+              <div class="contact-page__field">
+                <label for="ContactName-{{ section.id }}">
+                  {{ name_label }}
+                  <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="ContactName-{{ section.id }}"
+                  type="text"
+                  name="contact[name]"
+                  value="{{ form.name | default: customer.name | escape }}"
+                  placeholder="{{ name_placeholder }}"
+                  autocomplete="name"
+                  required
+                >
+              </div>
+
+              <div class="contact-page__field">
+                <label for="ContactEmail-{{ section.id }}">
+                  {{ email_label }}
+                  <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="ContactEmail-{{ section.id }}"
+                  type="email"
+                  name="contact[email]"
+                  value="{{ form.email | default: customer.email | escape }}"
+                  placeholder="{{ email_placeholder }}"
+                  autocomplete="email"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  required
+                  {% if form.errors contains 'email' %}
+                    aria-invalid="true"
+                    aria-describedby="ContactEmailError-{{ section.id }}"
+                  {% endif %}
+                >
+                {% if form.errors contains 'email' %}
+                  <small class="contact-page__field-error" id="ContactEmailError-{{ section.id }}">
+                    {{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}
+                  </small>
+                {% endif %}
+              </div>
+
+              <div class="contact-page__field">
+                <label for="ContactPhone-{{ section.id }}">{{ phone_label }}</label>
+                <input
+                  id="ContactPhone-{{ section.id }}"
+                  type="tel"
+                  name="contact[phone]"
+                  value="{{ form.phone | default: customer.phone | escape }}"
+                  placeholder="{{ phone_placeholder }}"
+                  autocomplete="tel"
+                  inputmode="tel"
+                >
+              </div>
+
+              <div class="contact-page__field">
+                <label for="ContactOrder-{{ section.id }}">{{ order_label }}</label>
+                <input
+                  id="ContactOrder-{{ section.id }}"
+                  type="text"
+                  name="contact[Order number]"
+                  value="{{ form.order_number | escape }}"
+                  placeholder="{{ order_placeholder }}"
+                  autocomplete="off"
+                >
+              </div>
+
+              <div class="contact-page__field is-full">
+                <label for="ContactTopic-{{ section.id }}">
+                  {{ topic_label }}
+                  <span aria-hidden="true">*</span>
+                </label>
+                <div class="contact-page__select-wrap">
+                  <select id="ContactTopic-{{ section.id }}" name="contact[Topic]" required>
+                    <option value="" disabled {% if form.topic == blank %}selected{% endif %}>
+                      {{ topic_placeholder }}
+                    </option>
+                    <option value="{{ topic_order }}" {% if form.topic == topic_order %}selected{% endif %}>
+                      {{ topic_order }}
+                    </option>
+                    <option value="{{ topic_product }}" {% if form.topic == topic_product %}selected{% endif %}>
+                      {{ topic_product }}
+                    </option>
+                    <option value="{{ topic_shipping }}" {% if form.topic == topic_shipping %}selected{% endif %}>
+                      {{ topic_shipping }}
+                    </option>
+                    <option value="{{ topic_other }}" {% if form.topic == topic_other %}selected{% endif %}>
+                      {{ topic_other }}
+                    </option>
+                  </select>
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="contact-page__field is-full">
+                <label for="ContactMessage-{{ section.id }}">
+                  {{ message_label }}
+                  <span aria-hidden="true">*</span>
+                </label>
+                <textarea
+                  id="ContactMessage-{{ section.id }}"
+                  name="contact[body]"
+                  rows="7"
+                  placeholder="{{ message_placeholder }}"
+                  required
+                >{{ form.body | escape }}</textarea>
+              </div>
+            </div>
+
+            <div class="contact-page__form-footer">
+              <button type="submit">
+                <span>{{ submit_label }}</span>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              {% if privacy_note != blank %}
+                <div class="contact-page__privacy">
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <rect x="4.5" y="8.5" width="11" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M7 8.5V6.8a3 3 0 0 1 6 0v1.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  {{ privacy_note }}
+                  <a href="{{ shop.privacy_policy.url | default: '/policies/privacy-policy' }}">{{ 'sections.home.newsletter.privacy' | t }}</a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endform %}
+      </div>
+
+      <aside class="contact-page__sidebar" aria-label="{{ 'general.accessibility.contact_information' | t }}">
+        <div class="contact-page__support-card">
+          <span class="contact-page__card-icon" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none">
+              <path d="M4.5 7.5h19v14h-19z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="m5 8 9 7 9-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <p class="contact-page__card-eyebrow">{{ support_eyebrow }}</p>
+          <h2>{{ support_heading }}</h2>
+          {% if support_email != blank %}
+            <a class="contact-page__email" href="mailto:{{ support_email | escape }}">
+              <span>{{ support_email | escape }}</span>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if support_text != blank %}
+            <p class="contact-page__support-text">{{ support_text }}</p>
+          {% endif %}
+          {% if order_tip != blank %}
+            <div class="contact-page__order-tip">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M6 3.5h8v13H6z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/>
+                <path d="M8 7h4M8 10h4M8 13h2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+              </svg>
+              <p>{{ order_tip }}</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="contact-page__company-card">
+          <div class="contact-page__company-heading">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 20V7l8-4 8 4v13M8 20v-5h8v5M8 9h.01M12 9h.01M16 9h.01M8 12h.01M12 12h.01M16 12h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <h2>{{ company_heading }}</h2>
+          </div>
+          {% if company_intro != blank %}
+            <p>{{ company_intro }}</p>
+          {% endif %}
+          <address>
+            {% if section.settings.company_name != blank %}<strong>{{ section.settings.company_name | escape }}</strong>{% endif %}
+            {% if company_address_is_default %}
+              <span>Taboralaan 6<br>2820 Bonheiden<br>{{ 'sections.footer.country_belgium' | t }}</span>
+            {% elsif section.settings.company_address != blank %}
+              <span>{{ section.settings.company_address | newline_to_br }}</span>
+            {% endif %}
+          </address>
+          {% if section.settings.company_number != blank %}
+            <p class="contact-page__vat">{{ 'sections.footer.enterprise_number_label' | t }} {{ section.settings.company_number | escape }}</p>
+          {% endif %}
+          {% if company_vat_is_default %}
+            <p class="contact-page__vat">{{ 'sections.footer.vat_label' | t }} BE 1004.376.305</p>
+          {% elsif section.settings.company_vat != blank %}
+            <p class="contact-page__vat">{{ section.settings.company_vat | escape }}</p>
+          {% endif %}
+        </div>
+
+        {% if section.settings.show_page_content and page.content != blank %}
+          <div class="contact-page__page-content rte">{{ page.content }}</div>
+        {% endif %}
+      </aside>
+    </div>
+
+    {% assign quick_link_count = 0 %}
+    {% for block in section.blocks %}
+      {% if block.type == 'quick_link' %}
+        {% assign quick_link_count = quick_link_count | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+
+    {% if quick_link_count > 0 %}
+      <section class="contact-page__quick-help" aria-labelledby="QuickHelpHeading-{{ section.id }}">
+        <div class="contact-page__quick-heading">
+          {% if quick_eyebrow != blank %}
+            <p>{{ quick_eyebrow }}</p>
+          {% endif %}
+          <h2 id="QuickHelpHeading-{{ section.id }}">{{ quick_heading }}</h2>
+        </div>
+
+        <div class="contact-page__quick-grid">
+          {% for block in section.blocks %}
+            {% if block.type == 'quick_link' %}
+              {% liquid
+                assign quick_tag = 'div'
+                if block.settings.link != blank
+                  assign quick_tag = 'a'
+                endif
+
+                # The `t` filter HTML-escapes its output, so escape the raw branches here
+                # and print the quick-card variables without a second escape.
+                assign quick_card_heading = block.settings.heading | escape
+                assign quick_card_text = block.settings.text | escape
+                assign quick_card_link_label = block.settings.link_label | escape
+                case block.settings.icon
+                  when 'order'
+                    if block.settings.heading == blank or block.settings.heading == 'Your orders'
+                      assign quick_card_heading = 'sections.contact.orders_heading' | t
+                    endif
+                    if block.settings.text == blank or block.settings.text == 'View your order history and account details.'
+                      assign quick_card_text = 'sections.contact.orders_text' | t
+                    endif
+                    if block.settings.link_label == blank or block.settings.link_label == 'View orders' or block.settings.link_label == 'View account'
+                      assign quick_card_link_label = 'sections.contact.view_account' | t
+                    endif
+                  when 'shipping'
+                    if block.settings.heading == blank or block.settings.heading == 'Shipping information'
+                      assign quick_card_heading = 'sections.contact.shipping_heading' | t
+                    endif
+                    if block.settings.text == blank or block.settings.text == 'Free shipping over €49. Ask us anytime about delivery timing or costs.' or block.settings.text == 'Tracked EU delivery. Ask us anytime about delivery timing or costs.'
+                      if settings.free_shipping_enabled
+                        assign quick_card_text = 'sections.contact.shipping_text' | t: threshold: settings.free_shipping_threshold
+                      else
+                        assign quick_card_text = 'sections.promises.tracked_shipping_detail' | t
+                      endif
+                    endif
+                    if block.settings.link_label == blank or block.settings.link_label == 'Ask about delivery'
+                      assign quick_card_link_label = 'sections.contact.ask_delivery' | t
+                    endif
+                  when 'returns'
+                    if block.settings.heading == blank or block.settings.heading == 'Returns & refunds'
+                      assign quick_card_heading = 'sections.contact.returns_heading' | t
+                    endif
+                    if block.settings.text == blank or block.settings.text == 'You have 30 days to let us know if something isn’t right.'
+                      assign quick_card_text = 'sections.contact.returns_text' | t: days: settings.return_window_days
+                    endif
+                    if block.settings.link_label == blank or block.settings.link_label == 'Ask about a return'
+                      assign quick_card_link_label = 'sections.contact.ask_return' | t
+                    endif
+                endcase
+              %}
+              <{{ quick_tag }}
+                class="contact-page__quick-card"
+                style="--quick-background: {{ block.settings.background_color }};"
+                {% if block.settings.link != blank %}href="{{ block.settings.link }}"{% endif %}
+                {{ block.shopify_attributes }}
+              >
+                <span class="contact-page__quick-icon" aria-hidden="true">
+                  {% case block.settings.icon %}
+                    {% when 'returns' %}
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7.5 8H4V4.5M4.5 8a8 8 0 1 1-.2 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    {% when 'product' %}
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 8.5h14v11H5zM8.5 8.5a3.5 3.5 0 0 1 7 0" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                        <path d="m9 14 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    {% when 'shipping' %}
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M3.5 6.5h11v10h-11zM14.5 10h3.3l2.7 3v3.5h-6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                        <circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17" r="1.8" stroke="currentColor" stroke-width="1.6"/>
+                      </svg>
+                    {% else %}
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 3.5h12v17H6zM9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                  {% endcase %}
+                </span>
+                <div>
+                  <h3>{{ quick_card_heading }}</h3>
+                  {% if quick_card_text != blank %}<p>{{ quick_card_text }}</p>{% endif %}
+                  {% if block.settings.link != blank and quick_card_link_label != blank %}
+                    <span class="contact-page__quick-action">
+                      {{ quick_card_link_label }}
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  {% endif %}
+                </div>
+              </{{ quick_tag }}>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% assign has_app_blocks = false %}
+    {% for block in section.blocks %}
+      {% if block.type == '@app' %}
+        {% assign has_app_blocks = true %}
+      {% endif %}
+    {% endfor %}
+    {% if has_app_blocks %}
+      <div class="contact-page__apps">
+        {% for block in section.blocks %}
+          {% if block.type == '@app' %}
+            <div class="contact-page__app" {{ block.shopify_attributes }}>
+              {% render block %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Loemies contact page",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Page heading"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "Show breadcrumbs",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "We’re here to help"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Contact"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro text",
+      "default": "Questions about an order, a product or a return? We are happy to help."
+    },
+    {
+      "type": "text",
+      "id": "response_heading",
+      "label": "Response badge heading",
+      "default": "Usually within 24 hours"
+    },
+    {
+      "type": "text",
+      "id": "response_text",
+      "label": "Response badge text",
+      "default": "We reply every working day"
+    },
+    {
+      "type": "header",
+      "content": "Contact form"
+    },
+    {
+      "type": "text",
+      "id": "form_eyebrow",
+      "label": "Form eyebrow",
+      "default": "Send us a message"
+    },
+    {
+      "type": "text",
+      "id": "form_heading",
+      "label": "Form heading",
+      "default": "How can we help?"
+    },
+    {
+      "type": "textarea",
+      "id": "form_intro",
+      "label": "Form introduction",
+      "default": "Tell us what you need and our team will come back to you as soon as possible."
+    },
+    {
+      "type": "text",
+      "id": "name_label",
+      "label": "Name label",
+      "default": "Name"
+    },
+    {
+      "type": "text",
+      "id": "name_placeholder",
+      "label": "Name placeholder",
+      "default": "Your name"
+    },
+    {
+      "type": "text",
+      "id": "email_label",
+      "label": "Email label",
+      "default": "Email address"
+    },
+    {
+      "type": "text",
+      "id": "email_placeholder",
+      "label": "Email placeholder",
+      "default": "you@example.com"
+    },
+    {
+      "type": "text",
+      "id": "phone_label",
+      "label": "Phone label",
+      "default": "Phone (optional)"
+    },
+    {
+      "type": "text",
+      "id": "phone_placeholder",
+      "label": "Phone placeholder",
+      "default": "+32 …"
+    },
+    {
+      "type": "text",
+      "id": "order_label",
+      "label": "Order number label",
+      "default": "Order number (optional)"
+    },
+    {
+      "type": "text",
+      "id": "order_placeholder",
+      "label": "Order number placeholder",
+      "default": "For example #1001"
+    },
+    {
+      "type": "text",
+      "id": "topic_label",
+      "label": "Topic label",
+      "default": "What can we help with?"
+    },
+    {
+      "type": "text",
+      "id": "topic_placeholder",
+      "label": "Topic placeholder",
+      "default": "Choose a topic"
+    },
+    {
+      "type": "text",
+      "id": "topic_order",
+      "label": "Order topic",
+      "default": "An existing order"
+    },
+    {
+      "type": "text",
+      "id": "topic_product",
+      "label": "Product topic",
+      "default": "A product question"
+    },
+    {
+      "type": "text",
+      "id": "topic_shipping",
+      "label": "Shipping topic",
+      "default": "Shipping or returns"
+    },
+    {
+      "type": "text",
+      "id": "topic_other",
+      "label": "Other topic",
+      "default": "Something else"
+    },
+    {
+      "type": "text",
+      "id": "message_label",
+      "label": "Message label",
+      "default": "Your message"
+    },
+    {
+      "type": "textarea",
+      "id": "message_placeholder",
+      "label": "Message placeholder",
+      "default": "Share any details that will help us answer your question…"
+    },
+    {
+      "type": "text",
+      "id": "submit_label",
+      "label": "Submit button",
+      "default": "Send message"
+    },
+    {
+      "type": "richtext",
+      "id": "privacy_note",
+      "label": "Privacy note",
+      "default": "<p>We’ll only use your details to answer your question.</p>"
+    },
+    {
+      "type": "text",
+      "id": "success_heading",
+      "label": "Success heading",
+      "default": "Your message is on its way"
+    },
+    {
+      "type": "textarea",
+      "id": "success_text",
+      "label": "Success text",
+      "default": "Thank you for reaching out. We’ll get back to you as soon as we can."
+    },
+    {
+      "type": "text",
+      "id": "success_link_label",
+      "label": "Success link label",
+      "default": "Continue shopping"
+    },
+    {
+      "type": "text",
+      "id": "error_heading",
+      "label": "Error heading",
+      "default": "Please check the highlighted details"
+    },
+    {
+      "type": "header",
+      "content": "Support details"
+    },
+    {
+      "type": "text",
+      "id": "support_eyebrow",
+      "label": "Support eyebrow",
+      "default": "Customer service"
+    },
+    {
+      "type": "text",
+      "id": "support_heading",
+      "label": "Support heading",
+      "default": "Prefer email?"
+    },
+    {
+      "type": "text",
+      "id": "support_email",
+      "label": "Support email",
+      "default": "support@loemies.com"
+    },
+    {
+      "type": "textarea",
+      "id": "support_text",
+      "label": "Support text",
+      "default": "We reply every working day, usually within 24 hours."
+    },
+    {
+      "type": "textarea",
+      "id": "order_tip",
+      "label": "Order tip",
+      "default": "Include your order number if your question is about an order — it helps us help you faster."
+    },
+    {
+      "type": "text",
+      "id": "company_heading",
+      "label": "Company heading",
+      "default": "Company details"
+    },
+    {
+      "type": "text",
+      "id": "company_intro",
+      "label": "Company introduction",
+      "default": "Loemies is a brand of Systemize BV."
+    },
+    {
+      "type": "text",
+      "id": "company_name",
+      "label": "Company name",
+      "default": "Systemize BV"
+    },
+    {
+      "type": "textarea",
+      "id": "company_address",
+      "label": "Company address",
+      "default": "Taboralaan 6\n2820 Bonheiden\nBelgium"
+    },
+    {
+      "type": "text",
+      "id": "company_number",
+      "label": "Belgian enterprise number",
+      "default": "1004.376.305"
+    },
+    {
+      "type": "text",
+      "id": "company_vat",
+      "label": "VAT number",
+      "default": "VAT BE 1004.376.305"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_page_content",
+      "label": "Show Shopify page content",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Quick help"
+    },
+    {
+      "type": "text",
+      "id": "quick_eyebrow",
+      "label": "Eyebrow",
+      "default": "Useful shortcuts"
+    },
+    {
+      "type": "text",
+      "id": "quick_heading",
+      "label": "Heading",
+      "default": "You may find your answer here"
+    },
+    {
+      "type": "header",
+      "content": "Colors and spacing"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#f7f3ec"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#b04f38"
+    },
+    {
+      "type": "color",
+      "id": "accent_soft_color",
+      "label": "Soft accent",
+      "default": "#f6e6df"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2b241f"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 16,
+      "max": 96,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 32,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "quick_link",
+      "name": "Quick help card",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            { "value": "order", "label": "Order" },
+            { "value": "shipping", "label": "Shipping" },
+            { "value": "returns", "label": "Returns" },
+            { "value": "product", "label": "Product" }
+          ],
+          "default": "order"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Your orders"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text",
+          "default": "View your order history and account details."
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link label",
+          "default": "View orders"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Background",
+          "default": "#f7edc8"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies contact page",
+      "blocks": [
+        {
+          "type": "quick_link",
+          "settings": {
+            "icon": "order",
+            "heading": "Your orders",
+            "text": "View your order history and account details.",
+            "link_label": "View account",
+            "link": "/account",
+            "background_color": "#f7edc8"
+          }
+        },
+        {
+          "type": "quick_link",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Shipping information",
+            "text": "Tracked EU delivery. Ask us anytime about delivery timing or costs.",
+            "link_label": "Ask about delivery",
+            "link": "/pages/contact#ContactForm",
+            "background_color": "#dcebdc"
+          }
+        },
+        {
+          "type": "quick_link",
+          "settings": {
+            "icon": "returns",
+            "heading": "Returns & refunds",
+            "text": "You have 30 days to let us know if something isn’t right.",
+            "link_label": "Ask about a return",
+            "link": "/pages/contact#ContactForm",
+            "background_color": "#e9e3f5"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

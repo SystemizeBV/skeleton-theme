@@ -1,0 +1,75 @@
+{% doc %}
+  Renders editable rich text for Loemies editorial sections.
+
+  @example
+  {% content_for 'block', type: 'loemies-rich-text', id: 'intro' %}
+{% enddoc %}
+
+{% liquid
+  assign localized_text = block.settings.text
+  if localized_text == '<p>Wooden, Montessori and sensory toys for everyday play, learning and gifting.</p>' or localized_text == "<p>Thoughtfully chosen toys and children's products for everyday play, learning and gifting.</p>"
+    capture localized_text
+      echo '<p>'
+      echo 'sections.home.hero.text' | t
+      echo '</p>'
+    endcapture
+  endif
+%}
+
+<div
+  class="loemies-rich-text loemies-rich-text--{{ block.settings.width }}"
+  {{ block.shopify_attributes }}
+>
+  {{ localized_text }}
+</div>
+
+{% stylesheet %}
+  .loemies-rich-text {
+    color: var(--loemies-body-color, currentcolor);
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    line-height: 1.6;
+  }
+
+  .loemies-rich-text--narrow {
+    max-width: 42ch;
+  }
+
+  .loemies-rich-text--wide {
+    max-width: 60ch;
+  }
+
+  .loemies-rich-text a {
+    color: inherit;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.2em;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loemies rich text",
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Playful pieces, easy colors, and considered details for everyday moments.</p>"
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "Text width",
+      "default": "narrow",
+      "options": [
+        { "value": "narrow", "label": "Narrow" },
+        { "value": "wide", "label": "Wide" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies rich text"
+    }
+  ]
+}
+{% endschema %}

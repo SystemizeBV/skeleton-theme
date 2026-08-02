@@ -1,0 +1,202 @@
+.loemies-upsell {
+  --upsell-border: color-mix(in srgb, currentcolor 14%, transparent);
+
+  padding: 1rem;
+  border: 1px solid var(--upsell-border);
+  border-radius: 0.9rem;
+  background: var(--upsell-background, #fffaf6);
+  color: var(--upsell-text, #2b241f);
+}
+
+.loemies-upsell__header {
+  margin-bottom: 0.8rem;
+}
+
+.loemies-upsell__eyebrow {
+  margin: 0 0 0.2rem;
+  color: var(--upsell-accent, #b04f38);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.loemies-upsell__header h2 {
+  margin: 0;
+  color: inherit;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.loemies-upsell__header p:last-child {
+  margin: 0.25rem 0 0;
+  color: color-mix(in srgb, currentcolor 68%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.loemies-upsell__cards {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.loemies-upsell-card {
+  display: grid;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+  grid-template-columns: 4.75rem minmax(0, 1fr) auto;
+  padding: 0.55rem;
+  border: 1px solid var(--upsell-border);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.loemies-upsell-card__image-link {
+  color: inherit;
+}
+
+.loemies-upsell-card__image-wrap {
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 0.6rem;
+  background: #eef0e9;
+}
+
+.loemies-upsell-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.loemies-upsell-card__image-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 25% 25%, #f7dc8d 0 12%, transparent 12.5%),
+    #eef0e9;
+}
+
+.loemies-upsell-card__content {
+  min-width: 0;
+}
+
+.loemies-upsell-card__detail {
+  margin: 0 0 0.15rem;
+  color: color-mix(in srgb, currentcolor 76%, transparent);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.loemies-upsell-card h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.loemies-upsell-card h3 a {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: inherit;
+  text-decoration: none;
+}
+
+.loemies-upsell-card h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.loemies-upsell-card__price {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.loemies-upsell-card__action {
+  min-width: 4.5rem;
+}
+
+.loemies-upsell-card__form {
+  margin: 0;
+}
+
+.loemies-upsell-card__action :is(a, button) {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--upsell-accent, #b04f38);
+  border-radius: 999rem;
+  background: var(--upsell-accent, #b04f38);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 850;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+}
+
+.loemies-upsell-card__action :is(a, button):hover {
+  filter: brightness(0.92);
+}
+
+.loemies-upsell-card__action button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.loemies-upsell-card__action [hidden] {
+  display: none;
+}
+
+.loemies-upsell--product {
+  margin-top: 1rem;
+}
+
+.loemies-upsell--cart {
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 64rem) {
+  .loemies-upsell--cart .loemies-upsell__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 27rem) {
+  .loemies-upsell-card {
+    align-items: start;
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+  }
+
+  .loemies-upsell-card__action {
+    grid-column: 1 / -1;
+  }
+
+  .loemies-upsell-card__action,
+  .loemies-upsell-card__form,
+  .loemies-upsell-card__action :is(a, button) {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loemies-upsell-card__action :is(a, button) {
+    scroll-behavior: auto;
+  }
+}
+
+.loemies-upsell__eyebrow,
+.loemies-upsell-card__detail {
+  font-size: 0.75rem;
+}

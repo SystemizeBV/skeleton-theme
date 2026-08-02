@@ -11,7 +11,24 @@
   "sections": {
     "main": {
       "type": "collection",
-      "settings": {}
+      "settings": {
+        "eyebrow": "Shop",
+        "show_breadcrumbs": true,
+        "show_description": true,
+        "fallback_description": "<p>Thoughtfully chosen toys and essentials for little explorers, made for everyday play, learning, and wonder.</p>",
+        "show_product_count": true,
+        "enable_filtering": true,
+        "enable_sorting": true,
+        "products_per_page": 24,
+        "columns_desktop": 4,
+        "vertical_padding": 48,
+        "background_color": "#F7F3EC",
+        "card_color": "#FFFFFF",
+        "text_color": "#2B241F",
+        "accent_color": "#B04F38",
+        "accent_dark_color": "#96432F",
+        "accent_soft_color": "#F9E4DC"
+      }
     }
   },
   "order": [

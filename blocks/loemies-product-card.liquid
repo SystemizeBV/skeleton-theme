@@ -1,0 +1,269 @@
+{% doc %}
+  Renders a collection product supplied through the closest product context.
+
+  @param {string} [image_sizes] - Responsive sizes hint for this card's grid.
+  @param {string} [image_loading] - Native image loading mode.
+  @param {string} [image_fetchpriority] - Browser fetch priority for the image.
+  @param {boolean} [image_deferred] - Pass false to render real server-side img markup with native lazy loading instead of the JS-swapped placeholder. Eager images are always server-rendered.
+  @param {string} [heading_tag] - Semantic heading tag for the card title.
+
+  @example
+  {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: product %}
+{% enddoc %}
+
+{% assign product = closest.product %}
+
+{% liquid
+  assign product_image_sizes = image_sizes | default: '(min-width: 1200px) 251px, (min-width: 992px) calc((100vw - 196px) / 4), (min-width: 768px) calc((100vw - 174px) / 3), (min-width: 369px) calc((100vw - 48px) / 2), calc(100vw - 34px)'
+  assign product_image_loading = image_loading | default: 'lazy'
+  assign product_image_fetchpriority = image_fetchpriority | default: 'auto'
+
+  comment
+    Eager images always render server-side. Lazy images default to the
+    JS-swapped placeholder handled by deferred-images.js unless the caller
+    opts out with image_deferred: false, which keeps native lazy loading but
+    ships real src/srcset markup in the initial HTML.
+  endcomment
+  assign product_image_deferred = true
+  if product_image_loading == 'eager' or image_deferred == false
+    assign product_image_deferred = false
+  endif
+
+  comment
+    Supplier feeds occasionally place a low-resolution detail shot first even
+    when a clean square pack shot exists in the same genuine media set. Keep
+    the merchant's featured image by default, but promote the first 800px+
+    square-capable source when the featured source is too small for a sharp
+    two-column mobile card. This never invents or upscales product art.
+  endcomment
+  assign card_primary_image = product.featured_image
+  if card_primary_image != blank
+    if card_primary_image.width < 720 or card_primary_image.height < 720
+      for candidate_image in product.images
+        if candidate_image.width >= 800 and candidate_image.height >= 800
+          assign card_primary_image = candidate_image
+          break
+        endif
+      endfor
+    endif
+  endif
+  assign card_image_request_width = card_primary_image.width | at_most: 960
+  if card_primary_image.width < 960
+    assign card_image_widths = '180, 240, 320, 360, 400, 440, 480, 540, 640, 720, 800'
+  else
+    assign card_image_widths = '180, 240, 320, 360, 400, 440, 480, 540, 640, 720, 800, 960'
+  endif
+
+  comment
+    First image that is not the featured one, used for the desktop hover
+    crossfade. Reading product.images rather than product.media keeps videos
+    and 3D models out of a purely decorative swap. The markup is always
+    rendered but display:none outside hover-capable pointers, so a phone never
+    downloads it: a lazy image without a layout box is never fetched.
+  endcomment
+  assign card_hover_image = blank
+  if card_primary_image != blank
+    for card_image in product.images
+      if card_image.id != card_primary_image.id and card_image.width >= 720 and card_image.height >= 720
+        assign card_hover_image = card_image
+        break
+      endif
+    endfor
+    if card_hover_image == blank
+      for card_image in product.images
+        if card_image.id != card_primary_image.id
+          assign card_hover_image = card_image
+          break
+        endif
+      endfor
+    endif
+  endif
+  assign card_hover_request_width = card_hover_image.width | at_most: 960
+  if card_hover_image.width < 960
+    assign card_hover_widths = '180, 240, 320, 360, 400, 440, 480, 540, 640, 720, 800'
+  else
+    assign card_hover_widths = '180, 240, 320, 360, 400, 440, 480, 540, 640, 720, 800, 960'
+  endif
+
+  assign product_heading_tag = heading_tag | default: 'h3'
+  assign price_target = product.selected_or_first_available_variant
+  assign price_min_money = product.price_min | money
+  assign product_form_id = 'ProductCardForm-' | append: section.id | append: '-' | append: product.id
+  assign card_title = product.metafields.custom.card_title.value | default: product.title
+  assign age_guidance = product.metafields.custom.card_age.value
+
+  comment
+    Cards intentionally show one guidance chip at most: age. Keeping product
+    type, play style and material out of this row gives every title the same
+    vertical starting point and makes dense collection grids easier to scan.
+  endcomment
+  if age_guidance == blank
+    if product.tags contains 'Age 12 months+'
+      assign age_guidance = 'products.card.age_months' | t: count: 12
+    elsif product.tags contains 'Age 1+'
+      assign age_guidance = 'products.card.age_years' | t: count: 1
+    elsif product.tags contains 'Age 2+'
+      assign age_guidance = 'products.card.age_years' | t: count: 2
+    elsif product.tags contains 'Age 3+'
+      assign age_guidance = 'products.card.age_years' | t: count: 3
+    endif
+  endif
+
+%}
+
+{% if product != blank %}
+  <article
+    class="loemies-product-card{% unless product.available %} loemies-product-card--sold-out{% endunless %}"
+    {{ block.shopify_attributes }}
+  >
+    <button
+      class="loemies-product-card__wishlist"
+      type="button"
+      data-product-card-wishlist
+      data-wishlist-key="{{ product.id }}"
+      data-wishlist-handle="{{ product.handle | escape }}"
+      data-wishlist-title="{{ card_title | escape }}"
+      data-wishlist-url="{{ product.url | escape }}"
+      data-wishlist-image="{% if card_primary_image != blank %}{{ card_primary_image | image_url: width: 600 }}{% endif %}"
+      data-wishlist-price="{{ price_target.price }}"
+      data-wishlist-currency="{{ cart.currency.iso_code | default: shop.currency | escape }}"
+      data-wishlist-available="{{ product.available }}"
+      data-label-save="{{ 'products.product.save_to_wishlist' | t }}"
+      data-label-remove="{{ 'products.product.remove_from_wishlist' | t }}"
+      aria-label="{{ 'products.product.save_to_wishlist' | t }}"
+      aria-pressed="false"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20.8 5.8a5.3 5.3 0 0 0-7.5 0L12 7.1l-1.3-1.3a5.3 5.3 0 1 0-7.5 7.5L12 22l8.8-8.7a5.3 5.3 0 0 0 0-7.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <a class="loemies-product-card__media-link" href="{{ product.url }}" aria-label="{{ card_title | escape }}">
+      <div class="loemies-product-card__media">
+        {% if card_primary_image != blank %}
+          {% if product_image_deferred == false %}
+            {{ card_primary_image
+              | image_url: width: card_image_request_width
+              | image_tag:
+                class: 'loemies-product-card__image',
+                widths: card_image_widths,
+                sizes: product_image_sizes,
+                loading: product_image_loading,
+                fetchpriority: product_image_fetchpriority,
+                alt: ''
+            }}
+          {% else %}
+            <img
+              class="loemies-product-card__image"
+              src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
+              data-responsive-image-src="{{ card_primary_image | image_url: width: card_image_request_width }}"
+              data-responsive-image-width="{{ card_image_request_width }}"
+              data-responsive-image-sizes="{{ product_image_sizes | escape }}"
+              width="{{ card_primary_image.width }}"
+              height="{{ card_primary_image.height }}"
+              loading="lazy"
+              alt=""
+            >
+            <noscript>
+              {{ card_primary_image
+                | image_url: width: card_image_request_width
+                | image_tag:
+                  class: 'loemies-product-card__image loemies-product-card__image--noscript',
+                  widths: card_image_widths,
+                  sizes: product_image_sizes,
+                  loading: 'lazy',
+                  alt: ''
+              }}
+            </noscript>
+          {% endif %}
+
+          {% if card_hover_image != blank %}
+            {{ card_hover_image
+              | image_url: width: card_hover_request_width
+              | image_tag:
+                class: 'loemies-product-card__image loemies-product-card__image--hover',
+                widths: card_hover_widths,
+                sizes: product_image_sizes,
+                loading: 'lazy',
+                fetchpriority: 'low',
+                alt: ''
+            }}
+          {% endif %}
+        {% else %}
+          <div class="loemies-product-card__image-fallback" aria-hidden="true">
+            <span></span>
+          </div>
+        {% endif %}
+      </div>
+    </a>
+
+    <div class="loemies-product-card__content">
+      <div class="loemies-product-card__guidance">
+        {% if age_guidance != blank %}
+          <span>{{ 'products.card.from_age' | t: age: age_guidance }}</span>
+        {% endif %}
+      </div>
+
+      <{{ product_heading_tag }} class="loemies-product-card__title">
+        <a href="{{ product.url }}">{{ card_title | escape }}</a>
+      </{{ product_heading_tag }}>
+
+      <div class="loemies-product-card__rating-row">
+        {% render 'product-rating',
+          product: product,
+          class_name: 'loemies-product-card__rating',
+          compact: true
+        %}
+      </div>
+
+      <div class="loemies-product-card__meta">
+        <div class="loemies-product-card__price">
+          {% if product.price_varies %}
+            <span>{{ 'products.card.from_price' | t: price: price_min_money }}</span>
+          {% else %}
+            <span>{{ price_target.price | money }}</span>
+            {% if price_target.compare_at_price > price_target.price %}
+              <s>{{ price_target.compare_at_price | money }}</s>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        {% unless product.available %}
+          <span class="loemies-product-card__availability{% unless product.available %} is-sold-out{% endunless %}">
+            {{ 'products.product.sold_out' | t }}
+          </span>
+        {% endunless %}
+      </div>
+
+      <div class="loemies-product-card__action">
+        {% if product.available and product.has_only_default_variant %}
+          {% form 'product', product, id: product_form_id, class: 'loemies-product-card__form', data-quick-add-form: '' %}
+            <input type="hidden" name="id" value="{{ price_target.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button
+              type="submit"
+              name="add"
+              data-quick-add-submit
+              aria-label="{{ 'products.product.add_to_cart' | t }} — {{ card_title | escape }}"
+            >
+              {{ 'products.product.add_to_cart' | t }}
+            </button>
+          {% endform %}
+        {% elsif product.available %}
+          <a href="{{ product.url }}">{{ 'products.card.choose_options' | t }}</a>
+        {% else %}
+          <a class="loemies-product-card__view-product" href="{{ product.url }}">
+            {{ 'products.card.view_product' | t }}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+{% endif %}
+
+
+{% schema %}
+{
+  "name": "Loemies product card",
+  "settings": []
+}
+{% endschema %}

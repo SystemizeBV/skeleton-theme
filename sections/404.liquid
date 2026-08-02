@@ -3,21 +3,251 @@
   enter an invalid store URL.
 
   https://shopify.dev/docs/storefronts/themes/architecture/templates/404
+
+  Branded recovery page: playful rainbow artwork, a warm heading, a search
+  form, and category chips so nobody hits a dead end.
 {% endcomment %}
 
-<h1>{{ '404.title' | t }}</h1>
+{% liquid
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
 
-<p>
-  {{ '404.not_found' | t }}
-</p>
+  # The `t` filter HTML-escapes its output, so escape the raw branch here and
+  # print these without a second escape. New keys fall back to hardcoded
+  # English until they land in the locale files.
+  assign not_found_heading = section.settings.heading | escape
+  if section.settings.heading == blank or section.settings.heading == 'This page wandered off to play'
+    assign not_found_heading = '404.heading' | t
+    if not_found_heading contains 'ranslation missing'
+      assign not_found_heading = 'This page wandered off to play'
+    endif
+  endif
 
-<a href="{{ routes.all_products_collection_url }}">
-  {{ '404.back_to_shopping' | t }}
-</a>
+  assign not_found_text = section.settings.text | escape
+  if section.settings.text == blank or section.settings.text == "The link is broken or the page has moved — but everything lovely is still right here. Try a search, or browse a category below."
+    assign not_found_text = '404.reassurance' | t
+    if not_found_text contains 'ranslation missing'
+      assign not_found_text = 'The link is broken or the page has moved — but everything lovely is still right here. Try a search, or browse a category below.'
+    endif
+  endif
+
+  assign age_two_label = 'sections.catalog.age_two' | t
+  if age_two_label contains 'ranslation missing'
+    assign age_two_label = 'From 2 years'
+  endif
+%}
+
+<section class="loemies-404" aria-labelledby="NotFoundHeading-{{ section.id }}">
+  <div class="loemies-404__art" aria-hidden="true">
+    <svg viewBox="0 0 260 190" fill="none">
+      <circle cx="38" cy="52" r="15" fill="#FFFFFF"/>
+      <circle cx="228" cy="122" r="5" fill="#B04F38"/>
+      <path d="m212 30 5 11 12 1.5-9 8 2.5 12-10.5-6-11 6 2.5-12-8.5-8 12-1.5 5-11Z" fill="#E2A33C"/>
+      <path d="M41 168c0-53 39-96 88-96s88 43 88 96" stroke="#F4CDBA" stroke-width="25" stroke-linecap="round"/>
+      <path d="M66 168c0-38 28-69 63-69s63 31 63 69" stroke="#D9D9EE" stroke-width="23" stroke-linecap="round"/>
+      <path d="M91 168c0-23 17-42 38-42s38 19 38 42" stroke="#D8E4D5" stroke-width="22" stroke-linecap="round"/>
+      <path d="M180 76c1.5-13 11.5-22.5 24.5-22.5 13.5 0 24.5 10.5 25.5 24 9.5 0 17 7.5 17 16.5S239.5 110.5 230 110.5h-52c-10 0-17.5-7.5-17.5-17.5 0-9 7-16.5 16-17h3.5Z" fill="#FFFFFF"/>
+    </svg>
+  </div>
+
+  <p class="loemies-404__eyebrow">{{ '404.title' | t }} &middot; {{ '404.not_found' | t }}</p>
+  <h1 id="NotFoundHeading-{{ section.id }}">{{ not_found_heading }}</h1>
+  <p class="loemies-404__text">{{ not_found_text }}</p>
+
+  <form class="loemies-404__search" action="{{ routes.search_url }}" method="get" role="search">
+    <label class="visually-hidden" for="NotFoundSearch-{{ section.id }}">{{ 'search.content.form_label' | t }}</label>
+    <div class="loemies-404__field">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="10.75" cy="10.75" r="6.25" stroke="currentColor" stroke-width="1.75"/>
+        <path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+      <input
+        id="NotFoundSearch-{{ section.id }}"
+        type="search"
+        name="q"
+        placeholder="{{ 'search.content.placeholder' | t }}"
+        autocomplete="on"
+        enterkeyhint="search"
+        spellcheck="false"
+        required
+      >
+    </div>
+    <button type="submit">{{ 'search.submit' | t }}</button>
+  </form>
+
+  <nav class="loemies-404__categories" aria-label="{{ '404.back_to_shopping' | t }}">
+    <p class="loemies-404__categories-label">{{ '404.back_to_shopping' | t }}</p>
+    <div class="loemies-404__chips">
+      <a href="{{ catalog_url }}">{{ 'sections.catalog.all' | t }}</a>
+      <a href="{{ catalog_url }}/age-1">{{ 'sections.catalog.age_one' | t }}</a>
+      <a href="{{ catalog_url }}/age-2">{{ age_two_label | escape }}</a>
+      <a href="{{ catalog_url }}/age-3">{{ 'sections.catalog.age_three' | t }}</a>
+    </div>
+  </nav>
+</section>
+
+{% stylesheet %}
+  .loemies-404 {
+    display: grid;
+    max-width: 36rem;
+    margin-inline: auto;
+    padding-block: clamp(1.5rem, 5vw, 3.5rem);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .loemies-404__art {
+    position: relative;
+    width: min(15rem, 70vw);
+  }
+
+  .loemies-404__art svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .loemies-404__eyebrow {
+    margin: 1.25rem 0 0;
+    color: var(--color-brand);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .loemies-404 h1 {
+    margin: 0.5rem 0 0;
+    font-size: clamp(1.75rem, 5vw, 2.6rem);
+    font-weight: 900;
+  }
+
+  .loemies-404__text {
+    max-width: 42ch;
+    margin: 0.8rem 0 0;
+    color: var(--color-muted);
+    line-height: 1.65;
+  }
+
+  .loemies-404__search {
+    display: flex;
+    width: 100%;
+    max-width: 28rem;
+    margin-top: 1.6rem;
+    gap: 0.6rem;
+  }
+
+  .loemies-404__field {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+  }
+
+  .loemies-404__field svg {
+    position: absolute;
+    left: 1rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--color-muted);
+    pointer-events: none;
+  }
+
+  .loemies-404__field input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: 0 0.15rem 0.6rem rgba(77, 52, 42, 0.035);
+  }
+
+  .loemies-404__field input::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+
+  .loemies-404__search button {
+    flex: 0 0 auto;
+    border-radius: 999px;
+  }
+
+  .loemies-404__categories {
+    width: 100%;
+    padding-top: 1.9rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .loemies-404__categories-label {
+    margin: 0 0 0.85rem;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .loemies-404__chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.65rem;
+  }
+
+  .loemies-404__chips a {
+    display: inline-flex;
+    min-height: 2.8rem;
+    align-items: center;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .loemies-404__chips a:hover {
+    border-color: var(--color-brand);
+    background: var(--color-brand-soft);
+  }
+
+  @media (max-width: 30rem) {
+    .loemies-404__search {
+      flex-direction: column;
+    }
+
+    .loemies-404__search button {
+      width: 100%;
+    }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.404",
-  "settings": []
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "This page wandered off to play"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Text",
+      "default": "The link is broken or the page has moved — but everything lovely is still right here. Try a search, or browse a category below."
+    }
+  ]
 }
 {% endschema %}

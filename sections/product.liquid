@@ -1,50 +1,1135 @@
 {% comment %}
-  This section is used in the product template to render product page with
-  media, content, and add-to-cart form.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/product
+  Branded Loemies product page with rich media, variant-aware purchase controls,
+  and progressive enhancement for gallery and quantity interactions.
 {% endcomment %}
 
-<div class="product-images">
-  {% for image in product.images %}
-    {% render 'image', class: 'product-image', image: image %}
-  {% endfor %}
-</div>
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+  assign product_upsells = product.metafields['shopify--discovery--product_recommendation'].complementary_products.value
+  if product_upsells == blank
+    assign product_upsells = product.metafields.custom.upsell_products.value
+  endif
+  assign product_upsells_disabled = product.metafields.custom.disable_upsells.value | default: false
+  assign initial_media = current_variant.featured_media | default: product.featured_media | default: product.media.first
 
-<div class="product-info">
-  <h1>{{ product.title }}</h1>
-  <p>{{ product.price | money }}</p>
-  <p>{{ product.description }}</p>
-</div>
+  comment
+    Preserve explicit variant media, but do not lead the PDP with a weak
+    supplier thumbnail when the same authentic gallery contains a sharp
+    800px+ image. The source order remains available in the thumbnail rail.
+  endcomment
+  if current_variant.featured_media == blank and initial_media.preview_image != blank
+    if initial_media.preview_image.width < 720 or initial_media.preview_image.height < 720
+      for candidate_media in product.media
+        if candidate_media.media_type == 'image' and candidate_media.preview_image.width >= 800 and candidate_media.preview_image.height >= 800
+          assign initial_media = candidate_media
+          break
+        endif
+      endfor
+    endif
+  endif
+  assign initial_media_position = 1
+  assign product_form_id = 'ProductForm-' | append: section.id
+  assign product_image_media = product.media | where: 'media_type', 'image'
+  assign storefront_quantity_cap = settings.max_items_per_product | default: 10
+  assign current_quantity_max = current_variant.quantity_rule.max
+  if current_quantity_max == blank or current_quantity_max > storefront_quantity_cap
+    assign current_quantity_max = storefront_quantity_cap
+  endif
+  comment
+    A blank highlight stays blank so the facts strip below can take its place;
+    only the legacy default English copy is swapped for its translation.
+  endcomment
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign product_note = section.settings.product_note | escape
+  if section.settings.product_note == 'Chosen with care for everyday family life'
+    assign product_note = 'products.product.content.note' | t
+  endif
 
-<div class="product-form">
-  {% form 'product', product %}
-    {% assign current_variant = product.selected_or_first_available_variant %}
+  comment
+    Product facts chips reuse the exact tag parsing from the Loemies product
+    card (blocks/loemies-product-card.liquid) so PDP and cards always agree.
+  endcomment
+  assign facts_age = product.metafields.custom.card_age.value
+  assign facts_detail = product.metafields.custom.card_detail.value | escape
+  if facts_age == blank
+    if product.tags contains 'Age 12 months+'
+      assign facts_age = 'products.card.age_months' | t: count: 12
+    elsif product.tags contains 'Age 1+'
+      assign facts_age = 'products.card.age_years' | t: count: 1
+    elsif product.tags contains 'Age 2+'
+      assign facts_age = 'products.card.age_years' | t: count: 2
+    elsif product.tags contains 'Age 3+'
+      assign facts_age = 'products.card.age_years' | t: count: 3
+    endif
+  endif
+  if product.metafields.custom.card_detail.value == blank
+    if product.tags contains 'FSC Wood'
+      assign facts_detail = 'products.card.fsc_wood' | t
+    elsif product.tags contains 'Made in EU'
+      assign facts_detail = 'products.card.made_in_eu' | t
+    elsif product.tags contains 'Wooden Toys'
+      assign facts_detail = 'products.card.wooden_toy' | t
+    endif
+  endif
+  assign facts_type = ''
+  if facts_age == blank and product.type != blank
+    assign facts_type = product.type
+  endif
+  assign delivery_heading = section.settings.delivery_heading | escape
+  if section.settings.delivery_heading == blank or section.settings.delivery_heading == 'Ordered before 16:00, shipped today'
+    assign delivery_heading = 'products.product.content.delivery_heading' | t
+  elsif section.settings.delivery_heading == 'Dispatched within 1–2 business days'
+    assign delivery_heading = 'products.product.content.delivery_promise' | t
+  endif
+  assign delivery_text = section.settings.delivery_text | escape
+  if section.settings.delivery_text == blank or section.settings.delivery_text == 'Shipping calculated at checkout'
+    assign delivery_text = 'products.product.shipping_at_checkout' | t
+  endif
+  assign upsell_eyebrow = section.settings.upsell_eyebrow | escape
+  if section.settings.upsell_eyebrow == blank or section.settings.upsell_eyebrow == 'A thoughtful extra'
+    assign upsell_eyebrow = 'products.product.content.upsell_eyebrow' | t
+  endif
+  assign product_upsell_heading = product.metafields.custom.upsell_heading.value | escape
+  if product.metafields.custom.upsell_heading.value == blank
+    assign product_upsell_heading = section.settings.upsell_heading | escape
+    if section.settings.upsell_heading == blank or section.settings.upsell_heading == 'Pairs well with this'
+      assign product_upsell_heading = 'products.product.content.upsell_heading' | t
+    endif
+  endif
+  assign upsell_text = section.settings.upsell_text | escape
+  if section.settings.upsell_text == blank or section.settings.upsell_text == 'Useful additions chosen to complement this product.'
+    assign upsell_text = 'products.product.content.upsell_text' | t
+  endif
+  assign details_heading = section.settings.details_heading | escape
+  if section.settings.details_heading == blank or section.settings.details_heading == 'About this product'
+    assign details_heading = 'products.product.content.details_heading' | t
+  endif
+  assign reviews_heading = section.settings.reviews_heading | escape
+  if section.settings.reviews_heading == blank or section.settings.reviews_heading == 'Reviews'
+    assign reviews_heading = 'products.product.content.reviews_heading' | t
+  endif
+  assign reviews_intro = section.settings.reviews_intro
+  if reviews_intro == blank or reviews_intro == 'Real experiences from families who use this product.'
+    assign reviews_intro = 'products.product.content.reviews_intro' | t
+  endif
+  assign review_form_heading = section.settings.review_form_heading
+  if review_form_heading == blank or review_form_heading == 'Write a review'
+    assign review_form_heading = 'products.product.content.review_form_heading' | t
+  endif
+  assign review_form_intro = section.settings.review_form_intro
+  if review_form_intro == blank or review_form_intro == 'Tell other families what you think. Your review will be checked before it is published.'
+    assign review_form_intro = 'products.product.content.review_form_intro' | t
+  endif
+  assign benefit_one = section.settings.benefit_one | escape
+  if section.settings.benefit_one == blank or section.settings.benefit_one == '30-day returns'
+    assign benefit_one = 'products.product.content.benefit_one' | t: days: settings.return_window_days
+  endif
+  assign benefit_two = section.settings.benefit_two | escape
+  if section.settings.benefit_two == blank or section.settings.benefit_two == 'Safe and secure payment'
+    assign benefit_two = 'products.product.content.benefit_two' | t
+  endif
+  assign benefit_three = section.settings.benefit_three | escape
+  if section.settings.benefit_three == blank or section.settings.benefit_three == 'Personal service from the Loemies team'
+    assign benefit_three = 'products.product.content.benefit_three' | t
+  endif
+  assign payment_label = section.settings.payment_label | escape
+  if section.settings.payment_label == blank or section.settings.payment_label == 'Pay safely with'
+    assign payment_label = 'products.product.content.payment_label' | t
+  endif
 
-    <select name="id">
-      {% for variant in product.variants %}
-        <option
-          value="{{ variant.id }}"
-          {% if variant == current_variant %}
-            selected="selected"
+  if section.settings.use_store_promises
+    if settings.free_shipping_enabled
+      assign delivery_text = 'sections.promises.free_shipping' | t: threshold: settings.free_shipping_threshold
+    else
+      assign delivery_text = 'sections.promises.tracked_shipping' | t
+    endif
+    assign benefit_one = 'sections.promises.returns' | t: days: settings.return_window_days
+  endif
+
+  comment
+    The sticky-bar reviews anchor only makes sense once at least one approved
+    review exists; mirror the validity check from snippets/product-reviews.
+  endcomment
+  assign product_reviews_list = product.metafields.custom.reviews.value
+  assign product_has_reviews = false
+  for product_review in product_reviews_list
+    assign product_review_rating = product_review.rating.value | plus: 0
+    if product_review_rating >= 1 and product_review_rating <= 5
+      assign product_has_reviews = true
+      break
+    endif
+  endfor
+
+  if initial_media != blank
+    for media_item in product.media
+      if media_item.id == initial_media.id
+        assign initial_media_position = forloop.index
+        break
+      endif
+    endfor
+  endif
+
+  assign current_on_sale = false
+  if current_variant.compare_at_price > current_variant.price
+    assign current_on_sale = true
+  endif
+
+  assign has_product_context = false
+  if section.settings.show_vendor and product.vendor != blank
+    assign has_product_context = true
+  endif
+  if section.settings.show_product_type and product.type != blank
+    assign has_product_context = true
+  endif
+%}
+
+<script src="{{ 'product.js' | asset_url }}" defer="defer"></script>
+<noscript>
+  <style>
+    .loemies-product .loemies-product-media:not(.is-active) {
+      display: grid;
+    }
+  </style>
+</noscript>
+
+<loemies-product
+  class="loemies-product full-width"
+  data-add-to-cart-text="{{ 'products.product.add_to_cart' | t }}"
+  data-available-text="{{ 'products.product.in_stock' | t }}"
+  data-sold-out-text="{{ 'products.product.sold_out' | t }}"
+  data-cart-label-template="{{ 'general.accessibility.cart_count' | t: count: '__COUNT__' }}"
+  data-cart-error="{{ 'products.upsell.error' | t }}"
+>
+  <div class="loemies-product__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="loemies-product__breadcrumbs" aria-label="{{ 'products.product.breadcrumbs' | t }}">
+        <a href="{{ routes.root_url }}">{{ 'products.product.home' | t }}</a>
+        <span aria-hidden="true">/</span>
+        {% if collection != blank %}
+          <a href="{{ collection.url }}">{{ collection.title | escape }}</a>
+        {% else %}
+          <a href="{{ catalog_url }}">{{ 'products.product.shop' | t }}</a>
+        {% endif %}
+        <span aria-hidden="true">/</span>
+        <span class="loemies-product__breadcrumbs-current" aria-current="page">{{ product.title | escape }}</span>
+      </nav>
+    {% endif %}
+
+    <div class="loemies-product__layout">
+      <div
+        class="loemies-product__gallery"
+        role="region"
+        aria-label="{{ 'products.product.gallery' | t }}"
+      >
+        {% if product.media.size > 0 %}
+          <div class="loemies-product__gallery-layout">
+            {% if product.media.size > 1 %}
+              <div
+                class="loemies-product__thumbnails"
+                role="group"
+                aria-label="{{ 'products.product.gallery_thumbnails' | t }}"
+              >
+                {% for media in product.media %}
+                  {% liquid
+                    assign media_is_active = false
+                    if media.id == initial_media.id
+                      assign media_is_active = true
+                    endif
+                  %}
+                  <a
+                    class="loemies-product__thumbnail"
+                    href="#ProductMedia-{{ section.id }}-{{ media.id }}"
+                    data-media-thumbnail
+                    data-media-id="{{ media.id }}"
+                    aria-label="{{ 'products.product.view_media' | t: index: forloop.index, total: product.media.size }}"
+                    {% if media_is_active %}
+                      aria-current="true"
+                    {% endif %}
+                  >
+                    {% if media.preview_image != blank %}
+                      {% if forloop.index <= 4 %}
+                        {{ media.preview_image
+                          | image_url: width: 180
+                          | image_tag:
+                            widths: '64, 96, 128, 144, 180',
+                            sizes: '68px',
+                            loading: 'lazy',
+                            fetchpriority: 'low',
+                            alt: ''
+                        }}
+                      {% else %}
+                        <img
+                          src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
+                          data-thumbnail-src="{{ media.preview_image | image_url: width: 180 }}"
+                          width="{{ media.preview_image.width }}"
+                          height="{{ media.preview_image.height }}"
+                          loading="lazy"
+                          fetchpriority="low"
+                          alt=""
+                        >
+                      {% endif %}
+                    {% endif %}
+                    {% unless media.media_type == 'image' %}
+                      <span class="loemies-product__thumbnail-icon" aria-hidden="true">
+                        {% if media.media_type == 'model' %}
+                          3D
+                        {% else %}
+                          &#9654;
+                        {% endif %}
+                      </span>
+                    {% endunless %}
+                  </a>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="loemies-product__stage" id="ProductMediaStage-{{ section.id }}">
+              <div class="loemies-product__track" data-media-track>
+                {% for media in product.media %}
+                  {% liquid
+                    assign media_is_active = false
+                    if media.id == initial_media.id
+                      assign media_is_active = true
+                    endif
+                  %}
+                  {% render 'product-media',
+                    media: media,
+                    product_title: product.title,
+                    section_id: section.id,
+                    position: forloop.index,
+                    priority: media_is_active
+                  %}
+                {% endfor %}
+              </div>
+
+              {% if product.media.size > 1 %}
+                <button
+                  class="loemies-product__gallery-control is-previous"
+                  type="button"
+                  data-gallery-previous
+                  aria-label="{{ 'general.accessibility.previous_media' | t }}"
+                  aria-controls="ProductMediaStage-{{ section.id }}"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  class="loemies-product__gallery-control is-next"
+                  type="button"
+                  data-gallery-next
+                  aria-label="{{ 'general.accessibility.next_media' | t }}"
+                  aria-controls="ProductMediaStage-{{ section.id }}"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <p
+                  class="loemies-product__media-counter"
+                  data-media-counter
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <span class="visually-hidden">{{ 'products.product.media_counter' | t: index: initial_media_position, total: product.media.size }}</span>
+                  <span data-media-counter-current aria-hidden="true">{{ initial_media_position }}</span>
+                  <span aria-hidden="true">/</span>
+                  <span aria-hidden="true">{{ product.media.size }}</span>
+                </p>
+              {% endif %}
+            </div>
+          </div>
+
+          <dialog
+            class="loemies-product__lightbox"
+            id="ProductLightbox-{{ section.id }}"
+            data-product-lightbox
+            aria-label="{{ 'general.accessibility.view_larger_product_image' | t }}"
+            scroll-lock
+          >
+            <div class="loemies-product__lightbox-layout" data-lightbox-layout>
+              <button
+                class="loemies-product__lightbox-close"
+                type="button"
+                data-lightbox-close
+                aria-label="{{ 'general.accessibility.close_image_viewer' | t }}"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </button>
+              {% if product_image_media.size > 1 %}
+                <button
+                  class="loemies-product__lightbox-nav is-previous"
+                  type="button"
+                  data-lightbox-previous
+                  aria-label="{{ 'general.accessibility.previous_media' | t }}"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  class="loemies-product__lightbox-nav is-next"
+                  type="button"
+                  data-lightbox-next
+                  aria-label="{{ 'general.accessibility.next_media' | t }}"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              {% endif %}
+              <img
+                class="loemies-product__lightbox-image"
+                data-lightbox-image
+                alt=""
+                width="2400"
+                height="2400"
+              >
+            </div>
+          </dialog>
+        {% else %}
+          <div class="loemies-product__empty-media">
+            <div>
+              <span class="loemies-product__empty-media-mark" aria-hidden="true">&#10022;</span>
+              <p>{{ 'products.product.media_fallback' | t }}</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <aside class="loemies-product__summary{% if section.settings.enable_sticky_summary %} is-sticky{% endif %}">
+        <div class="loemies-product__summary-intro">
+          <p class="loemies-product__eyebrow">
+            {% if section.settings.show_vendor and product.vendor != blank %}
+              {{ product.vendor | escape }}
+            {% endif %}
+            {% if section.settings.show_vendor and product.vendor != blank and section.settings.show_product_type and product.type != blank %}
+              <span aria-hidden="true"> · </span>
+            {% endif %}
+            {% if section.settings.show_product_type and product.type != blank %}
+              {{ product.type | escape }}
+            {% endif %}
+            {% unless has_product_context %}
+              {{ 'products.product.eyebrow' | t }}
+            {% endunless %}
+          </p>
+
+          <h1 class="loemies-product__title">{{ product.title | escape }}</h1>
+
+          {% if section.settings.show_reviews %}
+            {% assign product_reviews_anchor = '#ProductReviews-' | append: section.id %}
+            {% render 'product-rating',
+              product: product,
+              href: product_reviews_anchor,
+              class_name: 'loemies-product__rating',
+              show_average: true,
+              show_empty: false
+            %}
           {% endif %}
-        >
-          {{ variant.title }} - {{ variant.price | money }}
-        </option>
-      {% endfor %}
-    </select>
 
-    <input type="text" name="quantity" min="1" value="1">
+          {% if product_note != blank %}
+            <p class="loemies-product__note">
+              <span class="loemies-product__note-mark" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="m6 10 2.4 2.4L14 6.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span>{{ product_note }}</span>
+            </p>
+          {% endif %}
 
-    <input type="submit" value="Add to cart">
-    {{ form | payment_button }}
-  {% endform %}
-</div>
+          {% if facts_age != blank or facts_detail != blank or facts_type != blank %}
+            <ul class="loemies-product__facts" role="list">
+              {% if facts_age != blank %}
+                <li>{{ 'products.card.from_age' | t: age: facts_age }}</li>
+              {% elsif facts_type != blank %}
+                <li>{{ facts_type | escape }}</li>
+              {% endif %}
+              {% if facts_detail != blank %}
+                <li>{{ facts_detail }}</li>
+              {% endif %}
+            </ul>
+          {% endif %}
+        </div>
+
+        <div class="loemies-product__summary-card">
+          <div class="loemies-product__price-header">
+            <div>
+              <div class="loemies-product__price-row" role="status" aria-live="polite">
+                <span class="loemies-product__price" data-product-price>{{ current_variant.price | money }}</span>
+                <s
+                  class="loemies-product__compare-price"
+                  data-product-compare-price
+                  {% unless current_on_sale %}
+                    hidden
+                  {% endunless %}
+                >
+                  {% if current_on_sale %}{{ current_variant.compare_at_price | money }}{% endif %}
+                </s>
+                <span
+                  class="loemies-product__sale-badge"
+                  data-sale-badge
+                  {% unless current_on_sale %}
+                    hidden
+                  {% endunless %}
+                >
+                  {{ 'products.product.sale' | t }}
+                </span>
+              </div>
+
+              <p class="loemies-product__tax-note">
+                {% if cart.taxes_included %}
+                  {{ 'products.product.tax_included' | t }}
+                {% endif %}
+                {% if shop.shipping_policy.body != blank %}
+                  {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                {% else %}
+                  {{ 'products.product.shipping_at_checkout' | t }}
+                {% endif %}
+              </p>
+            </div>
+
+            <span
+              class="loemies-product__availability{% unless current_variant.available %} is-sold-out{% endunless %}"
+              data-product-availability
+              role="status"
+            >
+              {% if current_variant.available %}
+                {{ 'products.product.in_stock' | t }}
+              {% else %}
+                {{ 'products.product.sold_out' | t }}
+              {% endif %}
+            </span>
+          </div>
+
+          <p
+            class="loemies-product__unit-price"
+            data-unit-price-row
+            {% unless current_variant.unit_price_measurement %}
+              hidden
+            {% endunless %}
+          >
+            <span data-unit-price>
+              {% if current_variant.unit_price_measurement %}
+                {{ current_variant.unit_price | money }} /
+                {% if current_variant.unit_price_measurement.reference_value != 1 %}
+                  {{ current_variant.unit_price_measurement.reference_value }}
+                {% endif %}
+                {{ current_variant.unit_price_measurement.reference_unit }}
+              {% endif %}
+            </span>
+          </p>
+
+          {% if product.available %}
+            {% form 'product', product, id: product_form_id, class: 'loemies-product__form', data-product-form: '' %}
+            {% if form.errors %}
+              <div class="loemies-product__form-error" role="alert">
+                {{ form.errors | default_errors }}
+              </div>
+            {% endif %}
+
+            <div
+              class="loemies-product__field"
+              {% if product.has_only_default_variant %}
+                hidden
+              {% endif %}
+            >
+              <label class="loemies-product__label" for="VariantSelect-{{ section.id }}">
+                {{ 'products.product.variant' | t }}
+              </label>
+              <select
+                class="loemies-product__variant-select"
+                id="VariantSelect-{{ section.id }}"
+                name="id"
+                data-variant-select
+              >
+                {% for variant in product.variants %}
+                  {% liquid
+                    assign variant_on_sale = false
+                    if variant.compare_at_price > variant.price
+                      assign variant_on_sale = true
+                    endif
+                    assign variant_quantity_max = variant.quantity_rule.max
+                    if variant_quantity_max == blank or variant_quantity_max > storefront_quantity_cap
+                      assign variant_quantity_max = storefront_quantity_cap
+                    endif
+
+                    capture variant_unit_price
+                      if variant.unit_price_measurement
+                        echo variant.unit_price | money
+                        echo ' / '
+                        if variant.unit_price_measurement.reference_value != 1
+                          echo variant.unit_price_measurement.reference_value
+                        endif
+                        echo variant.unit_price_measurement.reference_unit
+                      endif
+                    endcapture
+                  %}
+                  <option
+                    value="{{ variant.id }}"
+                    data-available="{{ variant.available }}"
+                    data-price="{{ variant.price | money | escape }}"
+                    data-compare-at-price="{% if variant_on_sale %}{{ variant.compare_at_price | money | escape }}{% endif %}"
+                    data-media-id="{{ variant.featured_media.id }}"
+                    data-url="{{ variant.url }}"
+                    data-sku="{{ variant.sku | escape }}"
+                    data-unit-price="{{ variant_unit_price | strip | escape }}"
+                    data-quantity-min="{{ variant.quantity_rule.min | default: 1 }}"
+                    data-quantity-step="{{ variant.quantity_rule.increment | default: 1 }}"
+                    data-quantity-max="{{ variant_quantity_max }}"
+                    {% if variant == current_variant %}
+                      selected="selected"
+                    {% endif %}
+                  >
+                    {{ variant.title | escape }} — {{ variant.price | money }}
+                    {% unless variant.available %} ({{ 'products.product.sold_out' | t }}){% endunless %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="loemies-product__purchase-row">
+              <div class="loemies-product__field">
+                <label class="loemies-product__label" for="Quantity-{{ section.id }}">
+                  {{ 'products.product.quantity' | t }}
+                </label>
+                <div class="loemies-product__quantity-wrap">
+                  <button
+                    class="loemies-product__quantity-button"
+                    type="button"
+                    data-quantity-minus
+                    aria-label="{{ 'products.product.decrease_quantity' | t }}"
+                    {% unless current_variant.available %}
+                      disabled
+                    {% endunless %}
+                  >
+                    <span aria-hidden="true">−</span>
+                  </button>
+                  <input
+                    class="loemies-product__quantity"
+                    id="Quantity-{{ section.id }}"
+                    type="number"
+                    name="quantity"
+                    value="{{ current_variant.quantity_rule.min | default: 1 }}"
+                    min="{{ current_variant.quantity_rule.min | default: 1 }}"
+                    step="{{ current_variant.quantity_rule.increment | default: 1 }}"
+                    max="{{ current_quantity_max }}"
+                    inputmode="numeric"
+                    data-quantity-input
+                    {% unless current_variant.available %}
+                      disabled
+                    {% endunless %}
+                  >
+                  <button
+                    class="loemies-product__quantity-button"
+                    type="button"
+                    data-quantity-plus
+                    aria-label="{{ 'products.product.increase_quantity' | t }}"
+                    {% unless current_variant.available %}
+                      disabled
+                    {% endunless %}
+                  >
+                    <span aria-hidden="true">+</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="loemies-product__purchase-actions">
+                <button
+                  class="loemies-product__submit"
+                  type="submit"
+                  name="add"
+                  data-product-submit
+                  {% unless current_variant.available %}
+                    disabled
+                  {% endunless %}
+                >
+                  <span data-product-submit-text>
+                    {% if current_variant.available %}
+                      {{ 'products.product.add_to_cart' | t }}
+                    {% else %}
+                      {{ 'products.product.sold_out' | t }}
+                    {% endif %}
+                  </span>
+                </button>
+
+                <button
+                  class="loemies-product__wishlist"
+                  type="button"
+                  data-wishlist-toggle
+                  data-wishlist-key="{{ product.id }}"
+                  data-wishlist-handle="{{ product.handle | escape }}"
+                  data-wishlist-title="{{ product.title | escape }}"
+                  data-wishlist-url="{{ product.url | escape }}"
+                  data-wishlist-image="{% if product.featured_image != blank %}{{ product.featured_image | image_url: width: 600 }}{% endif %}"
+                  data-wishlist-price="{{ current_variant.price }}"
+                  data-wishlist-currency="{{ cart.currency.iso_code | default: shop.currency | escape }}"
+                  data-wishlist-available="{{ product.available }}"
+                  data-label-save="{{ 'products.product.save_to_wishlist' | t }}"
+                  data-label-remove="{{ 'products.product.remove_from_wishlist' | t }}"
+                  aria-label="{{ 'products.product.save_to_wishlist' | t }}"
+                  aria-pressed="false"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20.8 5.8a5.3 5.3 0 0 0-7.5 0L12 7.1l-1.3-1.3a5.3 5.3 0 1 0-7.5 7.5L12 22l8.8-8.7a5.3 5.3 0 0 0 0-7.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {% if section.settings.show_dynamic_checkout and product.available %}
+              <div class="loemies-product__dynamic-checkout" data-dynamic-checkout>
+                {{ form | payment_button }}
+              </div>
+            {% endif %}
+
+            <div class="loemies-product__payment-terms">
+              {{ form | payment_terms }}
+            </div>
+            {% endform %}
+
+            {% if delivery_heading != blank or delivery_text != blank %}
+              <div class="loemies-product__delivery">
+                <span class="loemies-product__delivery-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M3.5 6.5h10v9h-10zM13.5 9h3.2l3 3.2v3.3h-6.2zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM17 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <div>
+                  {% if delivery_heading != blank %}
+                    <p class="loemies-product__delivery-heading">{{ delivery_heading }}</p>
+                  {% endif %}
+                  {% if delivery_text != blank %}
+                    <p>{{ delivery_text }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="loemies-product__sold-out-recovery">
+              <h2>{{ 'products.product.sold_out_recovery_heading' | t }}</h2>
+              <p>{{ 'products.product.sold_out_recovery_text' | t }}</p>
+              {% form 'contact', id: 'SoldOutContact' %}
+                <input type="hidden" name="contact[tags]" value="product availability, {{ product.handle | escape }}">
+                <input type="hidden" name="contact[name]" value="Product availability request">
+                <input type="hidden" name="contact[body]" value="Please let me know about availability for {{ product.title | escape }} — {{ shop.url }}{{ product.url }}">
+                {% if form.posted_successfully? %}
+                  <p class="loemies-product__sold-out-success" role="status">{{ 'products.product.sold_out_recovery_success' | t }}</p>
+                {% else %}
+                  {% if form.errors %}
+                    <div class="loemies-product__form-error" role="alert">{{ form.errors | default_errors }}</div>
+                  {% endif %}
+                  <label class="visually-hidden" for="SoldOutEmail-{{ section.id }}">{{ 'products.product.sold_out_recovery_email' | t }}</label>
+                  <div class="loemies-product__sold-out-fields">
+                    <input
+                      id="SoldOutEmail-{{ section.id }}"
+                      type="email"
+                      name="contact[email]"
+                      value="{% if customer %}{{ customer.email | escape }}{% endif %}"
+                      placeholder="{{ 'products.product.sold_out_recovery_email' | t }}"
+                      autocomplete="email"
+                      required
+                    >
+                    <button type="submit">{{ 'products.product.sold_out_recovery_submit' | t }}</button>
+                  </div>
+                {% endif %}
+              {% endform %}
+              <a class="loemies-product__sold-out-browse" href="{{ catalog_url }}">{{ 'products.product.sold_out_recovery_browse' | t }} <span aria-hidden="true">→</span></a>
+            </div>
+          {% endif %}
+
+          {% if section.settings.show_upsells and product_upsells_disabled == false and product_upsells != blank %}
+            {% liquid
+              assign product_upsell_count = 0
+              capture product_upsell_cards
+                for upsell_product in product_upsells
+                  if product_upsell_count >= section.settings.upsell_maximum
+                    break
+                  endif
+                  if upsell_product.id != product.id and upsell_product.available
+                    render 'loemies-upsell-card', upsell_product: upsell_product, context: 'product', enable_quick_add: section.settings.upsell_quick_add
+                    assign product_upsell_count = product_upsell_count | plus: 1
+                  endif
+                endfor
+              endcapture
+            %}
+            {% if product_upsell_count > 0 %}
+              <section
+                class="loemies-upsell loemies-upsell--product"
+                aria-labelledby="ProductUpsellHeading-{{ section.id }}"
+                style="--upsell-background: {{ section.settings.upsell_background }}; --upsell-text: {{ section.settings.upsell_text_color }}; --upsell-accent: {{ section.settings.upsell_accent }};"
+              >
+                <header class="loemies-upsell__header">
+                  {% if upsell_eyebrow != blank %}
+                    <p class="loemies-upsell__eyebrow">{{ upsell_eyebrow }}</p>
+                  {% endif %}
+                  <h2 id="ProductUpsellHeading-{{ section.id }}">{{ product_upsell_heading }}</h2>
+                  {% if upsell_text != blank %}
+                    <p>{{ upsell_text }}</p>
+                  {% endif %}
+                </header>
+                <div class="loemies-upsell__cards">
+                  {{ product_upsell_cards }}
+                </div>
+              </section>
+            {% endif %}
+          {% endif %}
+
+          {% if section.settings.show_sku %}
+            <p
+              class="loemies-product__sku"
+              data-product-sku-row
+              {% if current_variant.sku == blank %}
+                hidden
+              {% endif %}
+            >
+              {{ 'products.product.sku' | t }}: <span data-product-sku>{{ current_variant.sku | escape }}</span>
+            </p>
+          {% endif %}
+
+          {% if benefit_one != blank or benefit_two != blank or benefit_three != blank %}
+            <ul class="loemies-product__assurances" role="list">
+              {% if benefit_one != blank %}
+                <li class="loemies-product__assurance">
+                  <span class="loemies-product__assurance-mark" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M6.7 5.9H3.4V2.6M3.8 6.3a6.7 6.7 0 1 1-.4 7.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </span>
+                  <span>{{ benefit_one }}</span>
+                </li>
+              {% endif %}
+              {% if benefit_two != blank %}
+                <li class="loemies-product__assurance">
+                  <span class="loemies-product__assurance-mark" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M10 3 4.5 5v4.3c0 3.4 2.2 6.2 5.5 7.7 3.3-1.5 5.5-4.3 5.5-7.7V5L10 3Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="m7.5 10 1.5 1.5 3.5-3.7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </span>
+                  <span>{{ benefit_two }}</span>
+                </li>
+              {% endif %}
+              {% if benefit_three != blank %}
+                <li class="loemies-product__assurance">
+                  <span class="loemies-product__assurance-mark" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M10 3.5c-3.7 0-6.5 2.5-6.5 5.5 0 1.7.9 3.2 2.3 4.2-.1.9-.5 1.8-1.2 2.5 1.4-.1 2.6-.6 3.5-1.4.6.1 1.2.2 1.9.2 3.7 0 6.5-2.5 6.5-5.5S13.7 3.5 10 3.5Z" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </span>
+                  <span>{{ benefit_three }}</span>
+                </li>
+              {% endif %}
+            </ul>
+          {% endif %}
+
+          {% if section.settings.show_payment_icons and shop.enabled_payment_types != empty %}
+            <div class="loemies-product__payments">
+              <p>{{ payment_label }}</p>
+              <ul role="list" aria-label="{{ 'general.accessibility.accepted_payments' | t }}">
+                {% for type in shop.enabled_payment_types %}
+                  <li>{{ type | payment_type_svg_tag }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if product.available %}
+        <div class="loemies-product__mobile-bar" data-mobile-buy-bar inert>
+          <div class="loemies-product__mobile-summary">
+            {% if product.featured_image != blank %}
+              <img
+                src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
+                data-mobile-bar-image-src="{{ product.featured_image | image_url: width: 96 }}"
+                width="{{ product.featured_image.width }}"
+                height="{{ product.featured_image.height }}"
+                loading="lazy"
+                alt=""
+              >
+            {% endif %}
+            <div>
+              <p>{{ product.title | escape }}</p>
+              <span data-product-price-mobile>{{ current_variant.price | money }}</span>
+            </div>
+          </div>
+          <nav class="loemies-product__sticky-nav" aria-label="{{ 'general.accessibility.product_pages' | t }}">
+            {% if product.description != blank %}
+              <a href="#ProductDetails-{{ section.id }}">{{ details_heading }}</a>
+            {% endif %}
+            {% if section.settings.show_reviews and product_has_reviews %}
+              <a href="#ProductReviews-{{ section.id }}">{{ reviews_heading }}</a>
+            {% endif %}
+          </nav>
+          <button
+            class="loemies-product__mobile-submit"
+            type="submit"
+            name="add"
+            form="{{ product_form_id }}"
+            data-product-submit-mobile
+            {% unless current_variant.available %}disabled{% endunless %}
+          >
+            <span data-product-submit-text-mobile>
+              {% if current_variant.available %}
+                {{ 'products.product.add_to_cart' | t }}
+              {% else %}
+                {{ 'products.product.sold_out' | t }}
+              {% endif %}
+            </span>
+          </button>
+        </div>
+        {% endif %}
+      </aside>
+    </div>
+
+    {% if product.description != blank %}
+      <section class="loemies-product__details" aria-labelledby="ProductDetails-{{ section.id }}">
+        <div class="loemies-product__details-header">
+          <h2 class="loemies-product__details-title" id="ProductDetails-{{ section.id }}">
+            {{ details_heading }}
+          </h2>
+        </div>
+        <details class="loemies-product__details-disclosure" data-product-details open>
+          <summary>{{ details_heading }}</summary>
+          <div class="loemies-product__rte">
+            {{ product.description }}
+          </div>
+        </details>
+      </section>
+    {% endif %}
+
+    {% if section.settings.show_reviews %}
+      {% render 'product-reviews',
+        product: product,
+        section: section,
+        reviews_heading: reviews_heading,
+        reviews_intro: reviews_intro,
+        review_form_heading: review_form_heading,
+        review_form_intro: review_form_intro
+      %}
+    {% endif %}
+
+    {% assign product_models = product.media | where: 'media_type', 'model' %}
+    {% if product_models.size > 0 %}
+      <script type="application/json" data-product-model-json>
+        {{ product_models | json }}
+      </script>
+    {% endif %}
+  </div>
+</loemies-product>
 
 {% schema %}
 {
   "name": "t:general.product",
-  "settings": [],
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "Show breadcrumbs",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_type",
+      "label": "Show product type",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_summary",
+      "label": "Keep product information visible on desktop",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dynamic_checkout",
+      "label": "Show accelerated checkout button",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sku",
+      "label": "Show SKU below the add to cart button",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "product_note",
+      "label": "Product highlight",
+      "default": "Chosen with care for everyday family life"
+    },
+    {
+      "type": "header",
+      "content": "Delivery panel"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_store_promises",
+      "label": "Use global shipping and returns promises",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "delivery_heading",
+      "label": "Heading",
+      "default": "Ordered before 16:00, shipped today"
+    },
+    {
+      "type": "text",
+      "id": "delivery_text",
+      "label": "Text",
+      "default": "Shipping calculated at checkout"
+    },
+    {
+      "type": "header",
+      "content": "Complementary products"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_upsells",
+      "label": "Show complementary products",
+      "info": "Choose products per item in Shopify Search & Discovery. Optional custom metafields can override or hide this block.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "upsell_eyebrow",
+      "label": "Eyebrow",
+      "default": "A thoughtful extra"
+    },
+    {
+      "type": "text",
+      "id": "upsell_heading",
+      "label": "Heading",
+      "default": "Pairs well with this"
+    },
+    {
+      "type": "text",
+      "id": "upsell_text",
+      "label": "Text",
+      "default": "Useful additions chosen to complement this product."
+    },
+    {
+      "type": "range",
+      "id": "upsell_maximum",
+      "label": "Maximum products",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "checkbox",
+      "id": "upsell_quick_add",
+      "label": "Enable quick add",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "upsell_background",
+      "label": "Background",
+      "default": "#FFF8F2"
+    },
+    {
+      "type": "color",
+      "id": "upsell_text_color",
+      "label": "Text color",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "upsell_accent",
+      "label": "Accent",
+      "default": "#B04F38"
+    },
+    {
+      "type": "header",
+      "content": "Product details"
+    },
+    {
+      "type": "text",
+      "id": "details_heading",
+      "label": "Heading",
+      "default": "About this product"
+    },
+    {
+      "type": "header",
+      "content": "Product reviews"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_reviews",
+      "label": "Show reviews and review form",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "reviews_eyebrow",
+      "label": "Eyebrow",
+      "default": "Customer reviews"
+    },
+    {
+      "type": "text",
+      "id": "reviews_heading",
+      "label": "Heading",
+      "default": "Reviews"
+    },
+    {
+      "type": "textarea",
+      "id": "reviews_intro",
+      "label": "Introduction",
+      "default": "Real experiences from families who use this product."
+    },
+    {
+      "type": "text",
+      "id": "review_form_heading",
+      "label": "Form heading",
+      "default": "Write a review"
+    },
+    {
+      "type": "textarea",
+      "id": "review_form_intro",
+      "label": "Form introduction",
+      "default": "Tell other families what you think. Your review will be checked before it is published."
+    },
+    {
+      "type": "header",
+      "content": "Reassurance messages"
+    },
+    {
+      "type": "text",
+      "id": "benefit_one",
+      "label": "First message",
+      "default": "30-day returns"
+    },
+    {
+      "type": "text",
+      "id": "benefit_two",
+      "label": "Second message",
+      "default": "Safe and secure payment"
+    },
+    {
+      "type": "text",
+      "id": "benefit_three",
+      "label": "Third message",
+      "default": "Personal service from the Loemies team"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Show accepted payment methods",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "payment_label",
+      "label": "Payment heading",
+      "default": "Pay safely with"
+    }
+  ],
   "disabled_on": {
     "groups": ["header", "footer"]
   }

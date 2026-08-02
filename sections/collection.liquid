@@ -1,47 +1,674 @@
-{% comment %}
-  This section is used in the collection template to render collection page
-  listing all products within a collection.
+<script src="{{ 'catalog.js' | asset_url }}" defer></script>
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/collection
-{% endcomment %}
+{% liquid
+  assign sort_by = collection.sort_by | default: collection.default_sort_by
+  assign catalog_description = collection.description
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign catalog_title = collection.title | escape
+  assign catalog_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'Shop'
+    assign catalog_eyebrow = 'sections.catalog.content.eyebrow' | t
+  endif
+  assign catalog_fallback_description = section.settings.fallback_description
+  if catalog_fallback_description == blank or catalog_fallback_description == '<p>Thoughtfully chosen toys and essentials for little explorers, made for everyday play, learning, and wonder.</p>'
+    assign catalog_fallback_description = 'sections.catalog.content.fallback_description' | t
+  endif
+  assign catalog_context_tag = blank
+  assign catalog_context_description = blank
+  assign catalog_reset_url = request.path
+  assign show_catalog_browse = false
 
-<h1>{{ collection.title }}</h1>
+  if collection.handle == 'all-toys'
+    assign show_catalog_browse = true
+    if collection.title == blank or collection.title == 'All toys' or collection.title == 'All Toys'
+      assign catalog_title = 'sections.catalog.all' | t
+    endif
+  endif
 
-<div class="collection-products">
-  {% paginate collection.products by 20 %}
-    {% for product in collection.products %}
-      <div class="collection-product">
-        {% if product.featured_image %}
-          {% render 'image',
-            class: 'collection-product__image',
-            image: product.featured_image,
-            url: product.url,
-            width: 400,
-            height: 400,
-            crop: 'center'
-          %}
+  comment
+    Parent level for the tag-page breadcrumb: the unfiltered collection sits
+    between Home and the tag title. Captured before the tag case below
+    overwrites catalog_title.
+  endcomment
+  assign catalog_parent_title = catalog_title
+  assign catalog_parent_url = collection.url
+
+  comment
+    Every age tag that exists in the catalogue gets its own title and
+    description: Age 12 months+, Age 1+, Age 2+ and Age 3+. Chip labels for
+    the browse row live in the same locale group. New keys fall back to a
+    literal so a tag page never renders "Translation missing" while the
+    locale files catch up.
+  endcomment
+  assign catalog_title_fallback = blank
+  assign catalog_description_fallback = blank
+
+  if current_tags.size > 0
+    assign catalog_context_tag = current_tags.first
+    case catalog_context_tag
+      when 'Age 12 months+'
+        assign catalog_title = 'sections.catalog.titles.age_twelve_months' | t
+        assign catalog_title_fallback = 'Toys from 12 months'
+        assign catalog_context_description = 'sections.catalog.descriptions.age_twelve_months' | t
+        assign catalog_description_fallback = 'First toys for babies from twelve months, sized for small hands and early standing, walking and stacking.'
+      when 'Age 1+'
+        assign catalog_title = 'sections.catalog.titles.age_one' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.age_one' | t
+      when 'Age 2+'
+        assign catalog_title = 'sections.catalog.titles.age_two' | t
+        assign catalog_title_fallback = 'Toys from 2 years'
+        assign catalog_context_description = 'sections.catalog.descriptions.age_two' | t
+        assign catalog_description_fallback = 'Sorting, matching and building toys for two-year-olds who are testing ideas, colours and shapes.'
+      when 'Age 3+'
+        assign catalog_title = 'sections.catalog.titles.age_three' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.age_three' | t
+      when 'Fine Motor Skills'
+        assign catalog_title = 'sections.catalog.titles.fine_motor' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.fine_motor' | t
+      when 'Sensory Play'
+        assign catalog_title = 'sections.catalog.titles.sensory' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.sensory' | t
+      when 'Imaginative Play'
+        assign catalog_title = 'sections.catalog.titles.pretend' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.pretend' | t
+      when 'Outdoor Play'
+        assign catalog_title = 'sections.catalog.titles.active' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.active' | t
+      when 'Gift Idea'
+        assign catalog_title = 'sections.catalog.titles.gifts' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.gifts' | t
+    endcase
+
+    if catalog_title_fallback != blank and catalog_title contains 'ranslation missing'
+      assign catalog_title = catalog_title_fallback
+    endif
+    if catalog_description_fallback != blank and catalog_context_description contains 'ranslation missing'
+      assign catalog_context_description = catalog_description_fallback
+    endif
+  endif
+
+  if catalog_context_description != blank
+    assign catalog_description = catalog_context_description
+  endif
+  if catalog_description == blank
+    assign catalog_description = catalog_fallback_description
+  endif
+
+  if show_catalog_browse
+    # The `t` filter HTML-escapes its output, so print these chips without a
+    # second escape (the fallback literals are plain text).
+    assign catalog_chip_twelve_months = 'sections.catalog.age_twelve_months' | t
+    if catalog_chip_twelve_months contains 'ranslation missing'
+      assign catalog_chip_twelve_months = 'From 12 months'
+    endif
+    assign catalog_chip_two = 'sections.catalog.age_two' | t
+    if catalog_chip_two contains 'ranslation missing'
+      assign catalog_chip_two = 'From 2 years'
+    endif
+  endif
+
+  assign active_filter_count = 0
+  for filter in collection.filters
+    assign active_filter_count = active_filter_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value != nil or filter.max_value.value != nil
+        assign active_filter_count = active_filter_count | plus: 1
+      endif
+    endif
+  endfor
+
+  assign available_filter_count = 0
+  if section.settings.enable_filtering
+    assign available_filter_count = collection.filters.size
+  endif
+
+  assign catalog_desktop_gaps = section.settings.columns_desktop | minus: 1 | times: 20
+  assign catalog_desktop_offset = catalog_desktop_gaps | plus: 128
+  assign catalog_desktop_card_width = 1072 | minus: catalog_desktop_gaps | divided_by: section.settings.columns_desktop
+  assign catalog_desktop_inner_offset = section.settings.columns_desktop | times: 2
+  assign catalog_desktop_offset = catalog_desktop_offset | plus: catalog_desktop_inner_offset
+  assign catalog_desktop_card_width = catalog_desktop_card_width | minus: 2
+  capture catalog_product_image_sizes
+    echo '(min-width: 1200px) '
+    echo catalog_desktop_card_width
+    echo 'px, (min-width: 1088px) calc((100vw - '
+    echo catalog_desktop_offset
+    echo 'px) / '
+    echo section.settings.columns_desktop
+    echo '), (min-width: 768px) calc((100vw - 174px) / 3), (min-width: 369px) calc((100vw - 48px) / 2), calc(100vw - 34px)'
+  endcapture
+%}
+
+<section
+  class="loemies-catalog full-width"
+  style="
+    --catalog-background: {{ section.settings.background_color }};
+    --catalog-card: {{ section.settings.card_color }};
+    --catalog-text: {{ section.settings.text_color }};
+    --catalog-accent: {{ section.settings.accent_color }};
+    --catalog-accent-dark: {{ section.settings.accent_dark_color }};
+    --catalog-accent-soft: {{ section.settings.accent_soft_color }};
+    --catalog-columns: {{ section.settings.columns_desktop }};
+    --catalog-padding: {{ section.settings.vertical_padding }}px;
+    --loemies-featured-card: {{ section.settings.card_color }};
+    --loemies-featured-text: {{ section.settings.text_color }};
+    --loemies-featured-accent: {{ section.settings.accent_soft_color }};
+  "
+>
+  <div class="loemies-catalog__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="loemies-catalog__breadcrumb" aria-label="{{ 'sections.catalog.breadcrumb' | t }}">
+        <a href="{{ routes.root_url }}">{{ 'sections.catalog.home' | t }}</a>
+        <span aria-hidden="true">/</span>
+        {%- comment -%}
+          Tag pages sit one level below the collection, so they show the
+          collection itself as the middle breadcrumb level.
+        {%- endcomment -%}
+        {% if current_tags.size > 0 and catalog_parent_title != blank %}
+          {%- comment -%} catalog_parent_title copies catalog_title, which is already escaped (raw branch) or t-escaped. {%- endcomment -%}
+          <a href="{{ catalog_parent_url }}">{{ catalog_parent_title }}</a>
+          <span aria-hidden="true">/</span>
         {% endif %}
-        <div class="collection-product__content">
-          <p>{{ product.title | escape | link_to: product.url }}</p>
-          <p>{{ product.price | money }}</p>
+        <span aria-current="page">{{ catalog_title }}</span>
+      </nav>
+    {% endif %}
+
+    <header class="loemies-catalog__header">
+      {% if catalog_eyebrow != blank %}
+        <p class="loemies-catalog__eyebrow">{{ catalog_eyebrow }}</p>
+      {% endif %}
+
+      <h1 class="loemies-catalog__title">{{ catalog_title }}</h1>
+
+      {% if section.settings.show_description or section.settings.show_product_count %}
+        <div class="loemies-catalog__intro-row">
+          {% if section.settings.show_description and catalog_description != blank %}
+            <div class="loemies-catalog__description">{{ catalog_description }}</div>
+          {% endif %}
+
+          {% if section.settings.show_product_count %}
+            <p class="loemies-catalog__count">
+              {{ 'sections.catalog.product_count' | t: count: collection.products_count }}
+            </p>
+          {% endif %}
         </div>
-      </div>
-    {% endfor %}
+      {% endif %}
+    </header>
 
-    {{ paginate | default_pagination }}
-  {% endpaginate %}
-</div>
+    <div class="loemies-catalog__divider" aria-hidden="true"></div>
 
-{% stylesheet %}
-  .collection-products {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-  }
-{% endstylesheet %}
+    {% if show_catalog_browse %}
+      <nav class="loemies-catalog__browse" aria-label="{{ 'sections.catalog.browse' | t }}">
+        <span class="loemies-catalog__browse-heading">
+          <span class="loemies-catalog__browse-label">{{ 'sections.catalog.browse' | t }}</span>
+          <span class="loemies-catalog__browse-scroll-hint">{{ 'sections.catalog.swipe_to_browse' | t }}</span>
+        </span>
+        <div class="loemies-catalog__browse-links">
+          <a href="{{ collection.url }}"{% if current_tags == blank %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.all' | t }}
+          </a>
+          {%- comment -%}
+            One chip per age tag that exists in the catalogue, youngest first:
+            Age 12 months+, Age 1+, Age 2+, Age 3+.
+          {%- endcomment -%}
+          <a href="{{ collection.url }}/age-12-months"{% if current_tags contains 'Age 12 months+' %} class="is-active" aria-current="page"{% endif %}>
+            {{ catalog_chip_twelve_months }}
+          </a>
+          <a href="{{ collection.url }}/age-1"{% if current_tags contains 'Age 1+' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.age_one' | t }}
+          </a>
+          <a href="{{ collection.url }}/age-2"{% if current_tags contains 'Age 2+' %} class="is-active" aria-current="page"{% endif %}>
+            {{ catalog_chip_two }}
+          </a>
+          <a href="{{ collection.url }}/age-3"{% if current_tags contains 'Age 3+' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.age_three' | t }}
+          </a>
+          <a href="{{ collection.url }}/fine-motor-skills"{% if current_tags contains 'Fine Motor Skills' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.fine_motor' | t }}
+          </a>
+          <a href="{{ collection.url }}/sensory-play"{% if current_tags contains 'Sensory Play' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.sensory' | t }}
+          </a>
+          <a href="{{ collection.url }}/imaginative-play"{% if current_tags contains 'Imaginative Play' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.pretend' | t }}
+          </a>
+          <a href="{{ collection.url }}/outdoor-play"{% if current_tags contains 'Outdoor Play' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.active' | t }}
+          </a>
+          <a href="{{ collection.url }}/gift-idea"{% if current_tags contains 'Gift Idea' %} class="is-active" aria-current="page"{% endif %}>
+            {{ 'sections.catalog.gifts' | t }}
+          </a>
+        </div>
+      </nav>
+    {% endif %}
+
+    {% if section.settings.enable_sorting or available_filter_count > 0 %}
+      <form class="loemies-catalog__filter-form" action="{{ catalog_reset_url }}" method="get">
+        <details
+          class="loemies-catalog__filters"
+          data-catalog-filters
+          data-active-filters="{% if active_filter_count > 0 %}true{% else %}false{% endif %}"
+        >
+          <summary class="loemies-catalog__filter-toggle">
+            <span>
+              {% if available_filter_count > 0 %}
+                {{ 'sections.catalog.filters_and_sorting' | t }}
+              {% else %}
+                {{ 'sections.catalog.sort.label' | t }}
+              {% endif %}
+              {% if active_filter_count > 0 %}
+                <span class="loemies-catalog__filter-count">{{ active_filter_count }}</span>
+              {% endif %}
+            </span>
+            <span class="loemies-catalog__filter-result-count">
+              {{ 'sections.catalog.product_count' | t: count: collection.products_count }}
+            </span>
+          </summary>
+
+          <div class="loemies-catalog__filter-panel">
+            <div class="loemies-catalog__filter-controls">
+              {% if section.settings.enable_filtering %}
+                {% for filter in collection.filters %}
+                  {% liquid
+                    assign filter_active_count = filter.active_values.size
+                    if filter.type == 'price_range'
+                      if filter.min_value.value != nil or filter.max_value.value != nil
+                        assign filter_active_count = 1
+                      endif
+                    endif
+                  %}
+                  {% case filter.type %}
+                    {% when 'boolean' %}
+                      <details class="loemies-catalog__filter-group">
+                        <summary class="loemies-catalog__filter-summary">
+                          <span>{{ filter.label | escape }}</span>
+                          {% if filter_active_count > 0 %}<span class="loemies-catalog__group-count">{{ filter_active_count }}</span>{% endif %}
+                        </summary>
+                        <div class="loemies-catalog__filter-options">
+                          {% if filter.true_value.label != blank %}
+                            <label class="loemies-catalog__filter-option{% if filter.true_value.count == 0 and filter.true_value.active == false %} is-disabled{% endif %}">
+                              <input
+                                type="checkbox"
+                                name="{{ filter.param_name | escape }}"
+                                value="{{ filter.true_value.value | escape }}"
+                                {% if filter.true_value.active %}checked{% endif %}
+                                {% if filter.true_value.count == 0 and filter.true_value.active == false %}disabled{% endif %}
+                              >
+                              <span>{{ filter.true_value.label | escape }}</span>
+                              <span class="loemies-catalog__filter-option-count">{{ filter.true_value.count }}</span>
+                            </label>
+                          {% endif %}
+                          {% if filter.false_value.label != blank %}
+                            <label class="loemies-catalog__filter-option{% if filter.false_value.count == 0 and filter.false_value.active == false %} is-disabled{% endif %}">
+                              <input
+                                type="checkbox"
+                                name="{{ filter.param_name | escape }}"
+                                value="{{ filter.false_value.value | escape }}"
+                                {% if filter.false_value.active %}checked{% endif %}
+                                {% if filter.false_value.count == 0 and filter.false_value.active == false %}disabled{% endif %}
+                              >
+                              <span>{{ filter.false_value.label | escape }}</span>
+                              <span class="loemies-catalog__filter-option-count">{{ filter.false_value.count }}</span>
+                            </label>
+                          {% endif %}
+                        </div>
+                      </details>
+
+                    {% when 'list' %}
+                      <details class="loemies-catalog__filter-group">
+                        <summary class="loemies-catalog__filter-summary">
+                          <span>{{ filter.label | escape }}</span>
+                          {% if filter_active_count > 0 %}<span class="loemies-catalog__group-count">{{ filter_active_count }}</span>{% endif %}
+                        </summary>
+                        <div class="loemies-catalog__filter-options">
+                          {% for value in filter.values %}
+                            <label class="loemies-catalog__filter-option{% if value.count == 0 and value.active == false %} is-disabled{% endif %}">
+                              <input
+                                type="checkbox"
+                                name="{{ value.param_name | escape }}"
+                                value="{{ value.value | escape }}"
+                                {% if value.active %}checked{% endif %}
+                                {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                              >
+                              <span>{{ value.label | escape }}</span>
+                              <span class="loemies-catalog__filter-option-count">{{ value.count }}</span>
+                            </label>
+                          {% endfor %}
+                        </div>
+                      </details>
+
+                    {% when 'price_range' %}
+                      <details class="loemies-catalog__filter-group">
+                        <summary class="loemies-catalog__filter-summary">
+                          <span>{{ filter.label | escape }}</span>
+                          {% if filter_active_count > 0 %}<span class="loemies-catalog__group-count">{{ filter_active_count }}</span>{% endif %}
+                        </summary>
+                        <div class="loemies-catalog__filter-options loemies-catalog__filter-options--price">
+                          <div class="loemies-catalog__price-fields">
+                            <label class="loemies-catalog__price-field">
+                              <span>{{ 'sections.catalog.price_from' | t }} ({{ cart.currency.iso_code }})</span>
+                              <input
+                                name="{{ filter.min_value.param_name | escape }}"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                {% if filter.min_value.value %}
+                                  value="{{ filter.min_value.value | divided_by: 100.0 }}"
+                                {% endif %}
+                                placeholder="0"
+                              >
+                            </label>
+                            <span class="loemies-catalog__price-separator" aria-hidden="true">–</span>
+                            <label class="loemies-catalog__price-field">
+                              <span>{{ 'sections.catalog.price_to' | t }} ({{ cart.currency.iso_code }})</span>
+                              <input
+                                name="{{ filter.max_value.param_name | escape }}"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                max="{{ filter.range_max | divided_by: 100.0 }}"
+                                {% if filter.max_value.value %}
+                                  value="{{ filter.max_value.value | divided_by: 100.0 }}"
+                                {% endif %}
+                                placeholder="{{ filter.range_max | divided_by: 100.0 }}"
+                              >
+                            </label>
+                          </div>
+                          {%- comment -%}
+                            Price is the one facet that cannot auto-submit on
+                            change, so it keeps its own Apply inside the
+                            dropdown. Checkbox facets submit themselves on
+                            desktop (catalog.js).
+                          {%- endcomment -%}
+                          <button class="loemies-catalog__apply loemies-catalog__apply--price" type="submit">
+                            {{ 'sections.catalog.apply' | t }}
+                          </button>
+                        </div>
+                      </details>
+                  {% endcase %}
+                {% endfor %}
+              {% endif %}
+
+              {% if section.settings.enable_sorting %}
+                <div class="loemies-catalog__filter-group loemies-catalog__filter-group--sort">
+                  <label class="loemies-catalog__sort-label" for="CatalogSort-{{ section.id }}">{{ 'sections.catalog.sort.label' | t }}</label>
+                  {%- comment -%}
+                    data-default-sort lets catalog.js drop sort_by from the URL
+                    when the shopper picks the collection's own default order,
+                    which keeps the canonical collection URL clean and keeps the
+                    available-first ordering below intact.
+                  {%- endcomment -%}
+                  <select
+                    class="loemies-catalog__sort-select"
+                    id="CatalogSort-{{ section.id }}"
+                    name="sort_by"
+                    data-default-sort="{{ collection.default_sort_by | escape }}"
+                  >
+                    {% for option in collection.sort_options %}
+                      {% case option.value %}
+                        {% when 'manual' %}
+                          {% if collection.default_sort_by == 'manual' %}
+                            <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                              {{ 'sections.catalog.sort.featured' | t }}
+                            </option>
+                          {% endif %}
+                        {% when 'most-relevant' %}
+                          {% unless collection.default_sort_by == 'manual' %}
+                            <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                              {{ 'sections.catalog.sort.featured' | t }}
+                            </option>
+                          {% endunless %}
+                        {% when 'best-selling' %}
+                          <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                            {{ 'sections.catalog.sort.best_selling' | t }}
+                          </option>
+                        {% when 'price-ascending' %}
+                          <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                            {{ 'sections.catalog.sort.price_low_high' | t }}
+                          </option>
+                        {% when 'price-descending' %}
+                          <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                            {{ 'sections.catalog.sort.price_high_low' | t }}
+                          </option>
+                        {% when 'created-descending' %}
+                          <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                            {{ 'sections.catalog.sort.newest' | t }}
+                          </option>
+                      {% endcase %}
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
+              <div class="loemies-catalog__filter-actions">
+                {%- comment -%}
+                  The toolbar Apply stays in the markup for no-JS and for the
+                  mobile panel, where facets do not auto-submit. catalog.js
+                  flags the form as enhanced and the desktop stylesheet then
+                  hides this button, because every desktop control commits
+                  itself.
+                {%- endcomment -%}
+                <button class="loemies-catalog__apply loemies-catalog__apply--toolbar" type="submit">{{ 'sections.catalog.apply' | t }}</button>
+                {% if active_filter_count > 0 or sort_by != collection.default_sort_by %}
+                  <a class="loemies-catalog__reset" href="{{ catalog_reset_url }}">{{ 'sections.catalog.reset' | t }}</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </details>
+
+        {% if active_filter_count > 0 %}
+          <div class="loemies-catalog__active-filters" aria-label="{{ 'sections.catalog.active_filters' | t }}">
+            {% for filter in collection.filters %}
+              {% for value in filter.active_values %}
+                <a class="loemies-catalog__active-filter" href="{{ value.url_to_remove | escape }}">
+                  {{ value.label | escape }} <span aria-hidden="true">&times;</span>
+                  <span class="visually-hidden">{{ 'sections.catalog.remove_filter' | t }}: {{ value.label | escape }}</span>
+                </a>
+              {% endfor %}
+
+              {% if filter.type == 'price_range' %}
+                {% if filter.min_value.value != nil or filter.max_value.value != nil %}
+                  <a class="loemies-catalog__active-filter" href="{{ filter.url_to_remove | escape }}">
+                    {{ filter.label | escape }} <span aria-hidden="true">&times;</span>
+                    <span class="visually-hidden">{{ 'sections.catalog.remove_filter' | t }}: {{ filter.label | escape }}</span>
+                  </a>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </form>
+    {% endif %}
+
+    {% paginate collection.products by section.settings.products_per_page %}
+      {% if collection.products_count > 0 %}
+        {% liquid
+          # Available products first, sold-out products last. The reorder only
+          # ever sees the current page, which is why it stays limited to the
+          # collection's default order: a shopper-chosen sort must arrive
+          # exactly as Shopify returned it. This is intentionally a per-page
+          # reorder; the catalogue stays scannable at 24 items per page and
+          # Shopify's admin merchandising order controls the page boundaries.
+          assign catalog_page_products = collection.products
+          if sort_by == collection.default_sort_by
+            assign catalog_available_products = collection.products | where: 'available', true
+            assign catalog_sold_out_products = collection.products | where: 'available', false
+            assign catalog_page_products = catalog_available_products | concat: catalog_sold_out_products
+          endif
+        %}
+        <div class="loemies-catalog__product-grid" id="CatalogProducts-{{ section.id }}" data-catalog-grid>
+          {% for product in catalog_page_products %}
+            {% liquid
+              # The whole grid ships real server-rendered img markup with native
+              # lazy loading (image_deferred: false); the first two cards, which
+              # can sit above the fold, additionally load eagerly.
+              assign product_image_loading = 'lazy'
+              assign product_image_fetchpriority = 'auto'
+              if forloop.index <= 2
+                assign product_image_loading = 'eager'
+                assign product_image_fetchpriority = 'high'
+              endif
+            %}
+            {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: product, image_sizes: catalog_product_image_sizes, image_loading: product_image_loading, image_fetchpriority: product_image_fetchpriority, image_deferred: false, heading_tag: 'h2' %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="loemies-catalog__empty" data-catalog-grid>
+          <h2>{{ 'sections.catalog.empty_heading' | t }}</h2>
+          <p>{{ 'sections.catalog.empty_text' | t }}</p>
+          <div class="loemies-catalog__empty-actions">
+            <a class="loemies-catalog__empty-primary" href="{{ collection.url }}">{{ 'sections.catalog.clear_filters' | t }}</a>
+            {% if collection.handle != 'all-toys' %}
+              <a href="{{ collections['all-toys'].url | default: routes.all_products_collection_url }}">{{ 'sections.catalog.browse_all' | t }}</a>
+            {% else %}
+              <a href="{{ routes.collections_url }}">{{ 'sections.catalog.browse_categories' | t }}</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if paginate.pages > 1 %}
+        <nav class="loemies-catalog__pagination" aria-label="{{ 'sections.catalog.pagination' | t }}">
+          {% if paginate.previous %}
+            <a href="{{ paginate.previous.url }}" aria-label="{{ 'sections.catalog.previous_page' | t }}">&larr;</a>
+          {% endif %}
+
+          {% for part in paginate.parts %}
+            {% if part.is_link %}
+              <a href="{{ part.url }}">{{ part.title }}</a>
+            {% else %}
+              <span{% if part.title == paginate.current_page %} class="is-current" aria-current="page"{% endif %}>{{ part.title }}</span>
+            {% endif %}
+          {% endfor %}
+
+          {% if paginate.next %}
+            <a href="{{ paginate.next.url }}" aria-label="{{ 'sections.catalog.next_page' | t }}">&rarr;</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endpaginate %}
+  </div>
+</section>
 
 {% schema %}
 {
-  "name": "t:general.collection",
-  "settings": []
+  "name": "Loemies collection",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Shop"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "Show breadcrumbs",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show collection description",
+      "default": true
+    },
+    {
+      "type": "richtext",
+      "id": "fallback_description",
+      "label": "Fallback description",
+      "info": "Shown when a collection has no description.",
+      "default": "<p>Thoughtfully chosen toys and essentials for little explorers, made for everyday play, learning, and wonder.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_count",
+      "label": "Show product count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "label": "Enable filtering",
+      "info": "Manage available filters with Shopify Search & Discovery.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "label": "Enable sorting",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "info": "24 balances browsing depth, mobile performance and useful pagination.",
+      "min": 8,
+      "max": 50,
+      "step": 2,
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Desktop columns",
+      "min": 3,
+      "max": 5,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical spacing",
+      "min": 24,
+      "max": 96,
+      "step": 8,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#B04F38"
+    },
+    {
+      "type": "color",
+      "id": "accent_dark_color",
+      "label": "Accent hover",
+      "default": "#96432F"
+    },
+    {
+      "type": "color",
+      "id": "accent_soft_color",
+      "label": "Soft accent",
+      "default": "#F9E4DC"
+    }
+  ]
 }
 {% endschema %}

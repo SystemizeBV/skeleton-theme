@@ -1,0 +1,36 @@
+{% comment %}
+  Renders FAQPage JSON-LD from the same data used for the visible FAQ section.
+  Preferred source: article metafield custom.faqs (list of FAQ metaobjects).
+  Compatibility source: custom.faq_schema (JSON containing a FAQPage object).
+{% endcomment %}
+
+{% if faq_entries != blank %}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": {{ canonical_url | append: '#faq' | json }},
+      "inLanguage": {{ language | default: request.locale.iso_code | json }},
+      "mainEntity": [
+        {% for faq in faq_entries %}
+          {% liquid
+            assign faq_question = faq.question.value | default: faq.question
+            assign faq_answer = faq.answer.value | default: faq.answer | strip_html
+          %}
+          {
+            "@type": "Question",
+            "name": {{ faq_question | strip_html | json }},
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": {{ faq_answer | json }}
+            }
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+    }
+  </script>
+{% elsif fallback_faq_schema != blank %}
+  <script type="application/ld+json">
+    {{ fallback_faq_schema | json }}
+  </script>
+{% endif %}

@@ -1,0 +1,69 @@
+{% liquid
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+
+  comment
+    Prefer a short dedicated success label when the merchant adds one; fall
+    back to the existing cart-notification string so nothing renders as a
+    missing translation in the meantime.
+  endcomment
+  assign added_label = 'sections.wishlist.added' | t
+  if added_label contains 'Translation missing'
+    assign added_label = 'cart.notification.added' | t
+  endif
+%}
+
+<section
+  class="loemies-wishlist full-width"
+  data-wishlist-page
+  data-root-url="{{ routes.root_url }}"
+  data-currency="{{ cart.currency.iso_code | default: shop.currency | escape }}"
+  data-money-format="{{ shop.money_format | strip_html | escape }}"
+  data-remove-label="{{ 'sections.wishlist.remove' | t }}"
+  data-view-label="{{ 'sections.wishlist.view_product' | t }}"
+  data-unavailable-label="{{ 'sections.wishlist.unavailable' | t }}"
+  data-load-error="{{ 'sections.wishlist.load_error' | t }}"
+  data-removed-status="{{ 'sections.wishlist.status_removed' | t: product: '__PRODUCT__' }}"
+  data-add-to-cart-label="{{ 'products.product.add_to_cart' | t }}"
+  data-choose-options-label="{{ 'products.card.choose_options' | t }}"
+  data-added-label="{{ added_label }}"
+  data-add-error="{{ 'products.upsell.error' | t }}"
+  data-cart-count-label="{{ 'general.accessibility.cart_count' | t: count: '__COUNT__' }}"
+>
+  <div class="loemies-wishlist__inner">
+    <nav class="loemies-wishlist__breadcrumbs" aria-label="{{ 'products.product.breadcrumbs' | t }}">
+      <a href="{{ routes.root_url }}">{{ 'products.product.home' | t }}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ 'sections.wishlist.title' | t }}</span>
+    </nav>
+
+    <header class="loemies-wishlist__header">
+      <p class="loemies-wishlist__eyebrow">{{ 'sections.wishlist.eyebrow' | t }}</p>
+      <h1>{{ 'sections.wishlist.title' | t }}</h1>
+      <p>{{ 'sections.wishlist.intro' | t }}</p>
+    </header>
+
+    <p class="loemies-wishlist__status" data-wishlist-status role="status" aria-live="polite">
+      {{ 'sections.wishlist.loading' | t }}
+    </p>
+
+    <div class="loemies-wishlist__grid" data-wishlist-grid hidden></div>
+
+    <div class="loemies-wishlist__empty" data-wishlist-empty hidden>
+      <span class="loemies-wishlist__empty-mark" aria-hidden="true">♡</span>
+      <h2>{{ 'sections.wishlist.empty_heading' | t }}</h2>
+      <p>{{ 'sections.wishlist.empty_text' | t }}</p>
+      <a class="button" href="{{ catalog_url }}">{{ 'sections.wishlist.shop_all' | t }}</a>
+    </div>
+
+    <noscript>
+      <p class="loemies-wishlist__noscript">{{ 'sections.wishlist.javascript_required' | t }}</p>
+    </noscript>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Wishlist",
+  "settings": []
+}
+{% endschema %}

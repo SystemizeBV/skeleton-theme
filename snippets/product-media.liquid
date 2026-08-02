@@ -1,0 +1,136 @@
+{% doc %}
+  Renders one item in the Loemies product media gallery.
+
+  @param {media} media - The Shopify product media object to render.
+  @param {string} product_title - Product title used for fallback alternative text.
+  @param {string} section_id - Parent product section identifier used to keep media IDs unique.
+  @param {number} position - One-based position of this media item in the gallery.
+  @param {boolean} [priority] - Whether this is the initially visible, high-priority item.
+
+  @example
+  {% render 'product-media', media: media, product_title: product.title, section_id: section.id, position: forloop.index, priority: forloop.first %}
+{% enddoc %}
+
+{% liquid
+  assign fallback_alt = 'products.product.media_alt' | t: product: product_title, position: position
+
+  comment
+    Never ask Shopify's CDN to enlarge a supplier original. A responsive
+    candidate list capped to the source width keeps 800px catalogue images
+    honest and light while still allowing high-resolution studio assets to
+    serve retina displays.
+  endcomment
+  assign media_source_width = media.preview_image.width | default: 2200
+  assign media_request_width = media_source_width | at_most: 2200
+  if media_source_width < 480
+    assign media_responsive_widths = '360'
+  elsif media_source_width < 540
+    assign media_responsive_widths = '360, 480'
+  elsif media_source_width < 640
+    assign media_responsive_widths = '360, 480, 540'
+  elsif media_source_width < 720
+    assign media_responsive_widths = '360, 480, 540, 640'
+  elsif media_source_width < 800
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720'
+  elsif media_source_width < 900
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800'
+  elsif media_source_width < 1088
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800, 900'
+  elsif media_source_width < 1280
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800, 900, 1088'
+  elsif media_source_width < 1600
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800, 900, 1088, 1280'
+  elsif media_source_width < 1800
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800, 900, 1088, 1280, 1600'
+  elsif media_source_width < 2200
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800, 900, 1088, 1280, 1600, 1800'
+  else
+    assign media_responsive_widths = '360, 480, 540, 640, 672, 720, 800, 900, 1088, 1280, 1600, 1800, 2200'
+  endif
+
+  assign media_alt = media.alt
+  if media_alt == blank or media_alt == product_title
+    assign media_alt = fallback_alt
+  elsif position > 1
+    comment
+      Suppliers often repeat one generic alt value across every gallery image.
+      Keep their useful description, but add the position so screen-reader users
+      can distinguish otherwise identical gallery announcements.
+    endcomment
+    assign media_alt = media_alt | append: ' — ' | append: position
+  endif
+%}
+
+<div
+  class="loemies-product-media{% if priority %} is-active{% endif %}"
+  id="ProductMedia-{{ section_id }}-{{ media.id }}"
+  data-product-media
+  data-media-id="{{ media.id }}"
+>
+  {% case media.media_type %}
+    {% when 'image' %}
+      <button
+        class="loemies-product-media__lightbox-trigger"
+        type="button"
+        data-lightbox-open
+        aria-label="{{ 'products.product.view_larger_image' | t: title: media_alt }}"
+        aria-controls="ProductLightbox-{{ section_id }}"
+        aria-haspopup="dialog"
+      >
+        {% if priority %}
+          {{ media.preview_image
+            | image_url: width: media_request_width
+            | image_tag:
+              class: 'loemies-product-media__asset',
+              widths: media_responsive_widths,
+              sizes: '(min-width: 1280px) 544px, (min-width: 1024px) calc((100vw - 192px) / 2), (min-width: 768px) calc(100vw - 160px), calc(100vw - 32px)',
+              loading: 'eager',
+              fetchpriority: 'high',
+              alt: media_alt
+          }}
+        {% else %}
+          <img
+            class="loemies-product-media__asset"
+            src="{{ media.preview_image | image_url: width: 360 }}"
+            data-media-image-src="{{ media.preview_image | image_url: width: media_request_width }}"
+            data-media-image-width="{{ media_request_width }}"
+            width="{{ media.preview_image.width }}"
+            height="{{ media.preview_image.height }}"
+            loading="lazy"
+            alt="{{ media_alt | escape }}"
+          >
+        {% endif %}
+      </button>
+
+    {% when 'video' %}
+      {{ media
+        | video_tag:
+          class: 'loemies-product-media__asset',
+          image_size: '1200x',
+          controls: true,
+          preload: 'none'
+      }}
+
+    {% when 'external_video' %}
+      {{ media
+        | external_video_tag:
+          class: 'loemies-product-media__asset',
+          loading: 'lazy'
+      }}
+
+    {% when 'model' %}
+      {{ media
+        | model_viewer_tag:
+          class: 'loemies-product-media__asset',
+          image_size: '1200x',
+          reveal: 'interaction',
+          toggleable: true
+      }}
+      <button class="loemies-product-media__ar-button" type="button" data-model-ar hidden>
+        {{ 'products.product.view_in_space' | t }}
+      </button>
+
+    {% else %}
+      {{ media | media_tag: class: 'loemies-product-media__asset', image_size: '1200x' }}
+  {% endcase %}
+</div>

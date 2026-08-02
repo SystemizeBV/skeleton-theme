@@ -1,0 +1,35 @@
+{% doc %}
+  Groups Loemies button blocks into a responsive row.
+
+  @example
+  {% content_for 'block', type: 'loemies-button-row', id: 'actions' %}
+{% enddoc %}
+
+<div class="loemies-button-row" {{ block.shopify_attributes }}>
+  {% content_for 'blocks' %}
+</div>
+
+{% stylesheet %}
+  .loemies-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loemies button row",
+  "blocks": [{ "type": "@theme" }],
+  "settings": [],
+  "presets": [
+    {
+      "name": "Loemies button row",
+      "blocks": [
+        { "type": "loemies-button" }
+      ]
+    }
+  ]
+}
+{% endschema %}

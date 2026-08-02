@@ -11,7 +11,84 @@
   "sections": {
     "main": {
       "type": "collections",
-      "settings": {}
+      "blocks": {
+        "building_blocks": {
+          "type": "collection",
+          "settings": {
+            "collection": "building-blocks"
+          }
+        },
+        "kids_room": {
+          "type": "collection",
+          "settings": {
+            "collection": "kids-room"
+          }
+        },
+        "montessori_learning": {
+          "type": "collection",
+          "settings": {
+            "collection": "montessori-learning"
+          }
+        },
+        "outdoor_family": {
+          "type": "collection",
+          "settings": {
+            "collection": "outdoor-family-games"
+          }
+        },
+        "pretend_play": {
+          "type": "collection",
+          "settings": {
+            "collection": "pretend-play"
+          }
+        },
+        "puzzles_sorters": {
+          "type": "collection",
+          "settings": {
+            "collection": "puzzles-shape-sorters"
+          }
+        },
+        "sensory_activity": {
+          "type": "collection",
+          "settings": {
+            "collection": "sensory-activity"
+          }
+        },
+        "stacking_toys": {
+          "type": "collection",
+          "settings": {
+            "collection": "stacking-toys"
+          }
+        }
+      },
+      "block_order": [
+        "building_blocks",
+        "kids_room",
+        "montessori_learning",
+        "outdoor_family",
+        "pretend_play",
+        "puzzles_sorters",
+        "sensory_activity",
+        "stacking_toys"
+      ],
+      "settings": {
+        "eyebrow": "Categories",
+        "heading": "Shop by category",
+        "text": "<p>Find the right kind of play for every little personality and stage.</p>",
+        "show_breadcrumbs": true,
+        "show_collection_count": true,
+        "show_descriptions": true,
+        "show_product_counts": true,
+        "hide_frontpage": true,
+        "columns_desktop": 4,
+        "vertical_padding": 48,
+        "background_color": "#F7F3EC",
+        "card_color": "#FFFFFF",
+        "text_color": "#2B241F",
+        "accent_color": "#B04F38",
+        "accent_dark_color": "#96432F",
+        "accent_soft_color": "#F9E4DC"
+      }
     }
   },
   "order": [

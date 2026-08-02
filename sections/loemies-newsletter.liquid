@@ -1,0 +1,231 @@
+{% liquid
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign newsletter_eyebrow = section.settings.eyebrow | escape
+  assign newsletter_heading = section.settings.heading | escape
+  assign newsletter_text = section.settings.text
+  assign newsletter_email_label = section.settings.email_label | escape
+  assign newsletter_button = section.settings.button_label | escape
+  assign newsletter_note = section.settings.note | escape
+  assign newsletter_privacy = section.settings.privacy_label | escape
+  assign newsletter_success = section.settings.success_text | escape
+  if section.settings.eyebrow == 'Stay in the loop'
+    assign newsletter_eyebrow = 'sections.home.newsletter.eyebrow' | t
+  endif
+  if section.settings.heading == 'New toys and useful gift ideas'
+    assign newsletter_heading = 'sections.home.newsletter.heading' | t
+  endif
+  if newsletter_text == '<p>Occasional notes when something genuinely useful joins the collection.</p>'
+    capture newsletter_text
+      echo '<p>'
+      echo 'sections.home.newsletter.text' | t
+      echo '</p>'
+    endcapture
+  endif
+  if section.settings.email_label == 'Email address'
+    assign newsletter_email_label = 'sections.home.newsletter.email_label' | t
+  endif
+  if section.settings.button_label == 'Sign up'
+    assign newsletter_button = 'sections.home.newsletter.button' | t
+  endif
+  if section.settings.note == 'No daily emails. Unsubscribe whenever you like.'
+    assign newsletter_note = 'sections.home.newsletter.note' | t
+  endif
+  if section.settings.privacy_label == 'Privacy policy'
+    assign newsletter_privacy = 'sections.home.newsletter.privacy' | t
+  endif
+  if section.settings.success_text == 'Thank you — you are on the list.'
+    assign newsletter_success = 'sections.home.newsletter.success' | t
+  endif
+%}
+
+<section class="loemies-newsletter full-width" aria-labelledby="LoemiesNewsletter-{{ section.id }}">
+  <div class="loemies-newsletter__inner">
+    <div class="loemies-newsletter__copy">
+      {% if newsletter_eyebrow != blank %}
+        <p class="loemies-newsletter__eyebrow">{{ newsletter_eyebrow }}</p>
+      {% endif %}
+      <h2 id="LoemiesNewsletter-{{ section.id }}">{{ newsletter_heading }}</h2>
+      {% if newsletter_text != blank %}
+        <div class="loemies-newsletter__text">{{ newsletter_text }}</div>
+      {% endif %}
+    </div>
+
+    {% form 'customer', class: 'loemies-newsletter__form' %}
+      <input type="hidden" name="contact[tags]" value="newsletter">
+
+      {% if form.posted_successfully? %}
+        <p class="loemies-newsletter__success" tabindex="-1">{{ newsletter_success }}</p>
+      {% else %}
+        {% if form.errors %}
+          <div class="loemies-newsletter__errors" role="alert">{{ form.errors | default_errors }}</div>
+        {% endif %}
+        <div class="loemies-newsletter__controls">
+          <label class="visually-hidden" for="NewsletterEmail-{{ section.id }}">{{ newsletter_email_label }}</label>
+          <input
+            id="NewsletterEmail-{{ section.id }}"
+            type="email"
+            name="contact[email]"
+            value="{{ form.email | escape }}"
+            placeholder="{{ section.settings.email_placeholder | escape }}"
+            autocomplete="email"
+            autocapitalize="off"
+            required
+          >
+          <button type="submit">{{ newsletter_button }}</button>
+        </div>
+        {% if newsletter_note != blank or shop.privacy_policy.body != blank %}
+          <p class="loemies-newsletter__note">
+            {% if newsletter_note != blank %}{{ newsletter_note }}{% endif %}
+            {% if shop.privacy_policy.body != blank and newsletter_privacy != blank %}
+              <a href="{{ shop.privacy_policy.url }}">{{ newsletter_privacy }}</a>
+            {% endif %}
+          </p>
+        {% endif %}
+      {% endif %}
+    {% endform %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .loemies-newsletter {
+    display: grid;
+    grid-template-columns: var(--content-grid);
+  }
+
+  .loemies-newsletter__inner {
+    display: grid;
+    width: min(100%, 67rem);
+    margin-inline: auto;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: 1rem;
+    background: #f5c8cf;
+    color: #2b241f;
+    grid-column: 2;
+    gap: 1.5rem;
+  }
+
+  .loemies-newsletter__eyebrow {
+    margin: 0 0 0.5rem;
+    color: #943f2e;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .loemies-newsletter h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 1.85rem);
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .loemies-newsletter__text {
+    max-width: 48ch;
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .loemies-newsletter__text p,
+  .loemies-newsletter__note,
+  .loemies-newsletter__success {
+    margin: 0;
+  }
+
+  .loemies-newsletter__form {
+    align-self: center;
+  }
+
+  .loemies-newsletter__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+  }
+
+  .loemies-newsletter__controls input {
+    min-width: 0;
+    min-height: 3rem;
+    padding-inline: 1rem;
+    border: 1px solid #d7a9b1;
+    border-radius: 999rem;
+    background: #ffffff;
+    color: #2b241f;
+    font: inherit;
+  }
+
+  .loemies-newsletter__controls button {
+    min-height: 3rem;
+    padding-inline: 1.25rem;
+    border: 1px solid #2b241f;
+    border-radius: 999rem;
+    background: #2b241f;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .loemies-newsletter__controls :is(input, button):focus-visible {
+    outline: 0.2rem solid #2b241f;
+    outline-offset: 0.2rem;
+  }
+
+  .loemies-newsletter__note {
+    margin-top: 0.55rem;
+    color: #554a43;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .loemies-newsletter__note a {
+    margin-inline-start: 0.35rem;
+    color: inherit;
+    font-weight: 750;
+    text-underline-offset: 0.15em;
+  }
+
+  .loemies-newsletter__success {
+    padding: 0.8rem 1rem;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    font-weight: 750;
+  }
+
+  .loemies-newsletter__errors {
+    margin-bottom: 0.75rem;
+    color: #8c2f3b;
+  }
+
+  @media (min-width: 48rem) {
+    .loemies-newsletter__inner {
+      align-items: center;
+      grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.85fr);
+    }
+  }
+
+  @media (max-width: 35rem) {
+    .loemies-newsletter__controls {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loemies newsletter",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Stay in the loop" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "New toys and useful gift ideas" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Occasional notes when something genuinely useful joins the collection.</p>" },
+    { "type": "text", "id": "email_label", "label": "Email label", "default": "Email address" },
+    { "type": "text", "id": "email_placeholder", "label": "Email placeholder", "default": "you@example.com" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Sign up" },
+    { "type": "text", "id": "note", "label": "Privacy note", "default": "No daily emails. Unsubscribe whenever you like." },
+    { "type": "text", "id": "privacy_label", "label": "Privacy link label", "default": "Privacy policy" },
+    { "type": "text", "id": "success_text", "label": "Success message", "default": "Thank you — you are on the list." }
+  ],
+  "presets": [{ "name": "Loemies newsletter" }]
+}
+{% endschema %}

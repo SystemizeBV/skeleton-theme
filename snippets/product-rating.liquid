@@ -1,0 +1,71 @@
+{% doc %}
+  Renders a product's native review average and count.
+
+  @param {product} product - Product whose reviews are summarized.
+  @param {string} [class_name] - Additional class for the wrapper.
+  @param {string} [href] - Optional link target, usually the product review section.
+  @param {boolean} [show_average] - Show the numeric average and full review count.
+  @param {boolean} [compact] - Show only the review count in parentheses.
+  @param {boolean} [show_empty] - Render empty stars and a zero count when there are no reviews.
+{% enddoc %}
+
+{% liquid
+  assign reviews = product.metafields.custom.reviews.value
+  assign review_count = 0
+  assign review_rating_total = 0
+
+  for review in reviews
+    assign review_rating = review.rating.value | plus: 0
+    if review_rating >= 1 and review_rating <= 5
+      assign review_count = review_count | plus: 1
+      assign review_rating_total = review_rating_total | plus: review_rating
+    endif
+  endfor
+
+  assign review_average = 0
+  assign review_percentage = 0
+  if review_count > 0
+    assign review_average = review_rating_total | times: 1.0 | divided_by: review_count
+    assign review_percentage = review_average | divided_by: 5.0 | times: 100
+  endif
+  assign review_average_rounded = review_average | round: 1
+%}
+
+{% if review_count > 0 or show_empty %}
+  {% if href != blank %}
+    <a class="loemies-rating {{ class_name }}" href="{{ href }}">
+  {% else %}
+    <span class="loemies-rating {{ class_name }}">
+  {% endif %}
+
+  <span
+    class="loemies-rating__stars"
+    role="img"
+    aria-label="{{ 'products.reviews.stars_label' | t: rating: review_average_rounded }}"
+  >
+    <span aria-hidden="true">★★★★★</span>
+    <span class="loemies-rating__fill" style="width: {{ review_percentage }}%" aria-hidden="true">★★★★★</span>
+  </span>
+
+  {% if show_average %}
+    <span class="loemies-rating__label">
+      {{ review_average_rounded }}
+      <span aria-hidden="true">·</span>
+      {% if review_count == 1 %}
+        {{ 'products.reviews.count.one' | t }}
+      {% else %}
+        {{ 'products.reviews.count.other' | t: count: review_count }}
+      {% endif %}
+    </span>
+  {% elsif compact %}
+    <span class="loemies-rating__label" aria-label="{% if review_count == 1 %}{{ 'products.reviews.count.one' | t }}{% else %}{{ 'products.reviews.count.other' | t: count: review_count }}{% endif %}">
+      ({{ review_count }})
+    </span>
+  {% endif %}
+
+  {% if href != blank %}
+    </a>
+  {% else %}
+    </span>
+  {% endif %}
+{% endif %}
