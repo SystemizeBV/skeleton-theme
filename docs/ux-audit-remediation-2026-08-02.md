@@ -18,7 +18,7 @@ The storefront and safe Shopify-admin fixes are live. The three-tap mobile path 
 |---|---|---|
 | Payment coverage | Merchant action required | Shopify Payments exposes a four-step Belgian KYC flow beginning with legal-entity type. PayPal is also marked `Setup incomplete`. No legal, identity or bank data was guessed. |
 | Reviews/testimonials | Excluded | Left untouched by explicit instruction. |
-| Late shipping cost | Fixed | Homepage, PDP, cart notification and shipping policy disclose standard delivery from **€8.99 Belgium / €9.99 Netherlands**, 3–8 business days and exact checkout pricing. Bulky tested examples are disclosed at €17.99 in the policy. |
+| Late shipping cost | Fixed | Homepage, PDP, cart progress, checkout and shipping policy disclose **€6.99 tracked shipping** and **automatic free shipping from €50**. Live checkout tests confirmed €6.99 below the threshold and a €6.99 discount to FREE above it for both standard and bulky items. |
 | Mobile drawer scroll leak | Fixed | Opening the drawer fixes the body, preserves the stored scroll offset, blocks background movement and restores the exact position on close. Focus, `inert` and Escape behavior remain intact. |
 | Dead `Shop by play` route | Fixed | Both header routes now target `/collections/all-toys#shop-by-play`; the live catalogue contains that anchor and the play shortcuts. |
 | Sold-out catalogue pollution | Fixed at storefront level | The default catalogue now excludes unavailable products while preserving direct sold-out PDP recovery. Live verification: zero sold-out cards in the default grid. Inventory was not fabricated and supplier stock was not overridden. |
@@ -44,7 +44,8 @@ The storefront and safe Shopify-admin fixes are live. The three-tap mobile path 
 - Empty-filter recovery verified with `Clear filters` and `Browse categories` actions.
 - Cart restored to its pre-test state after quick-add testing.
 - Checkout displays the brand logo/colors/font, omits company/phone, and shows **EU Shipping with Tracking**.
-- Shipping policy live-check confirms €8.99, €9.99 and €17.99 examples plus 3–8 business-day guidance.
+- Belgium and Netherlands rate endpoints return **EU Shipping with Tracking — €6.99** below €50. Live checkout shows the €6.99 rate discounted to **FREE** at €55.96 and on a €109.99 bulky item; the original cart was restored afterward.
+- Shipping policy live-check confirms €6.99 per order, automatic free shipping from €50 and 3–8 business-day guidance.
 - Shopify Theme Check: 77 files, 0 offenses.
 
 ## Remaining launch gates outside safe implementation authority

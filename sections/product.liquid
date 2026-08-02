@@ -141,7 +141,7 @@
 
   if section.settings.use_store_promises
     if settings.free_shipping_enabled
-      assign delivery_text = 'sections.promises.free_shipping' | t: threshold: settings.free_shipping_threshold
+      assign delivery_text = 'sections.promises.shipping_detail' | t: threshold: settings.free_shipping_threshold
     else
       assign delivery_text = 'sections.promises.tracked_shipping_detail' | t
     endif

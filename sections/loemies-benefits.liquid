@@ -27,7 +27,7 @@
             when 'shipping'
               if settings.free_shipping_enabled
                 assign benefit_heading = 'sections.promises.free_shipping' | t: threshold: settings.free_shipping_threshold
-                assign benefit_text = 'sections.promises.shipping_detail' | t
+                assign benefit_text = 'sections.promises.shipping_detail' | t: threshold: settings.free_shipping_threshold
               else
                 assign benefit_heading = 'sections.promises.tracked_shipping' | t
                 assign benefit_text = 'sections.promises.tracked_shipping_detail' | t

@@ -211,13 +211,13 @@
         "type": "text",
         "id": "free_shipping_threshold",
         "label": "Free shipping threshold",
-        "default": "€49"
+        "default": "€50"
       },
       {
         "type": "number",
         "id": "free_shipping_threshold_amount",
         "label": "Free shipping threshold (amount in store currency)",
-        "default": 49
+        "default": 50
       },
       {
         "type": "range",

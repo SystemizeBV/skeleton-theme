@@ -28,7 +28,7 @@
           "settings": {
             "icon": "shipping",
             "heading": "Shipping information",
-            "text": "Tracked EU delivery. Ask us anytime about delivery timing or costs.",
+            "text": "Tracked shipping is €6.99 and free from €50. Ask us anytime about delivery timing.",
             "link_label": "Ask about delivery",
             "link": "/policies/shipping-policy",
             "background_color": "#dcebdc"

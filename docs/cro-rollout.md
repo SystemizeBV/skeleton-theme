@@ -55,12 +55,12 @@ the remaining open items are listed first.
       the gallery. Responsive PDP sources are capped to each original's true
       width, preventing CDN upscaling, and repeated supplier alt text is made
       unique by gallery position.
-- [x] All 20 customer-facing rates in the two Hertwill shipping profiles were
-      renamed to **EU Shipping with Tracking**. The shipping policy now uses
-      the same name, removes the unsupported free-over-€49 claim and aligns
-      processing to 1–2 business days. The theme consistently says tracked EU
-      delivery and does not render free-shipping progress unless the global
-      promise is explicitly enabled.
+- [x] The active Belgium/Netherlands paths in the default and both Hertwill
+      shipping profiles use **EU Shipping with Tracking** at **€6.99**. An
+      automatic shipping discount makes eligible orders of **€50 or more**
+      free across profiles. The theme, cart progress, checkout and shipping
+      policy all disclose the same rule; the redundant domestic express rate
+      was removed.
 - [x] About and FAQ Online Store 2.0 templates added with localized EN/NL/FR
       content. The live `/pages/about-us` and `/pages/faq` Shopify pages were
       created, assigned to those templates, and are now linked in the footer.
@@ -69,8 +69,8 @@ the remaining open items are listed first.
       accidental 999-unit carts while supplier inventory policy is reviewed.
 
 - [x] Policies published (Settings → Policies): **Refund** (Shopify 30-day
-      template, return address + support@loemies.com), **Shipping** (tracked
-      EU delivery, checkout-calculated rates, delivery estimates, 30-day returns), **Terms of service**
+      template, return address + support@loemies.com), **Shipping** (€6.99
+      tracked delivery, free from €50, delivery estimates, 30-day returns), **Terms of service**
       (Systemize BV trading data, VAT BE 1004.376.305), **Contact
       information** (EU requirement). Privacy was already automated.
       Footer legal row + Customer service column (Contact/Shipping/Returns)

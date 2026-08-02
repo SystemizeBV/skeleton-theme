@@ -722,7 +722,7 @@
                       assign benefit_text = block.settings.text | escape
                       case block.settings.icon
                         when 'delivery'
-                          if block.settings.title == blank or block.settings.title == 'Thoughtful delivery' or block.settings.title == 'Tracked EU delivery'
+                          if block.settings.title == blank or block.settings.title == 'Thoughtful delivery' or block.settings.title == 'Tracked EU delivery' or block.settings.title == 'Free tracked shipping over €50'
                             assign benefit_title = 'cart.benefits.delivery_title' | t
                           endif
                           if block.settings.text == blank or block.settings.text == 'Packed with care' or block.settings.text == 'Tracking included with every parcel'

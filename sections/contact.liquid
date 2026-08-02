@@ -560,7 +560,7 @@
                     if block.settings.heading == blank or block.settings.heading == 'Shipping information'
                       assign quick_card_heading = 'sections.contact.shipping_heading' | t
                     endif
-                    if block.settings.text == blank or block.settings.text == 'Free shipping over €49. Ask us anytime about delivery timing or costs.' or block.settings.text == 'Tracked EU delivery. Ask us anytime about delivery timing or costs.'
+                    if block.settings.text == blank or block.settings.text == 'Free shipping over €49. Ask us anytime about delivery timing or costs.' or block.settings.text == 'Tracked EU delivery. Ask us anytime about delivery timing or costs.' or block.settings.text == 'Tracked shipping is €6.99 and free from €50. Ask us anytime about delivery timing.'
                       if settings.free_shipping_enabled
                         assign quick_card_text = 'sections.contact.shipping_text' | t: threshold: settings.free_shipping_threshold
                       else

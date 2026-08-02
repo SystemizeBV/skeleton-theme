@@ -157,7 +157,7 @@
             </svg>
             {% if settings.free_shipping_enabled %}
               <strong>{{ 'sections.promises.free_shipping' | t: threshold: settings.free_shipping_threshold }}</strong>
-              <small>{{ 'sections.promises.shipping_detail' | t }}</small>
+              <small>{{ 'sections.promises.shipping_detail' | t: threshold: settings.free_shipping_threshold }}</small>
             {% else %}
               <strong>{{ 'sections.promises.tracked_shipping' | t }}</strong>
               <small>{{ 'sections.promises.tracked_shipping_detail' | t }}</small>

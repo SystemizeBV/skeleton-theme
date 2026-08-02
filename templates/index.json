@@ -132,7 +132,7 @@
           "type": "benefit",
           "settings": {
             "icon": "shipping",
-            "heading": "Tracked EU delivery",
+            "heading": "Free tracked shipping over €50",
             "text": "Tracking included with every parcel",
             "background_color": "#F7DC8D"
           }
