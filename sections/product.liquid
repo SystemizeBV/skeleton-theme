@@ -62,7 +62,11 @@
   assign facts_age = product.metafields.custom.card_age.value
   assign facts_detail = product.metafields.custom.card_detail.value | escape
   if facts_age == blank
-    if product.tags contains 'Age 18 months+'
+    if product.tags contains 'Age 0-3 months'
+      assign facts_age = 'products.card.age_zero_three' | t
+    elsif product.tags contains 'Age 6-12 months'
+      assign facts_age = 'products.card.age_six_twelve' | t
+    elsif product.tags contains 'Age 18 months+'
       assign facts_age = 'products.card.age_months' | t: count: 18
     elsif product.tags contains 'Age 12 months+'
       assign facts_age = 'products.card.age_months' | t: count: 12

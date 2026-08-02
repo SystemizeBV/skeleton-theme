@@ -219,7 +219,9 @@
       "age_years": {
         "one": "{{ count }} an",
         "other": "{{ count }} ans"
-      }
+      },
+      "age_zero_three": "0–3 mois",
+      "age_six_twelve": "6–12 mois"
     },
     "upsell": {
       "add": "Ajouter",
@@ -373,6 +375,8 @@
       "browse": "Découvrir",
       "all": "Tous les jouets",
       "age_one": "Dès 1 an",
+      "age_zero_three": "0–3 mois",
+      "age_six_to_one": "6 mois – 1 an",
       "age_eighteen_months": "Dès 18 mois",
       "age_three": "Dès 3 ans",
       "fine_motor": "Motricité fine",
@@ -391,6 +395,8 @@
       "choose_style": "Choisir une couleur ou un modèle",
       "styles_available": "{{ count }} couleurs ou modèles",
       "titles": {
+        "age_zero_three": "Essentiels bébé, 0–3 mois",
+        "age_six_to_one": "Jouets de 6 à 12 mois",
         "age_one": "Jouets dès 1 an",
         "age_eighteen_months": "Jouets dès 18 mois",
         "age_three": "Jouets dès 3 ans",
@@ -403,6 +409,8 @@
         "age_two": "Jouets dès 2 ans"
       },
       "descriptions": {
+        "age_zero_three": "Couvertures douces, bodies et premiers essentiels sensoriels pour les bébés de 0 à 3 mois.",
+        "age_six_to_one": "Premiers jouets de préhension, d'empilage et de découverte pour les bébés de 6 mois à 1 an.",
         "age_one": "Des jouets adaptés aux premières découvertes, au mouvement et à l’autonomie qui grandit.",
         "age_eighteen_months": "Des jouets pour les tout-petits dès dix-huit mois, choisis pour développer la coordination, la curiosité et le jeu autonome.",
         "age_three": "Des jouets stimulants pour l’imagination, de nouvelles aptitudes et une autonomie grandissante.",
@@ -693,6 +701,9 @@
       "eyebrow": "Par âge",
       "heading": "Choisir par âge",
       "text": "Les bons jouets pour chaque étape, selon les recommandations d’âge des fabricants.",
+      "zero_three": "0–3 mois",
+      "six_to_one": "6 mois – 1 an",
+      "twelve_months": "12 mois et +",
       "zero_six": "0–6 mois",
       "six_twelve": "6–12 mois",
       "one_two": "1–2 ans",

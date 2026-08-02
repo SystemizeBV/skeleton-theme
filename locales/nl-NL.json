@@ -219,7 +219,9 @@
       "age_years": {
         "one": "{{ count }} jaar",
         "other": "{{ count }} jaar"
-      }
+      },
+      "age_zero_three": "0–3 maanden",
+      "age_six_twelve": "6–12 maanden"
     },
     "upsell": {
       "add": "Toevoegen",
@@ -373,6 +375,8 @@
       "browse": "Ontdek",
       "all": "Al het speelgoed",
       "age_one": "Vanaf 1 jaar",
+      "age_zero_three": "0–3 maanden",
+      "age_six_to_one": "6 maanden – 1 jaar",
       "age_eighteen_months": "Vanaf 18 maanden",
       "age_three": "Vanaf 3 jaar",
       "fine_motor": "Fijne motoriek",
@@ -391,6 +395,8 @@
       "choose_style": "Kies een kleur of uitvoering",
       "styles_available": "{{ count }} kleuren of uitvoeringen",
       "titles": {
+        "age_zero_three": "Baby-essentials, 0–3 maanden",
+        "age_six_to_one": "Speelgoed van 6 maanden tot 1 jaar",
         "age_one": "Speelgoed vanaf 1 jaar",
         "age_eighteen_months": "Speelgoed vanaf 18 maanden",
         "age_three": "Speelgoed vanaf 3 jaar",
@@ -403,6 +409,8 @@
         "age_two": "Speelgoed vanaf 2 jaar"
       },
       "descriptions": {
+        "age_zero_three": "Zachte dekentjes, rompertjes en eerste sensorische essentials voor baby's van 0 tot 3 maanden.",
+        "age_six_to_one": "Eerste grijp-, stapel- en ontdekspeelgoed voor baby's van 6 maanden tot 1 jaar.",
         "age_one": "Leeftijdsgeschikt speelgoed voor eerste ontdekkingen, beweging en groeiende zelfstandigheid.",
         "age_eighteen_months": "Speelgoed voor peuters vanaf achttien maanden, gekozen voor groeiende coördinatie, nieuwsgierigheid en zelfstandig spelen.",
         "age_three": "Uitdagend speelgoed voor fantasiespel, nieuwe vaardigheden en steeds zelfstandiger ontdekken.",
@@ -693,6 +701,9 @@
       "eyebrow": "Op leeftijd",
       "heading": "Winkelen op leeftijd",
       "text": "Het juiste speelgoed voor elke fase, op basis van de leeftijdsadviezen van de makers.",
+      "zero_three": "0–3 maanden",
+      "six_to_one": "6 maanden – 1 jaar",
+      "twelve_months": "12+ maanden",
       "zero_six": "0–6 maanden",
       "six_twelve": "6–12 maanden",
       "one_two": "1–2 jaar",

@@ -169,13 +169,22 @@
     "loemies_age": {
       "type": "loemies-age-navigation",
       "blocks": {
-        "twelve_months": {
+        "zero_three_months": {
           "type": "age",
           "settings": {
-            "label": "12+ months",
-            "link": "/collections/all-toys/age-12-months",
+            "label": "0–3 months",
+            "link": "/collections/all-toys/age-0-3-months",
             "icon": "rattle",
             "background_color": "#F5C8CF"
+          }
+        },
+        "six_to_one_year": {
+          "type": "age",
+          "settings": {
+            "label": "6 months – 1 year",
+            "link": "/collections/all-toys/age-6-12-months",
+            "icon": "stack",
+            "background_color": "#F7DC8D"
           }
         },
         "one_year": {
@@ -207,7 +216,8 @@
         }
       },
       "block_order": [
-        "twelve_months",
+        "zero_three_months",
+        "six_to_one_year",
         "one_year",
         "two_years",
         "three_years"

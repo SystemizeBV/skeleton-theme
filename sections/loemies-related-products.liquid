@@ -78,7 +78,7 @@
               assign recommendation_relevant = true
             else
               for relevance_tag in product.tags
-                if relevance_tag == 'Age 12 months+' or relevance_tag == 'Age 1+' or relevance_tag == 'Age 2+' or relevance_tag == 'Age 3+' or relevance_tag == 'Fine Motor' or relevance_tag == 'Sensory' or relevance_tag == 'Pretend Play' or relevance_tag == 'Active Play' or relevance_tag == 'Wooden Toys' or relevance_tag == 'FSC Wood' or relevance_tag == 'Made in EU'
+                if relevance_tag == 'Age 0-3 months' or relevance_tag == 'Age 6-12 months' or relevance_tag == 'Age 12 months+' or relevance_tag == 'Age 18 months+' or relevance_tag == 'Age 1+' or relevance_tag == 'Age 2+' or relevance_tag == 'Age 3+' or relevance_tag == 'Fine Motor Skills' or relevance_tag == 'Sensory Play' or relevance_tag == 'Imaginative Play' or relevance_tag == 'Outdoor Play' or relevance_tag == 'Wooden Toys' or relevance_tag == 'FSC Wood' or relevance_tag == 'Made in EU'
                   if recommended_product.tags contains relevance_tag
                     assign recommendation_relevant = true
                     break

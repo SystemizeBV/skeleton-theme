@@ -133,6 +133,18 @@
   });
 
   document.addEventListener('change', (event) => {
+    // The tag inputs carry no `name` (they must stay out of the query string,
+    // the tag route is built on submit), so radio grouping is enforced here.
+    const tagInput = event.target.closest('[data-catalog-tag]');
+    if (tagInput?.checked && tagInput.dataset.tagGroup) {
+      const group = tagInput.dataset.tagGroup;
+      tagInput.form
+        ?.querySelectorAll(`[data-catalog-tag][data-tag-group="${group}"]`)
+        .forEach((input) => {
+          if (input !== tagInput) input.checked = false;
+        });
+    }
+
     const sort = event.target.closest('.loemies-catalog__sort-select');
     if (sort) {
       sort.form?.requestSubmit();

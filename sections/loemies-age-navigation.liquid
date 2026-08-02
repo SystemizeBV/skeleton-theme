@@ -38,6 +38,12 @@
           # and print `age_label` without a second escape.
           assign age_label = block.settings.label | escape
           case block.settings.label
+            when '0–3 months'
+              assign age_label = 'sections.age_navigation.zero_three' | t
+            when '6 months – 1 year'
+              assign age_label = 'sections.age_navigation.six_to_one' | t
+            when '12+ months'
+              assign age_label = 'sections.age_navigation.twelve_months' | t
             when '3+ months'
               assign age_label = 'sections.age_navigation.three_months' | t
             when '6+ months'

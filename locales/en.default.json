@@ -219,7 +219,9 @@
       "age_years": {
         "one": "{{ count }} year",
         "other": "{{ count }} years"
-      }
+      },
+      "age_zero_three": "0–3 months",
+      "age_six_twelve": "6–12 months"
     },
     "upsell": {
       "add": "Add",
@@ -373,6 +375,8 @@
       "browse": "Browse",
       "all": "All toys",
       "age_one": "From 1 year",
+      "age_zero_three": "0–3 months",
+      "age_six_to_one": "6 months – 1 year",
       "age_eighteen_months": "From 18 months",
       "age_three": "From 3 years",
       "fine_motor": "Fine motor",
@@ -391,6 +395,8 @@
       "choose_style": "Choose a colour or style",
       "styles_available": "{{ count }} colours or styles",
       "titles": {
+        "age_zero_three": "Baby essentials, 0–3 months",
+        "age_six_to_one": "Toys from 6 to 12 months",
         "age_one": "Toys from 1 year",
         "age_eighteen_months": "Toys from 18 months",
         "age_three": "Toys from 3 years",
@@ -403,6 +409,8 @@
         "age_two": "Toys from 2 years"
       },
       "descriptions": {
+        "age_zero_three": "Soft blankets, bodysuits and first sensory essentials for babies from birth to three months.",
+        "age_six_to_one": "First grasping, stacking and discovery toys for babies from six to twelve months.",
         "age_one": "Age-appropriate toys for first discoveries, movement and growing independence.",
         "age_eighteen_months": "Toys for toddlers from eighteen months, chosen for growing coordination, curiosity and independent play.",
         "age_three": "Engaging toys for imaginative play, new skills and increasingly independent little explorers.",
@@ -693,6 +701,9 @@
       "eyebrow": "By age",
       "heading": "Shop by age",
       "text": "The right toys for every stage, based on the makers’ age recommendations.",
+      "zero_three": "0–3 months",
+      "six_to_one": "6 months – 1 year",
+      "twelve_months": "12+ months",
       "zero_six": "0–6 months",
       "six_twelve": "6–12 months",
       "one_two": "1–2 years",

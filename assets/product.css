@@ -940,14 +940,14 @@
 .loemies-product__details {
   display: grid;
   align-items: start;
-  gap: 2rem;
+  gap: 1rem;
   margin-block-start: 2.5rem;
   padding: 1.5rem;
   border: 1px solid var(--product-border);
   border-radius: var(--radius-card);
   background: var(--color-surface);
   box-shadow: var(--shadow-small);
-  grid-template-columns: minmax(12rem, 0.36fr) minmax(0, 0.64fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .loemies-product__details-title {
@@ -994,11 +994,10 @@
   background: var(--color-surface);
 }
 
+/* Stacked flow: heading and intro sit above the review content instead of in
+   a side column, matching the stacked product-details section. */
 .loemies-reviews__interactive {
-  display: grid;
-  align-items: start;
-  column-gap: 3rem;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  display: block;
 }
 
 .loemies-reviews__heading {
@@ -1508,6 +1507,14 @@
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
+}
+
+/* The sticky summary column already keeps the buy action reachable on larger
+   screens, so the fixed bottom bar is a small-screen aid only. */
+@media (min-width: 48rem) {
+  .loemies-product__mobile-bar {
+    display: none;
+  }
 }
 
 .loemies-product__mobile-summary {
