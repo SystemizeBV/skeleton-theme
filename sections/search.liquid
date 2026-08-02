@@ -50,6 +50,33 @@
   endif
 
   assign search_sort_by = search.sort_by | default: search.default_sort_by
+  assign normalized_terms = display_terms | downcase
+  assign help_result_url = blank
+  assign help_result_title = blank
+  assign help_result_text = blank
+  if normalized_terms contains 'return' or normalized_terms contains 'refund' or normalized_terms contains 'retour' or normalized_terms contains 'terug'
+    if shop.refund_policy.body != blank
+      assign help_result_url = shop.refund_policy.url
+      assign help_result_title = 'search.help.returns_title' | t
+      assign help_result_text = 'search.help.returns_text' | t
+    endif
+  elsif normalized_terms contains 'shipping' or normalized_terms contains 'delivery' or normalized_terms contains 'verzend' or normalized_terms contains 'levering' or normalized_terms contains 'livraison' or normalized_terms contains 'expédition'
+    if shop.shipping_policy.body != blank
+      assign help_result_url = shop.shipping_policy.url
+      assign help_result_title = 'search.help.shipping_title' | t
+      assign help_result_text = 'search.help.shipping_text' | t
+    endif
+  elsif normalized_terms contains 'contact' or normalized_terms contains 'support' or normalized_terms contains 'help' or normalized_terms contains 'hulp' or normalized_terms contains 'aide'
+    if pages['contact'] != blank
+      assign help_result_url = pages['contact'].url
+      assign help_result_title = 'search.help.contact_title' | t
+      assign help_result_text = 'search.help.contact_text' | t
+    endif
+  endif
+  assign displayed_result_count = search.results_count
+  if help_result_url != blank
+    assign displayed_result_count = displayed_result_count | plus: 1
+  endif
   assign active_filter_count = 0
   for filter in search.filters
     assign active_filter_count = active_filter_count | plus: filter.active_values.size
@@ -60,6 +87,18 @@
     endif
   endfor
 %}
+
+{% if search.performed %}
+  <script>
+    (() => {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('filter.v.availability')) {
+        url.searchParams.set('filter.v.availability', '1');
+        window.location.replace(url.toString());
+      }
+    })();
+  </script>
+{% endif %}
 
 <section
   class="loemies-search full-width"
@@ -99,6 +138,7 @@
           >
         </div>
         <input type="hidden" name="options[prefix]" value="last">
+        <input type="hidden" name="filter.v.availability" value="1">
         <button type="submit" name="search-submit">
           <span>{{ search_button_label }}</span>
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -113,11 +153,11 @@
     </header>
 
     {% if search.performed %}
-      {% if search.results_count > 0 %}
+      {% if search.results_count > 0 or help_result_url != blank %}
         <div class="loemies-search__results-heading" aria-live="polite">
           <div>
             <p class="loemies-search__results-eyebrow">{{ 'search.results_eyebrow' | t }}</p>
-            <h2>{{ 'search.match_count' | t: count: search.results_count, terms: display_terms }}</h2>
+            <h2>{{ 'search.match_count' | t: count: displayed_result_count, terms: display_terms }}</h2>
           </div>
         </div>
 
@@ -125,13 +165,14 @@
           <form class="loemies-search__tools" action="{{ routes.search_url }}" method="get">
             <input type="hidden" name="q" value="{{ search.terms | escape }}">
             <input type="hidden" name="options[prefix]" value="last">
+            <input type="hidden" name="filter.v.availability" value="1">
             <details class="loemies-search__filters" data-search-filters>
               <summary>
                 <span>
                   {{ 'sections.catalog.filters_and_sorting' | t }}
                   {% if active_filter_count > 0 %}<strong>{{ active_filter_count }}</strong>{% endif %}
                 </span>
-                <span>{{ 'search.match_count' | t: count: search.results_count, terms: display_terms }}</span>
+                <span>{{ 'search.match_count' | t: count: displayed_result_count, terms: display_terms }}</span>
               </summary>
               <div class="loemies-search__filter-panel">
                 {% for filter in search.filters %}
@@ -199,7 +240,7 @@
                 <div class="loemies-search__filter-actions">
                   <button type="submit">{{ 'sections.catalog.apply' | t }}</button>
                   {% if active_filter_count > 0 or search_sort_by != search.default_sort_by %}
-                    <a href="{{ routes.search_url }}?q={{ search.terms | url_encode }}&options%5Bprefix%5D=last">{{ 'sections.catalog.reset' | t }}</a>
+                    <a href="{{ routes.search_url }}?q={{ search.terms | url_encode }}&options%5Bprefix%5D=last&filter.v.availability=1">{{ 'sections.catalog.reset' | t }}</a>
                   {% endif %}
                 </div>
               </div>
@@ -224,6 +265,24 @@
 
         {% paginate search.results by results_per_page %}
           <div class="loemies-search__grid">
+            {% if help_result_url != blank and paginate.current_page == 1 %}
+              <article class="search-card search-card--page search-card--help">
+                <a class="search-card__link" href="{{ help_result_url }}">
+                  <div class="search-card__media search-card__help-media" aria-hidden="true">
+                    <svg viewBox="0 0 64 64" fill="none">
+                      <path d="M16 12h32a4 4 0 0 1 4 4v32a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="3"/>
+                      <path d="M22 24h20M22 32h20M22 40h12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                    <span class="search-card__badge">{{ 'search.help.badge' | t }}</span>
+                  </div>
+                  <div class="search-card__content">
+                    <h3>{{ help_result_title }}</h3>
+                    <p class="search-card__excerpt">{{ help_result_text }}</p>
+                    <span class="search-card__read-more">{{ 'search.help.view' | t }} <span aria-hidden="true">&rarr;</span></span>
+                  </div>
+                </a>
+              </article>
+            {% endif %}
             {% for result in search.results %}
               {% liquid
                 assign result_image = result.featured_image | default: result.image
@@ -354,9 +413,15 @@
           {% for search_collection_handle in search_collection_handles %}
             {% assign suggested_collection = collections[search_collection_handle] %}
             {% if suggested_collection != blank %}
+              {% assign available_collection_count = 0 %}
+              {% for suggested_product in suggested_collection.products limit: 50 %}
+                {% if suggested_product.available %}
+                  {% assign available_collection_count = available_collection_count | plus: 1 %}
+                {% endif %}
+              {% endfor %}
               <a href="{{ suggested_collection.url }}">
                 <span>{{ suggested_collection.title | escape }}</span>
-                <small>{{ suggested_collection.products_count }}</small>
+                <small>{{ available_collection_count }}</small>
               </a>
             {% endif %}
           {% endfor %}

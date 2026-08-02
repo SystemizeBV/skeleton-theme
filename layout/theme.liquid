@@ -167,6 +167,16 @@
     {% sections 'header-group' %}
 
     <main id="MainContent" tabindex="-1">
+      {% if request.page_type == 'policy' and request.path contains '/refund-policy' %}
+        <aside class="loemies-policy-clarifier" aria-labelledby="PolicyClarifierTitle">
+          <h2 id="PolicyClarifierTitle">{{ 'sections.policy.return_details_heading' | t }}</h2>
+          <ul>
+            <li>{{ 'sections.policy.return_postage' | t }}</li>
+            <li>{{ 'sections.policy.damaged_costs' | t }}</li>
+            <li>{{ 'sections.policy.hygiene_exception' | t }}</li>
+          </ul>
+        </aside>
+      {% endif %}
       {{ content_for_layout }}
     </main>
 

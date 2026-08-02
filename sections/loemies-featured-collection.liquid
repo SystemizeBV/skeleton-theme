@@ -144,11 +144,12 @@
             {% liquid
               # Every rail ships real server-side img markup with native lazy
               # loading — no dependency on deferred-images.js. The first rail on
-              # a page (the hero is section 1) additionally loads its first four
-              # cards eagerly, since they can sit above the fold.
+              # a page (the hero is section 1) additionally loads only its first
+              # card eagerly. The rail overflows horizontally on mobile, so
+              # eager-loading four cards wastes bandwidth on off-screen media.
               assign card_image_loading = 'lazy'
               assign card_image_deferred = false
-              if section.index <= 2 and rendered_products < 4
+              if section.index <= 2 and rendered_products == 0
                 assign card_image_loading = 'eager'
               endif
             %}

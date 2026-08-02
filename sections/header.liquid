@@ -74,7 +74,7 @@
 
       <button class="mobile-menu__backdrop" type="button" data-mobile-menu-close aria-label="{{ 'sections.header.close_menu' | t }}"></button>
 
-      <div class="mobile-menu__panel">
+      <div class="mobile-menu__panel" inert aria-hidden="true">
         {% if section.settings.show_shop_navigation or section.settings.menu != blank %}
           <nav aria-label="{{ 'sections.header.mobile_navigation' | t }}">
             <ul class="mobile-menu__list" role="list">
@@ -253,6 +253,7 @@
         aria-expanded="false"
       >
       <input type="hidden" name="options[prefix]" value="last">
+      <input type="hidden" name="filter.v.availability" value="1">
       <button class="header-search__submit" type="submit" name="search-submit" aria-label="{{ 'sections.header.search' | t }}">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="10.75" cy="10.75" r="6.25" stroke="currentColor" stroke-width="1.75"/>

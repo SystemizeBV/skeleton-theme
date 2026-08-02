@@ -282,6 +282,7 @@
       "media_fallback": "Une jolie nouveauté arrive bientôt.",
       "quantity": "Quantité",
       "sale": "Promotion",
+      "free_shipping_qualified": "Cet article bénéficie de la livraison suivie gratuite.",
       "shipping_at_checkout": "La livraison suivie coûte 6,99 € et est offerte dès 50 €.",
       "shipping_policy_html": "La livraison suivie coûte 6,99 € et est offerte dès 50 €. <a href=\"{{ link }}\">Voir la politique de livraison</a>.",
       "shop": "Boutique",
@@ -325,10 +326,16 @@
     }
   },
   "sections": {
+    "policy": {
+      "return_details_heading": "Frais de retour et exceptions — en bref",
+      "return_postage": "Pour un retour dû à un changement d’avis, vous payez les frais de retour.",
+      "damaged_costs": "Si un article est confirmé comme endommagé, défectueux, incomplet ou incorrect, Loemies prend en charge les frais appropriés de retour ou de remplacement.",
+      "hygiene_exception": "Seuls les articles personnalisés, les cartes-cadeaux et les biens sensibles à l’hygiène dont le sceau a été brisé sont exclus ; les jouets standards non ouverts restent retournables s’ils remplissent les conditions."
+    },
     "about": {
       "eyebrow": "À propos de Loemies",
       "title": "Moins de choix, mais de meilleurs choix pour jouer au quotidien",
-      "intro": "Loemies aide les familles à trouver des jouets bien pensés sans parcourir une infinité d’options. Notre objectif est simple : des détails utiles, une découverte adaptée à l’âge et une aide chaleureuse si nécessaire.",
+      "intro": "Loemies est exploité depuis Bonheiden, en Belgique, par Systemize BV. Nous aidons les familles à trouver des jouets bien pensés sans parcourir une infinité d’options, avec des détails utiles, une découverte adaptée à l’âge et une aide directe si nécessaire.",
       "choice_heading": "Une collection ciblée",
       "choice_text": "Nous facilitons la découverte et classons les jouets comme les familles les recherchent réellement : par âge, type de jeu et objectif.",
       "details_heading": "Des détails clairs avant le discours commercial",
@@ -354,12 +361,19 @@
       "sold_out_answer": "Ouvrez la page du produit et envoyez une demande de disponibilité. Notre équipe vous répondra ; cela ne vous inscrit pas aux communications marketing.",
       "help_question": "Puis-je poser une question avant de commander ?",
       "help_answer": "Oui. Envoyez le nom du produit et votre question via la page de contact afin que nous puissions vous répondre précisément.",
-      "contact_link": "Contacter l’équipe Loemies"
+      "contact_link": "Contacter l’équipe Loemies",
+      "return_cost_question": "Qui paie les frais de retour ?",
+      "return_cost_answer": "Pour un retour dû à un changement d’avis, vous payez les frais de retour. Si un article est confirmé comme endommagé, défectueux ou incorrect, Loemies prend en charge les frais appropriés de retour ou de remplacement.",
+      "damaged_question": "Que faire si ma commande arrive endommagée, incomplète ou incorrecte ?",
+      "damaged_answer": "Contactez-nous dès que possible avec votre numéro de commande et des photos nettes. Nous vérifierons le problème et organiserons le remplacement, le remboursement ou les instructions de retour appropriés.",
+      "split_question": "Une commande peut-elle arriver en plusieurs colis ?",
+      "split_answer": "Oui. Les produits de différentes marques ou de différents entrepôts de l’UE peuvent être expédiés séparément. Chaque colis expédié reçoit son propre suivi, sans frais de livraison supplémentaires au-delà du montant affiché au paiement."
     },
     "catalog": {
       "browse": "Découvrir",
       "all": "Tous les jouets",
       "age_one": "Dès 1 an",
+      "age_eighteen_months": "Dès 18 mois",
       "age_three": "Dès 3 ans",
       "fine_motor": "Motricité fine",
       "sensory": "Sensoriel",
@@ -378,6 +392,7 @@
       "styles_available": "{{ count }} couleurs ou modèles",
       "titles": {
         "age_one": "Jouets dès 1 an",
+        "age_eighteen_months": "Jouets dès 18 mois",
         "age_three": "Jouets dès 3 ans",
         "fine_motor": "Jouets de motricité fine",
         "sensory": "Jouets sensoriels",
@@ -389,6 +404,7 @@
       },
       "descriptions": {
         "age_one": "Des jouets adaptés aux premières découvertes, au mouvement et à l’autonomie qui grandit.",
+        "age_eighteen_months": "Des jouets pour les tout-petits dès dix-huit mois, choisis pour développer la coordination, la curiosité et le jeu autonome.",
         "age_three": "Des jouets stimulants pour l’imagination, de nouvelles aptitudes et une autonomie grandissante.",
         "fine_motor": "Enfiler, trier, empiler et construire pour occuper les petites mains avec intention.",
         "sensory": "Des jouets à manipuler pour toucher, bouger, explorer et découvrir librement.",
@@ -722,6 +738,16 @@
       "product": "Produit",
       "article": "Article",
       "page": "Page"
+    },
+    "help": {
+      "badge": "Aide et politiques",
+      "view": "Voir les informations",
+      "returns_title": "Retours et remboursements",
+      "returns_text": "Consultez les conditions, les étapes et les délais de remboursement de notre politique de retour de 30 jours.",
+      "shipping_title": "Expédition et livraison",
+      "shipping_text": "Consultez les frais, les délais, le suivi et les informations sur les envois séparés.",
+      "contact_title": "Contacter Loemies",
+      "contact_text": "Posez une question à notre équipe sur un produit, une commande, une livraison ou un retour."
     },
     "view_result": "Voir {{ type }}",
     "empty_eyebrow": "Rien ici pour l’instant",

@@ -54,6 +54,7 @@
 
     const summary = menu.querySelector(':scope > summary');
     const closeButton = menu.querySelector('[data-mobile-menu-close]');
+    const panel = menu.querySelector('.mobile-menu__panel');
     const header = menu.closest('.site-header');
     const pageRegions = [
       document.querySelector('main'),
@@ -105,6 +106,13 @@
 
     menu.addEventListener('toggle', () => {
       summary?.setAttribute('aria-expanded', String(menu.open));
+      if (menu.open) {
+        panel?.removeAttribute('inert');
+        panel?.setAttribute('aria-hidden', 'false');
+      } else {
+        panel?.setAttribute('inert', '');
+        panel?.setAttribute('aria-hidden', 'true');
+      }
       pageRegions.forEach((region) => {
         if (menu.open) {
           region.setAttribute('inert', '');
@@ -162,6 +170,13 @@
     desktopQuery.addEventListener?.('change', handleDesktop);
 
     summary?.setAttribute('aria-expanded', String(menu.open));
+    if (menu.open) {
+      panel?.removeAttribute('inert');
+      panel?.setAttribute('aria-hidden', 'false');
+    } else {
+      panel?.setAttribute('inert', '');
+      panel?.setAttribute('aria-hidden', 'true');
+    }
   };
 
   const initializeDesktopDropdown = (dropdown) => {
@@ -297,10 +312,11 @@
     };
 
     const render = (products, query) => {
-      results.replaceChildren(...products.map(createResult));
-      status.textContent = products.length ? '' : form.dataset.noResults;
+      const availableProducts = products.filter((product) => product.available !== false).slice(0, 4);
+      results.replaceChildren(...availableProducts.map(createResult));
+      status.textContent = availableProducts.length ? '' : form.dataset.noResults;
       const normalizedQuery = query.endsWith('*') ? query : `${query}*`;
-      allResults.href = `${form.action}?q=${encodeURIComponent(normalizedQuery)}&options%5Bprefix%5D=last`;
+      allResults.href = `${form.action}?q=${encodeURIComponent(normalizedQuery)}&options%5Bprefix%5D=last&filter.v.availability=1`;
       // Always offer the full-search link for a non-empty query: it is the
       // recovery path when predictive search returns nothing.
       allResults.hidden = !query;
@@ -316,7 +332,7 @@
       const parameters = new URLSearchParams({
         q: query,
         'resources[type]': 'product',
-        'resources[limit]': '4',
+        'resources[limit]': '10',
         'resources[options][unavailable_products]': 'last',
         'resources[options][fields]': 'title,product_type,variants.title,vendor,tag',
       });

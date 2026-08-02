@@ -282,6 +282,7 @@
       "media_fallback": "Something lovely is on the way.",
       "quantity": "Quantity",
       "sale": "Sale",
+      "free_shipping_qualified": "This item qualifies for free tracked shipping.",
       "shipping_at_checkout": "Tracked shipping is €6.99 and free over €50.",
       "shipping_policy_html": "Tracked shipping is €6.99 and free over €50. <a href=\"{{ link }}\">View shipping policy</a>.",
       "shop": "Shop",
@@ -325,10 +326,16 @@
     }
   },
   "sections": {
+    "policy": {
+      "return_details_heading": "Return costs and exceptions — the short version",
+      "return_postage": "For a change-of-mind return, you pay the return postage.",
+      "damaged_costs": "If an item is verified as damaged, defective, incomplete or incorrect, Loemies covers the appropriate return or replacement cost.",
+      "hygiene_exception": "Only personalised items, gift cards and sealed hygiene-sensitive goods after the seal is broken are excluded; standard unopened toys are returnable when eligible."
+    },
     "about": {
       "eyebrow": "About Loemies",
       "title": "Fewer, better choices for everyday play",
-      "intro": "Loemies helps families find thoughtful toys without wading through endless options. The goal is simple: useful details, age-aware discovery and friendly support when you need it.",
+      "intro": "Loemies is operated from Bonheiden, Belgium by Systemize BV. We help families find thoughtful toys without wading through endless options, with useful details, age-aware discovery and direct support when you need it.",
       "choice_heading": "A focused collection",
       "choice_text": "We keep discovery manageable and organize toys by the way families actually shop: age, play style and purpose.",
       "details_heading": "Clear details before hype",
@@ -354,12 +361,19 @@
       "sold_out_answer": "Open the product page and send an availability enquiry. Our team will reply with an update; this does not subscribe you to marketing.",
       "help_question": "Can I ask a question before ordering?",
       "help_answer": "Yes. Send the product name and your question through the contact page so we can give you a specific answer.",
-      "contact_link": "Contact the Loemies team"
+      "contact_link": "Contact the Loemies team",
+      "return_cost_question": "Who pays for return shipping?",
+      "return_cost_answer": "For a change-of-mind return, you pay the return postage. If an item is verified as damaged, defective or incorrect, Loemies covers the appropriate return or replacement cost.",
+      "damaged_question": "What if my order arrives damaged, incomplete or incorrect?",
+      "damaged_answer": "Contact us as soon as possible with your order number and clear photos. We will check the issue and arrange the appropriate replacement, refund or return instructions.",
+      "split_question": "Can one order arrive in more than one parcel?",
+      "split_answer": "Yes. Products from different brands or EU warehouses can ship separately. Each dispatched parcel receives its own tracking update, with no extra shipping fee beyond the amount shown at checkout."
     },
     "catalog": {
       "browse": "Browse",
       "all": "All toys",
       "age_one": "From 1 year",
+      "age_eighteen_months": "From 18 months",
       "age_three": "From 3 years",
       "fine_motor": "Fine motor",
       "sensory": "Sensory",
@@ -378,6 +392,7 @@
       "styles_available": "{{ count }} colours or styles",
       "titles": {
         "age_one": "Toys from 1 year",
+        "age_eighteen_months": "Toys from 18 months",
         "age_three": "Toys from 3 years",
         "fine_motor": "Fine-motor toys",
         "sensory": "Sensory toys",
@@ -389,6 +404,7 @@
       },
       "descriptions": {
         "age_one": "Age-appropriate toys for first discoveries, movement and growing independence.",
+        "age_eighteen_months": "Toys for toddlers from eighteen months, chosen for growing coordination, curiosity and independent play.",
         "age_three": "Engaging toys for imaginative play, new skills and increasingly independent little explorers.",
         "fine_motor": "Threading, sorting, stacking and building toys that keep little hands purposefully busy.",
         "sensory": "Hands-on toys for touch, movement, exploration and open-ended discovery.",
@@ -722,6 +738,16 @@
       "product": "Product",
       "article": "Article",
       "page": "Page"
+    },
+    "help": {
+      "badge": "Help & policies",
+      "view": "View information",
+      "returns_title": "Returns and refunds",
+      "returns_text": "Read the 30-day return conditions, instructions and refund timing.",
+      "shipping_title": "Shipping and delivery",
+      "shipping_text": "See shipping costs, delivery estimates, tracking and split-shipment details.",
+      "contact_title": "Contact Loemies",
+      "contact_text": "Ask our team about a product, order, delivery or return."
     },
     "view_result": "View {{ type }}",
     "empty_eyebrow": "Nothing here yet",

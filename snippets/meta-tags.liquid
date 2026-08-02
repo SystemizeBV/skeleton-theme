@@ -27,6 +27,10 @@
   if request.page_type == 'collection' and current_tags.size > 0
     assign primary_catalog_tag = current_tags.first
     case primary_catalog_tag
+      when 'Age 18 months+'
+        assign meta_title = 'sections.catalog.titles.age_eighteen_months' | t
+        assign meta_description = 'sections.catalog.descriptions.age_eighteen_months' | t
+        assign has_custom_tag_meta = true
       when 'Age 12 months+'
         assign meta_title = 'sections.catalog.titles.age_twelve_months' | t
         assign meta_description = 'sections.catalog.descriptions.age_twelve_months' | t

@@ -241,7 +241,7 @@
           {% if use_shop_menu %}
             {% for link in shop_menu.links %}
               <li>
-                <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                <a href="{% if link.url contains '#shopifyReshowConsentBanner' %}{{ routes.root_url }}#shopifyReshowConsentBanner{% else %}{{ link.url }}{% endif %}"{% if link.current %} aria-current="page"{% endif %}>
                   {{ link.title | escape }}
                 </a>
               </li>
@@ -264,7 +264,7 @@
             {% if customer_service_menu != blank %}
               {% for link in customer_service_menu.links %}
                 <li>
-                  <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                  <a href="{% if link.url contains '#shopifyReshowConsentBanner' %}{{ routes.root_url }}#shopifyReshowConsentBanner{% else %}{{ link.url }}{% endif %}"{% if link.current %} aria-current="page"{% endif %}>
                     {{ link.title | escape }}
                   </a>
                 </li>
@@ -307,9 +307,20 @@
           <h2>{{ 'sections.footer.legal' | t }}</h2>
           <ul role="list">
             {% for policy in shop.policies %}
-              {% if policy.body != blank %}
+              {% liquid
+                assign policy_is_duplicate_service_link = false
+                if customer_service_menu == blank
+                  if policy.url == shipping_url or policy.url == returns_url
+                    assign policy_is_duplicate_service_link = true
+                  endif
+                endif
+              %}
+              {% if policy.body != blank and policy_is_duplicate_service_link == false %}
                 <li>
-                  <a href="{{ policy.url }}"{% if policy.url == request.path %} aria-current="page"{% endif %}>
+                  <a
+                    href="{% if policy.url contains '#shopifyReshowConsentBanner' %}{{ routes.root_url }}#shopifyReshowConsentBanner{% else %}{{ policy.url }}{% endif %}"
+                    {% if policy.url == request.path %}aria-current="page"{% endif %}
+                  >
                     {{ policy.title | escape }}
                   </a>
                 </li>

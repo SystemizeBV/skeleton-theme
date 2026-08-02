@@ -1614,12 +1614,16 @@
     font-size: 1rem;
   }
 
-  /*
-   * The media stage becomes a swipeable scroll-snap carousel and the
-   * thumbnail rail disappears, pulling the title and price up the page.
-   */
+  /* Keep a compact horizontal overview below the swipeable gallery so long
+     supplier galleries do not force customers through every image in order. */
   .loemies-product__thumbnails {
-    display: none;
+    display: flex;
+    padding-inline: 0.1rem;
+  }
+
+  .loemies-product__thumbnail {
+    width: 3.5rem;
+    border-radius: 0.6rem;
   }
 
   .loemies-product__track {

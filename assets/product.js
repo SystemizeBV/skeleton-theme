@@ -653,6 +653,7 @@ class LoemiesProduct extends HTMLElement {
 
     this.updateAvailability(available);
     this.updateQuantityRules(selectedOption);
+    this.updateShippingMessage(selectedOption);
 
     if (mediaId) this.activateMedia(mediaId, false);
     if (variantUrl) window.history.replaceState({}, '', variantUrl);
@@ -683,6 +684,18 @@ class LoemiesProduct extends HTMLElement {
     if (dynamicCheckout) dynamicCheckout.hidden = !available;
     if (this.quantityInput) this.quantityInput.disabled = !available;
     this.updateQuantityButtons();
+  }
+
+  updateShippingMessage(option) {
+    const message = this.querySelector('[data-product-shipping-message]');
+    if (!message) return;
+
+    const threshold = Number(this.dataset.freeShippingThreshold) || 0;
+    const price = Number(option.dataset.priceCents) || 0;
+    const qualifies = threshold > 0 && price >= threshold;
+    message.textContent = qualifies
+      ? this.dataset.freeShippingQualified
+      : this.dataset.shippingStandard;
   }
 
   updateQuantityRules(option) {

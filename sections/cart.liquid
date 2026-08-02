@@ -638,7 +638,6 @@
                 {{ 'cart.duties_included' | t }}
               {% endif %}
               {% if shop.shipping_policy.body != blank %}
-                {{ 'cart.shipping_calculated' | t }}
                 <a href="{{ shop.shipping_policy.url }}">{{ 'cart.view_shipping_policy' | t }}</a>.
               {% else %}
                 {{ 'cart.shipping_taxes_calculated' | t }}

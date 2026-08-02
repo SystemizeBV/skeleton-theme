@@ -282,6 +282,7 @@
       "media_fallback": "Er komt iets leuks aan.",
       "quantity": "Aantal",
       "sale": "Aanbieding",
+      "free_shipping_qualified": "Dit artikel komt in aanmerking voor gratis verzending met tracking.",
       "shipping_at_checkout": "Verzending met tracking kost € 6,99 en is gratis vanaf € 50.",
       "shipping_policy_html": "Verzending met tracking kost € 6,99 en is gratis vanaf € 50. <a href=\"{{ link }}\">Bekijk het verzendbeleid</a>.",
       "shop": "Winkel",
@@ -325,10 +326,16 @@
     }
   },
   "sections": {
+    "policy": {
+      "return_details_heading": "Retourkosten en uitzonderingen — kort uitgelegd",
+      "return_postage": "Bij een retour omdat je van gedachten bent veranderd, betaal je zelf de retourzending.",
+      "damaged_costs": "Als een artikel aantoonbaar beschadigd, defect, onvolledig of verkeerd is, betaalt Loemies de passende retour- of vervangingskosten.",
+      "hygiene_exception": "Alleen gepersonaliseerde artikelen, cadeaubonnen en verzegelde hygiënegevoelige goederen waarvan de verzegeling is verbroken zijn uitgesloten; standaard ongeopend speelgoed kan worden geretourneerd wanneer het aan de voorwaarden voldoet."
+    },
     "about": {
       "eyebrow": "Over Loemies",
       "title": "Minder, betere keuzes voor elke speeldag",
-      "intro": "Loemies helpt gezinnen doordacht speelgoed te vinden zonder eindeloos veel opties door te nemen. Het doel is eenvoudig: nuttige details, zoeken op leeftijd en vriendelijke hulp wanneer dat nodig is.",
+      "intro": "Loemies wordt vanuit Bonheiden, België beheerd door Systemize BV. We helpen gezinnen doordacht speelgoed te vinden zonder eindeloos veel opties, met nuttige details, zoeken op leeftijd en rechtstreekse hulp wanneer dat nodig is.",
       "choice_heading": "Een gerichte collectie",
       "choice_text": "We houden ontdekken overzichtelijk en ordenen speelgoed zoals gezinnen echt zoeken: op leeftijd, speelstijl en doel.",
       "details_heading": "Duidelijke informatie vóór verkooppraat",
@@ -354,12 +361,19 @@
       "sold_out_answer": "Open de productpagina en stuur een vraag over de beschikbaarheid. Ons team antwoordt met een update; je wordt niet ingeschreven voor marketing.",
       "help_question": "Kan ik vóór het bestellen iets vragen?",
       "help_answer": "Ja. Stuur de productnaam en je vraag via de contactpagina, zodat we een gericht antwoord kunnen geven.",
-      "contact_link": "Neem contact op met Loemies"
+      "contact_link": "Neem contact op met Loemies",
+      "return_cost_question": "Wie betaalt de retourzending?",
+      "return_cost_answer": "Bij een retour omdat je van gedachten bent veranderd, betaal je zelf de retourzending. Als een artikel aantoonbaar beschadigd, defect of verkeerd is, betaalt Loemies de passende retour- of vervangingskosten.",
+      "damaged_question": "Wat als mijn bestelling beschadigd, onvolledig of verkeerd aankomt?",
+      "damaged_answer": "Neem zo snel mogelijk contact op met je bestelnummer en duidelijke foto’s. We beoordelen het probleem en regelen de passende vervanging, terugbetaling of retourinstructies.",
+      "split_question": "Kan één bestelling in meerdere pakketten aankomen?",
+      "split_answer": "Ja. Producten van verschillende merken of EU-magazijnen kunnen apart worden verzonden. Elk verzonden pakket krijgt een eigen trackingupdate, zonder extra verzendkosten boven het bedrag dat bij het afrekenen wordt getoond."
     },
     "catalog": {
       "browse": "Ontdek",
       "all": "Al het speelgoed",
       "age_one": "Vanaf 1 jaar",
+      "age_eighteen_months": "Vanaf 18 maanden",
       "age_three": "Vanaf 3 jaar",
       "fine_motor": "Fijne motoriek",
       "sensory": "Sensorisch",
@@ -378,6 +392,7 @@
       "styles_available": "{{ count }} kleuren of uitvoeringen",
       "titles": {
         "age_one": "Speelgoed vanaf 1 jaar",
+        "age_eighteen_months": "Speelgoed vanaf 18 maanden",
         "age_three": "Speelgoed vanaf 3 jaar",
         "fine_motor": "Speelgoed voor fijne motoriek",
         "sensory": "Sensorisch speelgoed",
@@ -389,6 +404,7 @@
       },
       "descriptions": {
         "age_one": "Leeftijdsgeschikt speelgoed voor eerste ontdekkingen, beweging en groeiende zelfstandigheid.",
+        "age_eighteen_months": "Speelgoed voor peuters vanaf achttien maanden, gekozen voor groeiende coördinatie, nieuwsgierigheid en zelfstandig spelen.",
         "age_three": "Uitdagend speelgoed voor fantasiespel, nieuwe vaardigheden en steeds zelfstandiger ontdekken.",
         "fine_motor": "Rijgen, sorteren, stapelen en bouwen om kleine handen doelgericht bezig te houden.",
         "sensory": "Speelgoed om te voelen, bewegen, onderzoeken en vrij te ontdekken.",
@@ -722,6 +738,16 @@
       "product": "Product",
       "article": "Artikel",
       "page": "Pagina"
+    },
+    "help": {
+      "badge": "Hulp en beleid",
+      "view": "Bekijk informatie",
+      "returns_title": "Retourneren en terugbetalingen",
+      "returns_text": "Lees de voorwaarden, stappen en terugbetalingstermijn van het retourbeleid van 30 dagen.",
+      "shipping_title": "Verzending en levering",
+      "shipping_text": "Bekijk verzendkosten, levertijden, tracking en informatie over deelleveringen.",
+      "contact_title": "Neem contact op met Loemies",
+      "contact_text": "Vraag ons team naar een product, bestelling, levering of retour."
     },
     "view_result": "Bekijk {{ type }}",
     "empty_eyebrow": "Nog niets gevonden",

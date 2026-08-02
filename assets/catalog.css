@@ -813,6 +813,11 @@
 }
 
 @media (max-width: 47.99rem) {
+  .loemies-catalog__filter-panel {
+    max-height: min(70svh, 38rem);
+    overflow-y: auto;
+  }
+
   .loemies-catalog {
     /* Phone screens spend this padding twice over — once here and once under
        the site header — so the multiplier and the floor both come down a
@@ -922,7 +927,12 @@
   }
 
   .loemies-catalog__filter-actions {
+    position: sticky;
+    z-index: 2;
+    bottom: -0.75rem;
     align-items: stretch;
+    padding: 0.75rem 0;
+    background: var(--catalog-card);
     flex-direction: column;
   }
 

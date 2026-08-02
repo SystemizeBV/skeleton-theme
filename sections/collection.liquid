@@ -37,7 +37,7 @@
 
   comment
     Every age tag that exists in the catalogue gets its own title and
-    description: Age 12 months+, Age 1+, Age 2+ and Age 3+. Chip labels for
+    description: Age 12 months+, Age 18 months+, Age 1+, Age 2+ and Age 3+. Chip labels for
     the browse row live in the same locale group. New keys fall back to a
     literal so a tag page never renders "Translation missing" while the
     locale files catch up.
@@ -53,6 +53,9 @@
         assign catalog_title_fallback = 'Toys from 12 months'
         assign catalog_context_description = 'sections.catalog.descriptions.age_twelve_months' | t
         assign catalog_description_fallback = 'First toys for babies from twelve months, sized for small hands and early standing, walking and stacking.'
+      when 'Age 18 months+'
+        assign catalog_title = 'sections.catalog.titles.age_eighteen_months' | t
+        assign catalog_context_description = 'sections.catalog.descriptions.age_eighteen_months' | t
       when 'Age 1+'
         assign catalog_title = 'sections.catalog.titles.age_one' | t
         assign catalog_context_description = 'sections.catalog.descriptions.age_one' | t
@@ -103,6 +106,7 @@
     if catalog_chip_twelve_months contains 'ranslation missing'
       assign catalog_chip_twelve_months = 'From 12 months'
     endif
+    assign catalog_chip_eighteen_months = 'sections.catalog.age_eighteen_months' | t
     assign catalog_chip_two = 'sections.catalog.age_two' | t
     if catalog_chip_two contains 'ranslation missing'
       assign catalog_chip_two = 'From 2 years'
@@ -227,10 +231,13 @@
           </a>
           {%- comment -%}
             One chip per age tag that exists in the catalogue, youngest first:
-            Age 12 months+, Age 1+, Age 2+, Age 3+.
+            Age 12 months+, Age 18 months+, Age 1+, Age 2+, Age 3+.
           {%- endcomment -%}
           <a href="{{ collection.url }}/age-12-months"{% if current_tags contains 'Age 12 months+' %} class="is-active" aria-current="page"{% endif %}>
             {{ catalog_chip_twelve_months }}
+          </a>
+          <a href="{{ collection.url }}/age-18-months"{% if current_tags contains 'Age 18 months+' %} class="is-active" aria-current="page"{% endif %}>
+            {{ catalog_chip_eighteen_months }}
           </a>
           <a href="{{ collection.url }}/age-1"{% if current_tags contains 'Age 1+' %} class="is-active" aria-current="page"{% endif %}>
             {{ 'sections.catalog.age_one' | t }}
@@ -298,12 +305,16 @@
                     </summary>
                     <div class="loemies-catalog__filter-options">
                       <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
-                        <input type="radio" data-catalog-tag data-tag-group="age" value=""{% unless current_tags contains 'Age 12 months+' or current_tags contains 'Age 1+' or current_tags contains 'Age 2+' or current_tags contains 'Age 3+' %} checked{% endunless %}>
+                        <input type="radio" data-catalog-tag data-tag-group="age" value=""{% unless current_tags contains 'Age 12 months+' or current_tags contains 'Age 18 months+' or current_tags contains 'Age 1+' or current_tags contains 'Age 2+' or current_tags contains 'Age 3+' %} checked{% endunless %}>
                         <span>{{ 'sections.catalog.any_option' | t }}</span>
                       </label>
                       <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
                         <input type="radio" data-catalog-tag data-tag-group="age" value="age-12-months"{% if current_tags contains 'Age 12 months+' %} checked{% endif %}>
                         <span>{{ catalog_chip_twelve_months }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="age" value="age-18-months"{% if current_tags contains 'Age 18 months+' %} checked{% endif %}>
+                        <span>{{ catalog_chip_eighteen_months }}</span>
                       </label>
                       <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
                         <input type="radio" data-catalog-tag data-tag-group="age" value="age-1"{% if current_tags contains 'Age 1+' %} checked{% endif %}>
