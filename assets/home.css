@@ -1031,8 +1031,9 @@
 }
 
 @media (min-width: 62rem) {
+  /* One even row regardless of how many age tiles the merchant configures. */
   .loemies-age__grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   }
 }
 
