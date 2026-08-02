@@ -91,6 +91,7 @@
 }
 
 .loemies-catalog__browse {
+  scroll-margin-top: 7rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -293,6 +294,10 @@
   line-height: 1.35;
 }
 
+.loemies-catalog__filter-option--tag {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
 .loemies-catalog__filter-option:first-child {
   margin-top: 0.6rem;
 }
@@ -453,6 +458,55 @@
   /* Breathing room when catalog.js scrolls the results into view after a
      filter or sort change. */
   scroll-margin-top: 1rem;
+}
+
+.loemies-catalog__product-family {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.loemies-catalog__product-family > .loemies-product-card {
+  flex: 1 1 auto;
+}
+
+.loemies-catalog__family-options {
+  display: grid;
+  padding: 0.7rem 0.75rem 0;
+  color: var(--catalog-text);
+  gap: 0.45rem;
+}
+
+.loemies-catalog__family-options > span {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.loemies-catalog__family-options > div {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.35rem;
+  scrollbar-width: thin;
+}
+
+.loemies-catalog__family-options a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--catalog-border);
+  border-radius: 999rem;
+  background: var(--catalog-card);
+  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.loemies-catalog__family-options a:is(:hover, .is-current) {
+  border-color: var(--catalog-accent);
+  background: var(--catalog-accent-soft);
 }
 
 .loemies-catalog__empty {

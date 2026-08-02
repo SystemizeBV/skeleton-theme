@@ -16,7 +16,8 @@
   endif
   assign catalog_context_tag = blank
   assign catalog_context_description = blank
-  assign catalog_reset_url = request.path
+  assign catalog_filter_action = request.path
+  assign catalog_reset_url = collection.url
   assign show_catalog_browse = false
 
   if collection.handle == 'all-toys'
@@ -108,7 +109,7 @@
     endif
   endif
 
-  assign active_filter_count = 0
+  assign active_filter_count = current_tags.size
   for filter in collection.filters
     assign active_filter_count = active_filter_count | plus: filter.active_values.size
     if filter.type == 'price_range'
@@ -129,6 +130,22 @@
   assign catalog_desktop_inner_offset = section.settings.columns_desktop | times: 2
   assign catalog_desktop_offset = catalog_desktop_offset | plus: catalog_desktop_inner_offset
   assign catalog_desktop_card_width = catalog_desktop_card_width | minus: 2
+  assign catalog_visible_product_count = 0
+  assign catalog_counted_families = '|'
+  for catalog_product in collection.products
+    if section.settings.show_sold_out or catalog_product.available
+      assign catalog_count_family = catalog_product.title | split: ':' | first | strip
+      if catalog_product.title contains ':'
+        assign catalog_count_token = '|' | append: catalog_count_family | append: '|'
+        unless catalog_counted_families contains catalog_count_token
+          assign catalog_visible_product_count = catalog_visible_product_count | plus: 1
+          assign catalog_counted_families = catalog_counted_families | append: catalog_count_family | append: '|'
+        endunless
+      else
+        assign catalog_visible_product_count = catalog_visible_product_count | plus: 1
+      endif
+    endif
+  endfor
   capture catalog_product_image_sizes
     echo '(min-width: 1200px) '
     echo catalog_desktop_card_width
@@ -189,7 +206,7 @@
 
           {% if section.settings.show_product_count %}
             <p class="loemies-catalog__count">
-              {{ 'sections.catalog.product_count' | t: count: collection.products_count }}
+              {{ 'sections.catalog.product_count' | t: count: catalog_visible_product_count }}
             </p>
           {% endif %}
         </div>
@@ -199,7 +216,7 @@
     <div class="loemies-catalog__divider" aria-hidden="true"></div>
 
     {% if show_catalog_browse %}
-      <nav class="loemies-catalog__browse" aria-label="{{ 'sections.catalog.browse' | t }}">
+      <nav id="shop-by-play" class="loemies-catalog__browse" aria-label="{{ 'sections.catalog.browse' | t }}">
         <span class="loemies-catalog__browse-heading">
           <span class="loemies-catalog__browse-label">{{ 'sections.catalog.browse' | t }}</span>
           <span class="loemies-catalog__browse-scroll-hint">{{ 'sections.catalog.swipe_to_browse' | t }}</span>
@@ -244,7 +261,12 @@
     {% endif %}
 
     {% if section.settings.enable_sorting or available_filter_count > 0 %}
-      <form class="loemies-catalog__filter-form" action="{{ catalog_reset_url }}" method="get">
+      <form
+        class="loemies-catalog__filter-form"
+        action="{{ catalog_filter_action }}"
+        method="get"
+        data-collection-url="{{ collection.url }}"
+      >
         <details
           class="loemies-catalog__filters"
           data-catalog-filters
@@ -262,13 +284,103 @@
               {% endif %}
             </span>
             <span class="loemies-catalog__filter-result-count">
-              {{ 'sections.catalog.product_count' | t: count: collection.products_count }}
+              {{ 'sections.catalog.product_count' | t: count: catalog_visible_product_count }}
             </span>
           </summary>
 
           <div class="loemies-catalog__filter-panel">
             <div class="loemies-catalog__filter-controls">
               {% if section.settings.enable_filtering %}
+                {% if show_catalog_browse %}
+                  <details class="loemies-catalog__filter-group">
+                    <summary class="loemies-catalog__filter-summary">
+                      <span>{{ 'sections.catalog.filter_age' | t }}</span>
+                    </summary>
+                    <div class="loemies-catalog__filter-options">
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="age" value=""{% unless current_tags contains 'Age 12 months+' or current_tags contains 'Age 1+' or current_tags contains 'Age 2+' or current_tags contains 'Age 3+' %} checked{% endunless %}>
+                        <span>{{ 'sections.catalog.any_option' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="age" value="age-12-months"{% if current_tags contains 'Age 12 months+' %} checked{% endif %}>
+                        <span>{{ catalog_chip_twelve_months }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="age" value="age-1"{% if current_tags contains 'Age 1+' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.age_one' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="age" value="age-2"{% if current_tags contains 'Age 2+' %} checked{% endif %}>
+                        <span>{{ catalog_chip_two }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="age" value="age-3"{% if current_tags contains 'Age 3+' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.age_three' | t }}</span>
+                      </label>
+                    </div>
+                  </details>
+
+                  <details class="loemies-catalog__filter-group">
+                    <summary class="loemies-catalog__filter-summary">
+                      <span>{{ 'sections.catalog.filter_play_style' | t }}</span>
+                    </summary>
+                    <div class="loemies-catalog__filter-options">
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="play" value=""{% unless current_tags contains 'Fine Motor Skills' or current_tags contains 'Sensory Play' or current_tags contains 'Imaginative Play' or current_tags contains 'Outdoor Play' or current_tags contains 'Gift Idea' %} checked{% endunless %}>
+                        <span>{{ 'sections.catalog.any_option' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="play" value="fine-motor-skills"{% if current_tags contains 'Fine Motor Skills' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.fine_motor' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="play" value="sensory-play"{% if current_tags contains 'Sensory Play' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.sensory' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="play" value="imaginative-play"{% if current_tags contains 'Imaginative Play' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.pretend' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="play" value="outdoor-play"{% if current_tags contains 'Outdoor Play' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.active' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="play" value="gift-idea"{% if current_tags contains 'Gift Idea' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.gifts' | t }}</span>
+                      </label>
+                    </div>
+                  </details>
+
+                  <details class="loemies-catalog__filter-group">
+                    <summary class="loemies-catalog__filter-summary">
+                      <span>{{ 'sections.catalog.filter_material_origin' | t }}</span>
+                    </summary>
+                    <div class="loemies-catalog__filter-options">
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="material" value=""{% unless current_tags contains 'FSC Wood' or current_tags contains 'Natural Wood' or current_tags contains 'Made in EU' or current_tags contains 'Eco-Friendly' %} checked{% endunless %}>
+                        <span>{{ 'sections.catalog.any_option' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="material" value="fsc-wood"{% if current_tags contains 'FSC Wood' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.fsc_wood' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="material" value="natural-wood"{% if current_tags contains 'Natural Wood' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.natural_wood' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="material" value="made-in-eu"{% if current_tags contains 'Made in EU' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.made_in_eu' | t }}</span>
+                      </label>
+                      <label class="loemies-catalog__filter-option loemies-catalog__filter-option--tag">
+                        <input type="radio" data-catalog-tag data-tag-group="material" value="eco-friendly"{% if current_tags contains 'Eco-Friendly' %} checked{% endif %}>
+                        <span>{{ 'sections.catalog.eco_friendly' | t }}</span>
+                      </label>
+                    </div>
+                  </details>
+                {% endif %}
+
                 {% for filter in collection.filters %}
                   {% liquid
                     assign filter_active_count = filter.active_values.size
@@ -483,7 +595,7 @@
     {% endif %}
 
     {% paginate collection.products by section.settings.products_per_page %}
-      {% if collection.products_count > 0 %}
+      {% if catalog_visible_product_count > 0 %}
         {% liquid
           # Available products first, sold-out products last. The reorder only
           # ever sees the current page, which is why it stays limited to the
@@ -497,10 +609,34 @@
             assign catalog_sold_out_products = collection.products | where: 'available', false
             assign catalog_page_products = catalog_available_products | concat: catalog_sold_out_products
           endif
+          assign catalog_seen_families = '|'
         %}
         <div class="loemies-catalog__product-grid" id="CatalogProducts-{{ section.id }}" data-catalog-grid>
           {% for product in catalog_page_products %}
+            {% unless section.settings.show_sold_out or product.available %}
+              {% continue %}
+            {% endunless %}
             {% liquid
+              assign catalog_family_name = product.title | split: ':' | first | strip
+              assign catalog_family_count = 0
+              if product.title contains ':'
+                for family_product in collection.products
+                  assign family_product_name = family_product.title | split: ':' | first | strip
+                  if family_product_name == catalog_family_name
+                    if section.settings.show_sold_out or family_product.available
+                      assign catalog_family_count = catalog_family_count | plus: 1
+                    endif
+                  endif
+                endfor
+              endif
+              if catalog_family_count > 1
+                assign catalog_family_token = '|' | append: catalog_family_name | append: '|'
+                if catalog_seen_families contains catalog_family_token
+                  continue
+                endif
+                assign catalog_seen_families = catalog_seen_families | append: catalog_family_name | append: '|'
+              endif
+
               # The whole grid ships real server-rendered img markup with native
               # lazy loading (image_deferred: false); the first two cards, which
               # can sit above the fold, additionally load eagerly.
@@ -511,7 +647,27 @@
                 assign product_image_fetchpriority = 'high'
               endif
             %}
-            {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: product, image_sizes: catalog_product_image_sizes, image_loading: product_image_loading, image_fetchpriority: product_image_fetchpriority, image_deferred: false, heading_tag: 'h2' %}
+            <div class="loemies-catalog__product-family{% if catalog_family_count > 1 %} has-options{% endif %}">
+              {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: product, image_sizes: catalog_product_image_sizes, image_loading: product_image_loading, image_fetchpriority: product_image_fetchpriority, image_deferred: false, heading_tag: 'h2' %}
+              {% if catalog_family_count > 1 %}
+                <nav class="loemies-catalog__family-options" aria-label="{{ catalog_family_name | escape }} — {{ 'sections.catalog.choose_style' | t }}">
+                  <span>{{ 'sections.catalog.styles_available' | t: count: catalog_family_count }}</span>
+                  <div>
+                    {% for family_product in collection.products %}
+                      {% assign family_product_name = family_product.title | split: ':' | first | strip %}
+                      {% if family_product_name == catalog_family_name %}
+                        {% if section.settings.show_sold_out or family_product.available %}
+                          {% assign family_option_name = family_product.title | split: ':' | last | strip %}
+                          <a href="{{ family_product.url }}"{% if family_product.id == product.id %} class="is-current" aria-current="true"{% endif %}>
+                            {{ family_option_name | escape }}
+                          </a>
+                        {% endif %}
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </nav>
+              {% endif %}
+            </div>
           {% endfor %}
         </div>
       {% else %}
@@ -601,10 +757,17 @@
       "default": true
     },
     {
+      "type": "checkbox",
+      "id": "show_sold_out",
+      "label": "Show sold-out products",
+      "info": "Keep disabled to prevent unavailable products from consuming catalogue positions. Direct sold-out product pages remain accessible.",
+      "default": false
+    },
+    {
       "type": "range",
       "id": "products_per_page",
       "label": "Products per page",
-      "info": "24 balances browsing depth, mobile performance and useful pagination.",
+      "info": "Use up to 50 when the catalogue must evaluate availability and colour families before rendering.",
       "min": 8,
       "max": 50,
       "step": 2,

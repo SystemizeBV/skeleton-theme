@@ -60,10 +60,16 @@
   const scrollResultsIntoView = () => {
     const params = new URLSearchParams(window.location.search);
     let hasResultParam = false;
+    const form = document.querySelector(formSelector);
+    const basePath = form?.dataset.collectionUrl?.replace(/\/$/, '');
 
     params.forEach((value, key) => {
       if (key === 'sort_by' || key.indexOf('filter.') === 0) hasResultParam = true;
     });
+
+    if (basePath && window.location.pathname.replace(/\/$/, '') !== basePath) {
+      hasResultParam = true;
+    }
 
     if (!hasResultParam) return;
     if (window.scrollY > 4) return;
@@ -138,7 +144,7 @@
     // range should never reload the page.
     if (!desktopQuery.matches) return;
 
-    const facet = event.target.closest('.loemies-catalog__filter-option input[type="checkbox"]');
+    const facet = event.target.closest('.loemies-catalog__filter-option input[type="checkbox"], [data-catalog-tag]');
     if (!facet) return;
 
     facet.form?.requestSubmit();
@@ -147,6 +153,14 @@
   document.addEventListener('submit', (event) => {
     const form = event.target.closest('.loemies-catalog__filter-form');
     if (!form) return;
+
+    const collectionUrl = form.dataset.collectionUrl?.replace(/\/$/, '');
+    if (collectionUrl) {
+      const selectedTags = Array.from(form.querySelectorAll('[data-catalog-tag]:checked'))
+        .map((input) => input.value)
+        .filter(Boolean);
+      form.action = selectedTags.length ? `${collectionUrl}/${selectedTags.join('+')}` : collectionUrl;
+    }
 
     form.querySelectorAll('input[type="number"]').forEach((input) => {
       if (input.value.trim() === '') input.disabled = true;

@@ -13,8 +13,8 @@
 
   assign announcement_text = section.settings.announcement_text
   assign shop_by_age_url = routes.root_url | append: '#shop-by-age'
-  assign shop_by_play_url = routes.root_url | append: '#shop-by-play'
   assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+  assign shop_by_play_url = catalog_url | append: '#shop-by-play'
   assign bestsellers_url = collections['bestsellers'].url | default: catalog_url
   assign gift_ideas_url = catalog_url | append: '/gift-idea'
   assign search_display_terms = search.terms
@@ -444,6 +444,11 @@
 </header>
 
 {% stylesheet %}
+  html.mobile-menu-open,
+  body.mobile-menu-open {
+    overscroll-behavior: none;
+  }
+
   .site-header {
     --header-background: #fdfbf7;
     --header-surface: #ffffff;

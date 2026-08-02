@@ -64,6 +64,38 @@
       menu.parentElement?.querySelector('.site-header__actions'),
       header?.querySelector('.site-header__nav-row'),
     ].filter(Boolean);
+    let lockedScrollY = 0;
+    let previousBodyStyles = null;
+
+    const lockPageScroll = () => {
+      if (previousBodyStyles) return;
+      lockedScrollY = window.scrollY;
+      previousBodyStyles = {
+        position: document.body.style.position,
+        insetBlockStart: document.body.style.insetBlockStart,
+        width: document.body.style.width,
+        overflow: document.body.style.overflow,
+      };
+      document.documentElement.classList.add('mobile-menu-open');
+      document.body.classList.add('mobile-menu-open');
+      document.body.style.position = 'fixed';
+      document.body.style.insetBlockStart = `-${lockedScrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    };
+
+    const unlockPageScroll = () => {
+      if (!previousBodyStyles) return;
+      const restoreY = lockedScrollY;
+      document.documentElement.classList.remove('mobile-menu-open');
+      document.body.classList.remove('mobile-menu-open');
+      document.body.style.position = previousBodyStyles.position;
+      document.body.style.insetBlockStart = previousBodyStyles.insetBlockStart;
+      document.body.style.width = previousBodyStyles.width;
+      document.body.style.overflow = previousBodyStyles.overflow;
+      previousBodyStyles = null;
+      window.scrollTo({ top: restoreY, left: 0, behavior: 'instant' });
+    };
 
     const close = ({ restoreFocus = true } = {}) => {
       if (!menu.open) return;
@@ -82,10 +114,13 @@
       });
 
       if (menu.open) {
+        lockPageScroll();
         window.requestAnimationFrame(() => {
           menu.querySelector('.mobile-menu__panel a, .mobile-menu__panel summary, .mobile-menu__panel button')
             ?.focus({ preventScroll: true });
         });
+      } else {
+        unlockPageScroll();
       }
     });
 

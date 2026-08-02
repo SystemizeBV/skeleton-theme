@@ -207,6 +207,10 @@
 }
 
 @media (max-width: 39.99rem) {
+  .loemies-hero {
+    padding-block-start: 1rem;
+  }
+
   .loemies-scroll-hint {
     display: flex;
     align-items: center;
@@ -239,19 +243,19 @@
   .loemies-hero__main > .shopify-block > .loemies-hero-media,
   .loemies-hero--media-left .loemies-hero__main > .shopify-block > .loemies-hero-media {
     grid-row: auto;
-    margin-top: 1rem;
+    margin-top: 0.7rem;
   }
 
   .loemies-hero__main {
-    padding: 1.5rem;
+    padding: 1.15rem;
   }
 
   .loemies-hero .loemies-button-row {
-    margin-top: 1.1rem;
+    margin-top: 0.85rem;
   }
 
   .loemies-hero .loemies-heading {
-    margin-bottom: 0.85rem;
+    margin-bottom: 0.65rem;
   }
 }
 

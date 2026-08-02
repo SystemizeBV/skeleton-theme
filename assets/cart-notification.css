@@ -252,3 +252,42 @@
     transition: none;
   }
 }
+
+@media (max-width: 39.99rem) {
+  .loemies-cart-notification__panel {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    max-height: 100dvh;
+    padding: 1.15rem;
+    border-radius: 1.25rem 1.25rem 0 0;
+    transform: translateY(102%);
+  }
+
+  .loemies-cart-notification.is-open .loemies-cart-notification__panel {
+    transform: translateY(0);
+  }
+
+  .loemies-cart-notification__header {
+    padding-block-end: 0.85rem;
+  }
+
+  .loemies-cart-notification__item {
+    padding-block: 1rem;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .loemies-cart-notification__image-wrap {
+    width: 5.5rem;
+  }
+
+  .loemies-cart-notification__total {
+    margin-block-start: 0;
+    padding-block: 0.85rem;
+  }
+
+  .loemies-cart-notification__actions {
+    padding-block-start: 0.8rem;
+  }
+}
