@@ -703,24 +703,10 @@
             %}
             <div class="loemies-catalog__product-family{% if catalog_family_count > 1 %} has-options{% endif %}">
               {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: product, image_sizes: catalog_product_image_sizes, image_loading: product_image_loading, image_fetchpriority: product_image_fetchpriority, image_deferred: false, heading_tag: 'h2' %}
-              {% if catalog_family_count > 1 %}
-                <nav class="loemies-catalog__family-options" aria-label="{{ catalog_family_name | escape }} — {{ 'sections.catalog.choose_style' | t }}">
-                  <span>{{ 'sections.catalog.styles_available' | t: count: catalog_family_count }}</span>
-                  <div>
-                    {% for family_product in collection.products %}
-                      {% assign family_product_name = family_product.title | split: ':' | first | strip %}
-                      {% if family_product_name == catalog_family_name %}
-                        {% if section.settings.show_sold_out or family_product.available %}
-                          {% assign family_option_name = family_product.title | split: ':' | last | strip %}
-                          <a href="{{ family_product.url }}"{% if family_product.id == product.id %} class="is-current" aria-current="true"{% endif %}>
-                            {{ family_option_name | escape }}
-                          </a>
-                        {% endif %}
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                </nav>
-              {% endif %}
+              {% comment %}
+                Colour/style variants are deliberately not shown in the grid;
+                the family is represented by one clean card.
+              {% endcomment %}
             </div>
           {% endfor %}
         </div>

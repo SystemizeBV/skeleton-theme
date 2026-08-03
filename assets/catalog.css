@@ -468,55 +468,10 @@
   flex-direction: column;
 }
 
-.loemies-catalog__product-family > .loemies-product-card {
-  flex: 1 1 auto;
-  border-bottom: 0;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-/* The style chooser reads as the card's own footer, not a loose row below it. */
-.loemies-catalog__family-options {
-  display: grid;
-  padding: 0 1.2rem 1.1rem;
-  border: 1px solid #eadfd2;
-  border-top: 0;
-  border-radius: 0 0 1rem 1rem;
-  background: var(--loemies-featured-card, var(--catalog-card, #ffffff));
-  color: var(--catalog-text);
-  gap: 0.45rem;
-}
-
-.loemies-catalog__family-options > span {
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.loemies-catalog__family-options > div {
-  display: flex;
-  overflow-x: auto;
-  gap: 0.35rem;
-  scrollbar-width: thin;
-}
-
-.loemies-catalog__family-options a {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  padding: 0.4rem 0.65rem;
-  border: 1px solid var(--catalog-border);
-  border-radius: 999rem;
-  background: var(--catalog-card);
-  color: inherit;
-  font-size: 0.7rem;
-  font-weight: 750;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.loemies-catalog__family-options a:is(:hover, .is-current) {
-  border-color: var(--catalog-accent);
-  background: var(--catalog-accent-soft);
+/* Shopify wraps the card block in a .shopify-block div; unwrap it so the card
+   stretches exactly like the direct grid children around it. */
+.loemies-catalog__product-family > .shopify-block {
+  display: contents;
 }
 
 .loemies-catalog__empty {

@@ -213,13 +213,18 @@
         <a href="{{ product.url }}">{{ card_title | escape }}</a>
       </{{ product_heading_tag }}>
 
-      <div class="loemies-product-card__rating-row">
-        {% render 'product-rating',
-          product: product,
-          class_name: 'loemies-product-card__rating',
-          compact: true
-        %}
-      </div>
+      {% capture card_rating %}{% render 'product-rating',
+        product: product,
+        class_name: 'loemies-product-card__rating',
+        compact: true
+      %}{% endcapture %}
+      {% comment %}
+        Rendered only when a rating exists; an empty reserved row reads as a
+        hole between the title and the price.
+      {% endcomment %}
+      {% if card_rating contains '<' %}
+        <div class="loemies-product-card__rating-row">{{ card_rating }}</div>
+      {% endif %}
 
       <div class="loemies-product-card__meta">
         <div class="loemies-product-card__price">
