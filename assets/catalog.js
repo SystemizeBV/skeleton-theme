@@ -38,8 +38,6 @@
 
   const syncFilterLayout = () => {
     document.querySelectorAll(filterSelector).forEach((filters) => {
-      const hasActiveFilters = filters.dataset.activeFilters === 'true';
-
       if (desktopQuery.matches) {
         filters.open = true;
         filters.dataset.wasDesktop = 'true';
@@ -54,8 +52,10 @@
         return;
       }
 
+      // On small screens the panel always starts closed — the count badge and
+      // active-filter chips already show that filters are applied.
       if (!filters.dataset.catalogReady || filters.dataset.wasDesktop === 'true') {
-        filters.open = hasActiveFilters;
+        filters.open = false;
       }
 
       filters.dataset.catalogReady = 'true';
