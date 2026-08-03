@@ -98,7 +98,7 @@
     position: relative;
     display: grid;
     width: 100%;
-    max-width: 21rem;
+    max-width: 26rem;
     min-height: 0;
     margin: 0 auto;
     place-items: end center;
@@ -117,15 +117,17 @@
     width: 100%;
     aspect-ratio: 1;
     height: 100%;
-    max-height: 21rem;
+    max-height: 26rem;
     border-radius: calc(var(--loemies-hero-radius, 1rem) * 0.75);
     background: #eef0e9;
     object-fit: cover;
+    /* Crops the thin white pillar bars that supplier stills carry. */
+    transform: scale(1.12);
     transition: transform 180ms ease;
   }
 
   .loemies-hero-media__image-link:hover .loemies-hero-media__image {
-    transform: scale(1.02);
+    transform: scale(1.15);
   }
 
   .loemies-hero-product {

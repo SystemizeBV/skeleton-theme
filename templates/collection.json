@@ -21,7 +21,7 @@
         "enable_sorting": true,
         "show_sold_out": false,
         "products_per_page": 50,
-        "columns_desktop": 4,
+        "columns_desktop": 3,
         "vertical_padding": 48,
         "background_color": "#F7F3EC",
         "card_color": "#FFFFFF",

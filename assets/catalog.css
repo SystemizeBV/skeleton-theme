@@ -468,11 +468,19 @@
 
 .loemies-catalog__product-family > .loemies-product-card {
   flex: 1 1 auto;
+  border-bottom: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
+/* The style chooser reads as the card's own footer, not a loose row below it. */
 .loemies-catalog__family-options {
   display: grid;
-  padding: 0.7rem 0.75rem 0;
+  padding: 0 1.2rem 1.1rem;
+  border: 1px solid #eadfd2;
+  border-top: 0;
+  border-radius: 0 0 1rem 1rem;
+  background: var(--loemies-featured-card, var(--catalog-card, #ffffff));
   color: var(--catalog-text);
   gap: 0.45rem;
 }
@@ -998,5 +1006,110 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
+  }
+}
+
+@media (min-width: 64rem) {
+  /* Wide screens: filters live in a persistent sidebar next to a three-column
+     grid, so refining results never requires opening dropdowns or scrolling
+     back up. */
+  .loemies-catalog__inner {
+    display: grid;
+    align-items: start;
+    column-gap: 2rem;
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+  }
+
+  .loemies-catalog__inner > * {
+    grid-column: 1 / -1;
+  }
+
+  .loemies-catalog__filter-form {
+    position: sticky;
+    top: 5.25rem;
+    overflow-y: auto;
+    max-height: calc(100vh - 6.25rem);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    align-self: start;
+    background: transparent;
+    grid-column: 1;
+    grid-row: span 24;
+  }
+
+  .loemies-catalog__filter-form ~ * {
+    grid-column: 2;
+  }
+
+  .loemies-catalog__filter-panel {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .loemies-catalog__filter-controls {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .loemies-catalog__filter-group {
+    position: static;
+    min-width: 0;
+    border: 1px solid var(--catalog-border);
+    border-radius: 0.75rem;
+    background: var(--catalog-card);
+  }
+
+  .loemies-catalog__filter-group--sort {
+    margin-left: 0;
+    padding: 0.7rem 0.85rem 0.85rem;
+    order: -1;
+  }
+
+  .loemies-catalog__filter-group--sort .loemies-catalog__sort-label {
+    position: static;
+    overflow: visible;
+    width: auto;
+    height: auto;
+    padding: 0 0 0.45rem;
+    margin: 0;
+    clip: auto;
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: normal;
+  }
+
+  .loemies-catalog__filter-summary {
+    border-radius: 0.75rem;
+    white-space: normal;
+  }
+
+  .loemies-catalog__sort-select {
+    border-radius: 0.6rem;
+  }
+
+  .loemies-catalog__filter-options {
+    position: static;
+    z-index: auto;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 0.1rem 0.85rem 0.85rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .loemies-catalog__filter-options--price {
+    width: auto;
+  }
+
+  .loemies-catalog__filter-actions {
+    justify-content: flex-start;
   }
 }

@@ -146,7 +146,11 @@
   {% endif %}
 
   <div class="site-footer__inner">
-    {% if section.settings.show_trust_bar and request.page_type != 'index' %}
+    {% comment %}
+      Suppressed on the homepage (its own benefit section covers this) and on
+      collection pages, where shipping messaging mid-browse reads as clutter.
+    {% endcomment %}
+    {% if section.settings.show_trust_bar and request.page_type != 'index' and request.page_type != 'collection' %}
       <ul class="site-footer__trust" role="list" aria-label="{{ 'sections.footer.shopping_assurances' | t }}">
         <li>
           {% if shipping_url != blank %}<a href="{{ shipping_url }}">{% else %}<span>{% endif %}

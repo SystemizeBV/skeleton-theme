@@ -90,6 +90,9 @@
   margin: -0.0625rem;
   object-fit: cover;
   object-position: center;
+  /* Many supplier images ship with thin white pillar bars baked in; a slight
+     zoom crops them away without visibly cutting real photography. */
+  transform: scale(1.12);
 }
 
 .loemies-product-card__image--noscript {

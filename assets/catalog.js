@@ -2,6 +2,7 @@
   const filterSelector = '[data-catalog-filters]';
   const formSelector = '.loemies-catalog__filter-form';
   const desktopQuery = window.matchMedia('(min-width: 48rem)');
+  const sidebarQuery = window.matchMedia('(min-width: 64rem)');
   const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // Marks every catalog form as JS-enhanced. The desktop stylesheet uses the
@@ -42,6 +43,14 @@
       if (desktopQuery.matches) {
         filters.open = true;
         filters.dataset.wasDesktop = 'true';
+        // In the wide sidebar layout every group starts expanded; the shopper
+        // can still collapse groups they do not need.
+        if (sidebarQuery.matches && !filters.dataset.sidebarReady) {
+          filters.querySelectorAll('.loemies-catalog__filter-group').forEach((group) => {
+            group.open = true;
+          });
+          filters.dataset.sidebarReady = 'true';
+        }
         return;
       }
 
@@ -90,8 +99,10 @@
 
   if (desktopQuery.addEventListener) {
     desktopQuery.addEventListener('change', syncFilterLayout);
+    sidebarQuery.addEventListener('change', syncFilterLayout);
   } else {
     desktopQuery.addListener(syncFilterLayout);
+    sidebarQuery.addListener(syncFilterLayout);
   }
 
   document.addEventListener('shopify:section:load', markEnhancedForms);
@@ -100,6 +111,8 @@
   window.addEventListener('resize', syncBrowseOverflow, { passive: true });
 
   document.addEventListener('toggle', (event) => {
+    // Sidebar groups are independent panels, not exclusive dropdowns.
+    if (sidebarQuery.matches) return;
     const openedGroup = event.target.closest('.loemies-catalog__filter-group[open]');
     if (!openedGroup || !desktopQuery.matches) return;
 
