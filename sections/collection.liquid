@@ -147,22 +147,47 @@
   assign catalog_desktop_inner_offset = section.settings.columns_desktop | times: 2
   assign catalog_desktop_offset = catalog_desktop_offset | plus: catalog_desktop_inner_offset
   assign catalog_desktop_card_width = catalog_desktop_card_width | minus: 2
+  comment
+    The header count must cover the whole (filtered) collection, but outside
+    of paginate `collection.products` caps at 50 items. The availability
+    facet's in-stock count is computed server-side across every matching
+    product, so it is the accurate source. Fall back to the page-limited
+    loop only when the facet is unavailable.
+  endcomment
   assign catalog_visible_product_count = 0
-  assign catalog_counted_families = '|'
-  for catalog_product in collection.products
-    if section.settings.show_sold_out or catalog_product.available
-      assign catalog_count_family = catalog_product.title | split: ':' | first | strip
-      if catalog_product.title contains ':'
-        assign catalog_count_token = '|' | append: catalog_count_family | append: '|'
-        unless catalog_counted_families contains catalog_count_token
-          assign catalog_visible_product_count = catalog_visible_product_count | plus: 1
-          assign catalog_counted_families = catalog_counted_families | append: catalog_count_family | append: '|'
-        endunless
-      else
-        assign catalog_visible_product_count = catalog_visible_product_count | plus: 1
+  assign catalog_count_resolved = false
+  if section.settings.show_sold_out
+    assign catalog_visible_product_count = collection.products_count
+    assign catalog_count_resolved = true
+  else
+    for catalog_count_filter in collection.filters
+      if catalog_count_filter.param_name == 'filter.v.availability'
+        for catalog_count_value in catalog_count_filter.values
+          if catalog_count_value.value == '1'
+            assign catalog_visible_product_count = catalog_count_value.count
+            assign catalog_count_resolved = true
+          endif
+        endfor
       endif
-    endif
-  endfor
+    endfor
+  endif
+  unless catalog_count_resolved
+    assign catalog_counted_families = '|'
+    for catalog_product in collection.products
+      if section.settings.show_sold_out or catalog_product.available
+        assign catalog_count_family = catalog_product.title | split: ':' | first | strip
+        if catalog_product.title contains ':'
+          assign catalog_count_token = '|' | append: catalog_count_family | append: '|'
+          unless catalog_counted_families contains catalog_count_token
+            assign catalog_visible_product_count = catalog_visible_product_count | plus: 1
+            assign catalog_counted_families = catalog_counted_families | append: catalog_count_family | append: '|'
+          endunless
+        else
+          assign catalog_visible_product_count = catalog_visible_product_count | plus: 1
+        endif
+      endif
+    endfor
+  endunless
   capture catalog_product_image_sizes
     echo '(min-width: 1200px) '
     echo catalog_desktop_card_width
