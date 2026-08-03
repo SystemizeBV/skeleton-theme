@@ -216,7 +216,11 @@
     --loemies-featured-accent: {{ section.settings.accent_soft_color }};
   "
 >
-  <div class="loemies-catalog__inner">
+  {%- comment -%}
+    The shop-by-play anchor lives on the container because the browse chip row
+    is hidden on wider screens, where the filter sidebar takes over.
+  {%- endcomment -%}
+  <div class="loemies-catalog__inner" id="shop-by-play">
     {% if section.settings.show_breadcrumbs %}
       <nav class="loemies-catalog__breadcrumb" aria-label="{{ 'sections.catalog.breadcrumb' | t }}">
         <a href="{{ routes.root_url }}">{{ 'sections.catalog.home' | t }}</a>
@@ -259,7 +263,7 @@
     <div class="loemies-catalog__divider" aria-hidden="true"></div>
 
     {% if show_catalog_browse %}
-      <nav id="shop-by-play" class="loemies-catalog__browse" aria-label="{{ 'sections.catalog.browse' | t }}">
+      <nav class="loemies-catalog__browse" aria-label="{{ 'sections.catalog.browse' | t }}">
         <span class="loemies-catalog__browse-heading">
           <span class="loemies-catalog__browse-label">{{ 'sections.catalog.browse' | t }}</span>
           <span class="loemies-catalog__browse-scroll-hint">{{ 'sections.catalog.swipe_to_browse' | t }}</span>

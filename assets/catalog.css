@@ -12,6 +12,8 @@
   width: min(100%, 67rem);
   margin-inline: auto;
   grid-column: 2;
+  /* #shop-by-play anchor target; keeps the header out of the way. */
+  scroll-margin-top: 5.5rem;
 }
 
 .loemies-catalog__breadcrumb {
@@ -723,6 +725,17 @@
 }
 
 @media (min-width: 48rem) {
+  /* The chip row repeats what the always-visible filters offer, so it is a
+     small-screen shortcut only. */
+  .loemies-catalog__browse {
+    display: none;
+  }
+
+  .loemies-catalog__filter-form {
+    border-top: 1px solid var(--catalog-border);
+    border-radius: 0.9rem;
+  }
+
   .loemies-catalog__filter-toggle {
     display: none;
   }
