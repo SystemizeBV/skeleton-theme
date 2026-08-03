@@ -163,8 +163,9 @@
     for catalog_count_filter in collection.filters
       if catalog_count_filter.param_name == 'filter.v.availability'
         for catalog_count_value in catalog_count_filter.values
-          if catalog_count_value.value == '1'
-            assign catalog_visible_product_count = catalog_count_value.count
+          assign catalog_count_value_key = catalog_count_value.value | append: ''
+          if catalog_count_value_key == '1'
+            assign catalog_visible_product_count = catalog_count_value.count | default: 0
             assign catalog_count_resolved = true
           endif
         endfor
