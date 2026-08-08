@@ -33,6 +33,36 @@ The footer's `OnlineStore` entity provides business identity and the confirmed
 is deliberately omitted until delivery times and shipping rates are represented
 as complete, verified structured data.
 
+## robots.txt
+
+`templates/robots.txt.liquid` is a pinned copy of the robots.txt Shopify serves
+by default, captured 2026-08-08, with two `Allow` rules added to each user-agent
+group. They unblock render-critical or audit-flagged resources without opening
+private paths:
+
+- `Allow: /cdn/shop/t/*/assets/` — the default `Disallow: /*/cart.js` targets
+  the localized AJAX endpoints, but `*` matches across slashes, so it also
+  blocked our own `cart.js` theme asset on the CDN. `/nl/cart.js` and
+  `/fr/cart.js` stay disallowed.
+- `Allow: /checkouts/internal/` — unblocks the `preloads.js` script Shopify
+  injects on every page. Checkout sessions live at `/checkouts/c/<token>` and
+  stay disallowed.
+
+Both rely on longest-match precedence, which Google, Bing, Ahrefs, and Semrush
+apply.
+
+Do not rebuild this file from `robots.default_groups`. That drop returns an
+older rule set than Shopify actually serves; rendering it live on 2026-08-08
+dropped the agentic-commerce preamble and the whole `adsbot-google` group, and
+introduced `Disallow: /policies/` and `Disallow: /cart`. Because the file is
+pinned instead, Shopify's future default changes are not inherited: re-sync by
+deleting the template, capturing `https://loemies.com/robots.txt`, and adding
+the two rules back under each `User-agent:` line.
+
+Only the live theme's `robots.txt.liquid` is served and it cannot be previewed
+on an unpublished theme, so any change must be verified on
+`https://loemies.com/robots.txt` and diffed against the captured default.
+
 ## Release checks
 
 1. Confirm every translated product field is present and not marked outdated.
