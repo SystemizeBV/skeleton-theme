@@ -1,0 +1,348 @@
+{% liquid
+  assign featured_collection = section.settings.collection
+  assign featured_products = section.settings.products
+  if featured_products == blank and featured_collection != blank
+    assign featured_products = featured_collection.products
+  endif
+  assign view_all_url = section.settings.view_all_link
+  if view_all_url == blank and featured_collection != blank
+    assign view_all_url = featured_collection.url
+  endif
+
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign featured_eyebrow = section.settings.eyebrow | escape
+  assign featured_heading = section.settings.heading
+  assign featured_text = section.settings.text
+  assign featured_view_all = section.settings.view_all_label | escape
+  assign featured_empty_heading = section.settings.empty_heading | escape
+  assign featured_empty_text = section.settings.empty_text | escape
+  if section.settings.eyebrow == 'Shop'
+    assign featured_eyebrow = 'sections.home.featured.eyebrow' | t
+  endif
+  if featured_heading == 'Featured toys'
+    assign featured_heading = 'sections.home.featured.heading' | t
+  endif
+  case featured_heading
+    when 'Popular right now'
+      assign featured_heading = 'sections.home.featured.popular_heading' | t
+    when 'Learning through play'
+      assign featured_heading = 'sections.home.featured.learning_heading' | t
+    when 'Build, stack and create'
+      assign featured_heading = 'sections.home.featured.building_heading' | t
+    when 'More ways to explore'
+      assign featured_heading = 'sections.home.featured.explore_heading' | t
+  endcase
+  if featured_text == '<p>Four different ways to sort, build, learn and imagine.</p>' or featured_text == '<p>Different ways to sort, build, learn and imagine.</p>'
+    capture featured_text
+      echo '<p>'
+      echo 'sections.home.featured.text' | t
+      echo '</p>'
+    endcapture
+  endif
+  case featured_text
+    when '<p>Customer favourites for everyday play, learning and gifting.</p>'
+      capture featured_text
+        echo '<p>'
+        echo 'sections.home.featured.popular_text' | t
+        echo '</p>'
+      endcapture
+    when '<p>Hands-on toys for sorting, problem-solving and new skills.</p>'
+      capture featured_text
+        echo '<p>'
+        echo 'sections.home.featured.learning_text' | t
+        echo '</p>'
+      endcapture
+    when '<p>Open-ended favourites that invite a different idea every time.</p>'
+      capture featured_text
+        echo '<p>'
+        echo 'sections.home.featured.building_text' | t
+        echo '</p>'
+      endcapture
+    when '<p>Sensory favourites for curious hands and active imaginations.</p>'
+      capture featured_text
+        echo '<p>'
+        echo 'sections.home.featured.explore_text' | t
+        echo '</p>'
+      endcapture
+  endcase
+  if section.settings.view_all_label == 'Explore all toys'
+    assign featured_view_all = 'sections.home.featured.view_all' | t
+  elsif section.settings.view_all_label == 'Shop this collection'
+    assign featured_view_all = 'sections.home.featured.collection_link' | t
+  endif
+  if section.settings.empty_heading == 'Something lovely is taking shape.'
+    assign featured_empty_heading = 'sections.home.featured.empty_heading' | t
+  endif
+  if section.settings.empty_text == 'Our next edit is on the way. Check back soon.'
+    assign featured_empty_text = 'sections.home.featured.empty_text' | t
+  endif
+
+  assign featured_desktop_gaps = section.settings.columns_desktop | minus: 1 | times: section.settings.grid_gap
+  assign featured_desktop_offset = featured_desktop_gaps | plus: 128
+  assign featured_desktop_card_width = 1072 | minus: featured_desktop_gaps | divided_by: section.settings.columns_desktop
+  assign featured_desktop_inner_offset = section.settings.columns_desktop | times: 2
+  assign featured_desktop_offset = featured_desktop_offset | plus: featured_desktop_inner_offset
+  assign featured_desktop_card_width = featured_desktop_card_width | minus: 2
+  capture featured_product_image_sizes
+    echo '(min-width: 1200px) '
+    echo featured_desktop_card_width
+    echo 'px, (min-width: 992px) calc((100vw - '
+    echo featured_desktop_offset
+    echo 'px) / '
+    echo section.settings.columns_desktop
+    echo '), (min-width: 768px) min(42vw, 272px), min(74vw, 272px)'
+  endcapture
+%}
+
+<section
+  class="loemies-featured loemies-featured--{{ section.settings.presentation | default: 'grid' }} full-width"
+  style="
+    --loemies-featured-background: {{ section.settings.background_color }};
+    --loemies-featured-card: {{ section.settings.card_color }};
+    --loemies-featured-text: {{ section.settings.text_color }};
+    --loemies-featured-accent: {{ section.settings.accent_color }};
+    --loemies-featured-columns: {{ section.settings.columns_desktop }};
+    --loemies-featured-gap: {{ section.settings.grid_gap }}px;
+    --loemies-featured-gap-mobile: {{ section.settings.grid_gap_mobile }}px;
+    --loemies-featured-padding: {{ section.settings.vertical_padding }}px;
+  "
+>
+  <div class="loemies-featured__inner">
+    <div class="loemies-featured__header">
+      <div class="loemies-featured__intro">
+        {% if featured_eyebrow != blank %}
+          <p class="loemies-featured__eyebrow">{{ featured_eyebrow }}</p>
+        {% endif %}
+
+        {% if featured_heading != blank %}
+          <h2 class="loemies-featured__heading">{{ featured_heading }}</h2>
+        {% endif %}
+
+        {% if featured_text != blank %}
+          <div class="loemies-featured__text">{{ featured_text }}</div>
+        {% endif %}
+      </div>
+
+      {% if view_all_url != blank and section.settings.show_view_all and featured_view_all != blank %}
+        <a class="loemies-featured__view-all" href="{{ view_all_url }}">
+          {{ featured_view_all }}
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      {% endif %}
+    </div>
+
+    <p class="loemies-scroll-hint" aria-hidden="true">
+      {{ 'sections.navigation.swipe_hint' | t }} <span>→</span>
+    </p>
+
+    {% if featured_products != blank %}
+      <div class="loemies-featured__grid">
+        {% assign rendered_products = 0 %}
+        {% for product in featured_products %}
+          {% if section.settings.show_sold_out or product.available %}
+            {% liquid
+              # Every rail ships real server-side img markup with native lazy
+              # loading — no dependency on deferred-images.js. The first rail on
+              # a page (the hero is section 1) additionally loads only its first
+              # card eagerly. The rail overflows horizontally on mobile, so
+              # eager-loading four cards wastes bandwidth on off-screen media.
+              assign card_image_loading = 'lazy'
+              assign card_image_deferred = false
+              if section.index <= 2 and rendered_products == 0
+                assign card_image_loading = 'eager'
+              endif
+            %}
+            {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: product, image_sizes: featured_product_image_sizes, heading_tag: 'h3', image_loading: card_image_loading, image_deferred: card_image_deferred %}
+            {% assign rendered_products = rendered_products | plus: 1 %}
+          {% endif %}
+          {% if rendered_products >= section.settings.products_to_show %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="loemies-featured__empty">
+        <span class="loemies-featured__empty-mark" aria-hidden="true">&#10022;</span>
+        <h3>{{ featured_empty_heading }}</h3>
+        <p>{{ featured_empty_text }}</p>
+        {% if request.design_mode and featured_collection == blank and section.settings.products == blank %}
+          <p class="loemies-featured__editor-note">Choose products or select a collection in this section's settings.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+{% schema %}
+{
+  "name": "Loemies featured products",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Fallback collection",
+      "info": "Used when no individual products are selected."
+    },
+    {
+      "type": "product_list",
+      "id": "products",
+      "label": "Selected products",
+      "limit": 12,
+      "info": "Optional. Selected products override the fallback collection."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Shop"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured toys"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Different ways to sort, build, learn and imagine.</p>"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sold_out",
+      "label": "Show sold-out products",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Desktop columns",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "label": "Desktop and tablet gap",
+      "min": 8,
+      "max": 32,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "grid_gap_mobile",
+      "label": "Mobile gap",
+      "min": 8,
+      "max": 24,
+      "step": 4,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Show view all link",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "view_all_label",
+      "label": "View all label",
+      "default": "All products"
+    },
+    {
+      "type": "url",
+      "id": "view_all_link",
+      "label": "View all link",
+      "info": "Leave empty to link to the selected collection."
+    },
+    {
+      "type": "header",
+      "content": "Empty state"
+    },
+    {
+      "type": "text",
+      "id": "empty_heading",
+      "label": "Heading",
+      "default": "Something lovely is taking shape."
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Text",
+      "default": "Our next edit is on the way. Check back soon."
+    },
+    {
+      "type": "header",
+      "content": "Layout and colors"
+    },
+    {
+      "type": "select",
+      "id": "presentation",
+      "label": "Presentation",
+      "default": "grid",
+      "options": [
+        { "value": "grid", "label": "Clean grid" },
+        { "value": "panel", "label": "Inset color panel" },
+        { "value": "band", "label": "Full-width editorial band" },
+        { "value": "feature_first", "label": "Large first product" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical spacing",
+      "min": 0,
+      "max": 96,
+      "step": 8,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Eyebrow",
+      "default": "#B04F38"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies featured products"
+    }
+  ]
+}
+{% endschema %}

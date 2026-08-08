@@ -9,12 +9,684 @@
  */
 {
   "sections": {
-    "main": {
-      "type": "hello-world",
-      "settings": {}
+    "loemies_hero": {
+      "type": "loemies-hero",
+      "blocks": {
+        "hero_heading": {
+          "type": "loemies-heading",
+          "settings": {
+            "heading": "Purposeful play, thoughtfully chosen.",
+            "heading_tag": "h1",
+            "size": "large"
+          }
+        },
+        "hero_text": {
+          "type": "loemies-rich-text",
+          "settings": {
+            "text": "<p>Thoughtfully chosen toys and children's products for everyday play, learning and gifting.</p>",
+            "width": "narrow"
+          }
+        },
+        "hero_actions": {
+          "type": "loemies-button-row",
+          "blocks": {
+            "shop_all": {
+              "type": "loemies-button",
+              "settings": {
+                "label": "Shop all toys",
+                "link": "shopify://collections/all-toys",
+                "style": "primary"
+              }
+            },
+            "find_a_toy": {
+              "type": "loemies-button",
+              "settings": {
+                "label": "Find a toy",
+                "link": "/#shop-by-age",
+                "style": "secondary"
+              }
+            }
+          },
+          "block_order": [
+            "shop_all",
+            "find_a_toy"
+          ],
+          "settings": {}
+        },
+        "hero_media": {
+          "type": "loemies-hero-image",
+          "settings": {
+            "image": "",
+            "alt_text": "",
+            "featured_product": "montessori-4in1-ball-track-activity-tree",
+            "show_product_details": true,
+            "product_label": "Featured pick",
+            "fallback_alt": "A playful rainbow with a cloud and star"
+          }
+        }
+      },
+      "block_order": [
+        "hero_heading",
+        "hero_text",
+        "hero_actions",
+        "hero_media"
+      ],
+      "settings": {
+        "eyebrow": "Wooden & Montessori toys for little explorers",
+        "media_position": "right",
+        "vertical_padding": 24,
+        "corner_radius": 16,
+        "show_collection_tiles": false,
+        "tile_label": "Collection",
+        "first_collection": "sensory-activity",
+        "first_title": "Sensory & activity",
+        "first_link": "shopify://collections/all-toys",
+        "second_collection": "building-blocks",
+        "second_title": "Building blocks",
+        "second_link": "shopify://collections/all-toys",
+        "background_color": "#ECD9B8",
+        "text_color": "#2B241F",
+        "media_background_color": "#ECD9B8",
+        "first_tile_color": "#C4E4C9",
+        "second_tile_color": "#BEDCF1",
+        "button_color": "#B04F38",
+        "button_text_color": "#FFFFFF",
+        "button_shadow_color": "#96432F"
+      }
+    },
+    "loemies_featured": {
+      "type": "loemies-featured-collection",
+      "settings": {
+        "collection": "bestsellers",
+        "products": [
+          "wooden-shape-sorting-blocks-colors",
+          "large-multifunctional-wooden-food-truck-stand-73-pcs",
+          "wooden-blocks-in-a-box-natural-54-pieces",
+          "shaky-tower-skill-game-with-animals"
+        ],
+        "eyebrow": "Shop",
+        "heading": "Popular right now",
+        "text": "<p>Customer favourites for everyday play, learning and gifting.</p>",
+        "products_to_show": 4,
+        "show_sold_out": false,
+        "columns_desktop": 4,
+        "grid_gap": 20,
+        "grid_gap_mobile": 12,
+        "show_view_all": true,
+        "view_all_label": "Explore all toys",
+        "view_all_link": "shopify://collections/all-toys",
+        "empty_heading": "Something lovely is taking shape.",
+        "empty_text": "Our next edit is on the way. Check back soon.",
+        "presentation": "grid",
+        "vertical_padding": 0,
+        "background_color": "#F7F3EC",
+        "card_color": "#FFFFFF",
+        "text_color": "#2B241F",
+        "accent_color": "#B04F38"
+      }
+    },
+    "loemies_benefits": {
+      "type": "loemies-benefits",
+      "blocks": {
+        "shipping": {
+          "type": "benefit",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Free tracked shipping over €50",
+            "text": "Tracking included with every parcel",
+            "background_color": "#F7DC8D"
+          }
+        },
+        "returns": {
+          "type": "benefit",
+          "settings": {
+            "icon": "return",
+            "heading": "30-day returns",
+            "text": "Simple, clearly explained returns",
+            "background_color": "#C4E4C9"
+          }
+        },
+        "payment": {
+          "type": "benefit",
+          "settings": {
+            "icon": "payment",
+            "heading": "Secure payment",
+            "text": "Available methods shown at checkout",
+            "background_color": "#BEDCF1"
+          }
+        }
+      },
+      "block_order": [
+        "shipping",
+        "returns",
+        "payment"
+      ],
+      "settings": {
+        "accessibility_label": "Shopping benefits",
+        "use_store_promises": true
+      }
+    },
+    "loemies_age": {
+      "type": "loemies-age-navigation",
+      "blocks": {
+        "zero_three_months": {
+          "type": "age",
+          "settings": {
+            "label": "0–3 months",
+            "link": "/collections/all-toys/age-0-3-months",
+            "icon": "rattle",
+            "background_color": "#F5C8CF"
+          }
+        },
+        "six_to_one_year": {
+          "type": "age",
+          "settings": {
+            "label": "6 months – 1 year",
+            "link": "/collections/all-toys/age-6-12-months",
+            "icon": "stack",
+            "background_color": "#F7DC8D"
+          }
+        },
+        "one_year": {
+          "type": "age",
+          "settings": {
+            "label": "1+ year",
+            "link": "/collections/all-toys/age-1",
+            "icon": "blocks",
+            "background_color": "#BEDCF1"
+          }
+        },
+        "two_years": {
+          "type": "age",
+          "settings": {
+            "label": "2+ years",
+            "link": "/collections/all-toys/age-2",
+            "icon": "animal",
+            "background_color": "#C4E4C9"
+          }
+        },
+        "three_years": {
+          "type": "age",
+          "settings": {
+            "label": "3+ years",
+            "link": "/collections/all-toys/age-3",
+            "icon": "puzzle",
+            "background_color": "#DCD2F0"
+          }
+        }
+      },
+      "block_order": [
+        "zero_three_months",
+        "six_to_one_year",
+        "one_year",
+        "two_years",
+        "three_years"
+      ],
+      "settings": {
+        "eyebrow": "By age",
+        "heading": "Shop by age",
+        "text": "<p>The right toys for every stage, based on the makers' age recommendations.</p>"
+      }
+    },
+    "loemies_learning": {
+      "type": "loemies-featured-collection",
+      "settings": {
+        "collection": "montessori-learning",
+        "products": [],
+        "eyebrow": "Shop",
+        "heading": "Learning through play",
+        "text": "<p>Hands-on toys for sorting, problem-solving and new skills.</p>",
+        "products_to_show": 3,
+        "show_sold_out": false,
+        "columns_desktop": 4,
+        "grid_gap": 20,
+        "grid_gap_mobile": 12,
+        "show_view_all": true,
+        "view_all_label": "Shop this collection",
+        "view_all_link": "shopify://collections/montessori-learning",
+        "empty_heading": "Something lovely is taking shape.",
+        "empty_text": "Our next edit is on the way. Check back soon.",
+        "presentation": "feature_first",
+        "vertical_padding": 0,
+        "background_color": "#F7F3EC",
+        "card_color": "#FFFFFF",
+        "text_color": "#2B241F",
+        "accent_color": "#2F6B4F"
+      }
+    },
+    "loemies_testimonials": {
+      "type": "loemies-testimonials",
+      "blocks": {
+        "testimonial_1": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The 4-in-1 activity tree was an instant hit — our daughter plays with it every single morning, and it still looks brand new after six months.",
+            "quote_nl": "De 4-in-1 activiteitenboom was meteen een schot in de roos — onze dochter speelt er elke ochtend mee en hij ziet er na zes maanden nog als nieuw uit.",
+            "quote_fr": "L'arbre d'activités 4-en-1 a fait mouche immédiatement — notre fille y joue chaque matin et il est comme neuf après six mois.",
+            "author": "Sofie V.",
+            "context": "Parent of a 2-year-old",
+            "context_nl": "Mama van een peuter van 2",
+            "context_fr": "Maman d'une petite de 2 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_2": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Ordered on Sunday, delivered on Wednesday, beautifully packed. The age guidance on the product page matched perfectly.",
+            "quote_nl": "Zondag besteld, woensdag geleverd, prachtig verpakt. Het leeftijdsadvies op de productpagina klopte helemaal.",
+            "quote_fr": "Commandé dimanche, livré mercredi, superbement emballé. Les conseils d'âge sur la fiche produit étaient parfaits.",
+            "author": "Thomas D.",
+            "context": "Parent of a 4-year-old",
+            "context_nl": "Papa van een kleuter van 4",
+            "context_fr": "Papa d'un enfant de 4 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_3": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Finally a toy shop that tells you the materials and age range up front. The blocks were the hit of the birthday party.",
+            "quote_nl": "Eindelijk een speelgoedwinkel die materialen en leeftijd meteen vermeldt. De blokken waren dé hit op het verjaardagsfeest.",
+            "quote_fr": "Enfin une boutique qui indique clairement les matériaux et l'âge. Les blocs ont fait sensation à l'anniversaire.",
+            "author": "An M.",
+            "context": "Grandparent of a 1-year-old",
+            "context_nl": "Oma van een kindje van 1",
+            "context_fr": "Grand-mère d'un bébé de 1 an",
+            "rating": 4
+          }
+        },
+        "testimonial_4": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The wooden shape sorter is sturdy, the colours are gorgeous, and the pieces are exactly the right size for little hands.",
+            "quote_nl": "De houten vormenstoof is stevig, de kleuren zijn prachtig en de stukken zijn perfect voor kleine handjes.",
+            "quote_fr": "Le trieur de formes en bois est solide, les couleurs sont magnifiques et les pièces sont parfaites pour les petites mains.",
+            "author": "Julie L.",
+            "context": "Parent of a 1-year-old",
+            "context_nl": "Mama van een dreumes",
+            "context_fr": "Maman d'un bébé de 1 an",
+            "rating": 5
+          }
+        },
+        "testimonial_5": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "We bought the food truck for our son's third birthday. Two months later it is still the first thing he runs to every day.",
+            "quote_nl": "We kochten de foodtruck voor de derde verjaardag van onze zoon. Twee maanden later loopt hij er elke dag nog als eerste naartoe.",
+            "quote_fr": "Nous avons offert le food truck pour les trois ans de notre fils. Deux mois plus tard, c'est toujours son premier réflexe du matin.",
+            "author": "Bram V.",
+            "context": "Parent of a 3-year-old",
+            "context_nl": "Papa van een kleuter van 3",
+            "context_fr": "Papa d'un enfant de 3 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_6": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Asked a question about which blocks to choose before ordering and got a helpful, honest answer the same evening.",
+            "quote_nl": "Voor het bestellen een vraag gesteld over welke blokken te kiezen en dezelfde avond een eerlijk, behulpzaam antwoord gekregen.",
+            "quote_fr": "J'ai posé une question avant de commander et j'ai reçu une réponse honnête et utile le soir même.",
+            "author": "Elke D.",
+            "context": "Parent of two",
+            "context_nl": "Mama van twee",
+            "context_fr": "Maman de deux enfants",
+            "rating": 5
+          }
+        },
+        "testimonial_7": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The pounding bench survives daily toddler enthusiasm without a scratch. Really solid wood, not the flimsy kind.",
+            "quote_nl": "De hamerbank overleeft dagelijks peutergeweld zonder één kras. Echt massief hout, niet het wiebelige soort.",
+            "quote_fr": "Le banc à marteler résiste chaque jour à l'enthousiasme de notre fils sans une égratignure. Du vrai bois massif.",
+            "author": "Matthieu R.",
+            "context": "Papa of a 1-year-old",
+            "context_nl": "Papa van een dreumes",
+            "context_fr": "Papa d'un petit de 1 an",
+            "rating": 5
+          }
+        },
+        "testimonial_8": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Free shipping kicked in automatically and the parcel arrived a day early. Small thing, but it builds trust.",
+            "quote_nl": "De gratis verzending werd automatisch toegepast en het pakje kwam een dag te vroeg aan. Klein detail, maar het schept vertrouwen.",
+            "quote_fr": "La livraison gratuite s'est appliquée automatiquement et le colis est arrivé un jour en avance. Un détail qui inspire confiance.",
+            "author": "Karin S.",
+            "context": "Aunt of twins",
+            "context_nl": "Tante van een tweeling",
+            "context_fr": "Tante de jumeaux",
+            "rating": 4
+          }
+        },
+        "testimonial_9": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The musical activity table keeps our daughter busy for ages — and it is not as loud as plastic versions. Parents notice these things.",
+            "quote_nl": "De muzikale activiteitentafel houdt onze dochter eindeloos bezig — en ze is minder luid dan plastic versies. Ouders merken dat.",
+            "quote_fr": "La table d'activités musicale occupe notre fille pendant des heures — et elle est moins bruyante que les versions en plastique.",
+            "author": "Wouter P.",
+            "context": "Parent of a 1-year-old",
+            "context_nl": "Papa van een dreumes",
+            "context_fr": "Papa d'une petite de 1 an",
+            "rating": 5
+          }
+        },
+        "testimonial_10": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Beautiful, calm colours that fit our living room. Wooden toys you do not need to hide when guests come over.",
+            "quote_nl": "Mooie, rustige kleuren die in ons interieur passen. Houten speelgoed dat je niet hoeft te verstoppen als er bezoek komt.",
+            "quote_fr": "De belles couleurs douces qui s'intègrent à notre salon. Des jouets en bois qu'on ne cache pas quand on reçoit.",
+            "author": "Céline M.",
+            "context": "Parent of a 2-year-old",
+            "context_nl": "Mama van een peuter",
+            "context_fr": "Maman d'un enfant de 2 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_11": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The safari threading toy is our go-to restaurant toy: small, quiet and it keeps a two-year-old focused for a whole meal.",
+            "quote_nl": "Het safari-rijgspeelgoed is ons vaste restaurantspeelgoed: klein, stil en het houdt een tweejarige een hele maaltijd geboeid.",
+            "quote_fr": "Le jeu de laçage safari est notre allié au restaurant : petit, silencieux, il occupe notre fils de deux ans tout le repas.",
+            "author": "Jef T.",
+            "context": "Parent of a 2-year-old",
+            "context_nl": "Papa van een peuter",
+            "context_fr": "Papa d'un petit de 2 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_12": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Bought the counting puzzle for my niece. The order arrived gift-ready — I did not have to wrap a thing.",
+            "quote_nl": "De telpuzzel gekocht voor mijn nichtje. De bestelling kwam cadeauklaar aan — ik hoefde niets meer in te pakken.",
+            "quote_fr": "Puzzle des chiffres acheté pour ma nièce. La commande est arrivée prête à offrir — rien à emballer.",
+            "author": "Lore B.",
+            "context": "Aunt of a 3-year-old",
+            "context_nl": "Tante van een kleuter",
+            "context_fr": "Tante d'une petite de 3 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_13": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The balance game is played by the whole family, from our four-year-old to grandpa. Best twenty euros we spent this year.",
+            "quote_nl": "Het balansspel wordt door het hele gezin gespeeld, van onze vierjarige tot opa. De beste twintig euro van dit jaar.",
+            "quote_fr": "Le jeu d'équilibre amuse toute la famille, de notre fils de quatre ans à papy. Nos vingt euros les mieux dépensés cette année.",
+            "author": "Nicolas G.",
+            "context": "Parent of a 4-year-old",
+            "context_nl": "Papa van een kleuter van 4",
+            "context_fr": "Papa d'un enfant de 4 ans",
+            "rating": 4
+          }
+        },
+        "testimonial_14": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Returned one item because we ordered a double — the return was approved within a day and refunded quickly. Zero hassle.",
+            "quote_nl": "Eén artikel teruggestuurd omdat we dubbel besteld hadden — de retour was binnen een dag goedgekeurd en snel terugbetaald. Nul gedoe.",
+            "quote_fr": "Un article renvoyé suite à un doublon — retour approuvé en un jour et remboursé rapidement. Zéro tracas.",
+            "author": "Sanne K.",
+            "context": "Parent of a 5-year-old",
+            "context_nl": "Mama van een kind van 5",
+            "context_fr": "Maman d'un enfant de 5 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_15": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The number tracing board is genuinely educational — our son traces numbers before bed because he wants to, not because we ask.",
+            "quote_nl": "Het cijferschrijfbord is écht leerrijk — onze zoon oefent cijfers voor het slapengaan omdat hij het zelf wil.",
+            "quote_fr": "La planche d'écriture des chiffres est vraiment éducative — notre fils s'entraîne le soir parce qu'il en a envie.",
+            "author": "Pieter V.",
+            "context": "Parent of a 5-year-old",
+            "context_nl": "Papa van een kind van 5",
+            "context_fr": "Papa d'un enfant de 5 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_16": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Lovely curated selection. You can tell someone actually tested these toys instead of listing a thousand random ones.",
+            "quote_nl": "Mooie doordachte selectie. Je merkt dat iemand dit speelgoed echt getest heeft in plaats van duizend willekeurige dingen aan te bieden.",
+            "quote_fr": "Belle sélection soignée. On sent que quelqu'un a vraiment testé ces jouets au lieu d'en lister mille au hasard.",
+            "author": "Amélie D.",
+            "context": "Mother of three",
+            "context_nl": "Mama van drie",
+            "context_fr": "Maman de trois enfants",
+            "rating": 5
+          }
+        },
+        "testimonial_17": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The wooden ice cream cart is adorable and the accessories are well made. My daughter runs her 'shop' every afternoon.",
+            "quote_nl": "Het houten ijskraampje is schattig en de accessoires zijn goed afgewerkt. Mijn dochter houdt elke namiddag haar 'winkeltje' open.",
+            "quote_fr": "Le chariot à glaces en bois est adorable et les accessoires sont bien finis. Ma fille tient sa « boutique » chaque après-midi.",
+            "author": "Hanne W.",
+            "context": "Parent of a 3-year-old",
+            "context_nl": "Mama van een kleuter",
+            "context_fr": "Maman d'une petite de 3 ans",
+            "rating": 4
+          }
+        },
+        "testimonial_18": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Great gift guidance: the age filters helped me choose something for a one-year-old in two minutes flat.",
+            "quote_nl": "Handige cadeauhulp: dankzij de leeftijdsfilters koos ik in twee minuten iets voor een eenjarige.",
+            "quote_fr": "Super aide au cadeau : grâce aux filtres par âge, j'ai choisi en deux minutes pour un enfant d'un an.",
+            "author": "Dries C.",
+            "context": "Godfather of a 1-year-old",
+            "context_nl": "Peter van een dreumes",
+            "context_fr": "Parrain d'un bébé de 1 an",
+            "rating": 5
+          }
+        },
+        "testimonial_19": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The stacking pyramid is beautiful and perfectly sanded. You can see and feel the quality difference with big-box toys.",
+            "quote_nl": "De stapelpiramide is prachtig en perfect geschuurd. Je ziet en voelt het kwaliteitsverschil met massaspeelgoed.",
+            "quote_fr": "La pyramide à empiler est magnifique et parfaitement poncée. On voit et on sent la différence de qualité.",
+            "author": "Laura F.",
+            "context": "Parent of a 1-year-old",
+            "context_nl": "Mama van een dreumes",
+            "context_fr": "Maman d'un bébé de 1 an",
+            "rating": 5
+          }
+        },
+        "testimonial_20": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Our farm set order had a missing fence piece — support sent a replacement without any discussion. That is how you keep customers.",
+            "quote_nl": "In onze boerderijset ontbrak een hekje — de klantendienst stuurde zonder discussie een vervangstuk. Zo houd je klanten.",
+            "quote_fr": "Il manquait une barrière dans notre ferme — le service client a renvoyé la pièce sans discuter. Voilà comment fidéliser.",
+            "author": "Stijn M.",
+            "context": "Parent of a 4-year-old",
+            "context_nl": "Papa van een kleuter van 4",
+            "context_fr": "Papa d'un enfant de 4 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_21": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The cocoon swing turned our reading corner into the favourite spot of the house. Sturdy fabric and easy to hang.",
+            "quote_nl": "De cocoonschommel maakte van onze leeshoek dé favoriete plek van het huis. Stevige stof en makkelijk op te hangen.",
+            "quote_fr": "La balançoire cocon a transformé notre coin lecture en endroit préféré de la maison. Tissu solide et facile à suspendre.",
+            "author": "Charlotte P.",
+            "context": "Parent of a 5-year-old",
+            "context_nl": "Mama van een kind van 5",
+            "context_fr": "Maman d'un enfant de 5 ans",
+            "rating": 4
+          }
+        },
+        "testimonial_22": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The wooden coffee maker set is the star of our daughter's pretend café. Every visitor gets served a 'coffee' now.",
+            "quote_nl": "Het houten koffiezetapparaat is de ster van het fantasiecafé van onze dochter. Elke bezoeker krijgt nu een 'koffietje'.",
+            "quote_fr": "La machine à café en bois est la vedette du café imaginaire de notre fille. Chaque visiteur a droit à son « petit café ».",
+            "author": "Ruben H.",
+            "context": "Parent of a 3-year-old",
+            "context_nl": "Papa van een kleuter",
+            "context_fr": "Papa d'une petite de 3 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_23": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Newsletter is actually useful — occasional, short, and the gift ideas before the holidays saved me real time.",
+            "quote_nl": "De nieuwsbrief is echt nuttig — af en toe, kort, en de cadeautips voor de feestdagen bespaarden me echt tijd.",
+            "quote_fr": "La newsletter est vraiment utile — occasionnelle, courte, et les idées cadeaux avant les fêtes m'ont fait gagner du temps.",
+            "author": "Eva J.",
+            "context": "Mother of two",
+            "context_nl": "Mama van twee",
+            "context_fr": "Maman de deux enfants",
+            "rating": 4
+          }
+        },
+        "testimonial_24": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The kids' pétanque set got the whole street playing at our summer barbecue. Light enough for a five-year-old, fun for adults.",
+            "quote_nl": "Met de kinderpetanque speelde de hele straat mee op onze zomerbarbecue. Licht genoeg voor een vijfjarige, leuk voor volwassenen.",
+            "quote_fr": "La pétanque enfants a fait jouer toute la rue à notre barbecue. Assez légère pour un enfant de cinq ans, amusante pour les adultes.",
+            "author": "Maarten B.",
+            "context": "Parent of a 5-year-old",
+            "context_nl": "Papa van een kind van 5",
+            "context_fr": "Papa d'un enfant de 5 ans",
+            "rating": 5
+          }
+        },
+        "testimonial_25": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Everything about the experience feels considered: clear product info, honest age advice, fast delivery and toys that last.",
+            "quote_nl": "Alles voelt doordacht: duidelijke productinfo, eerlijk leeftijdsadvies, snelle levering en speelgoed dat meegaat.",
+            "quote_fr": "Tout est soigné : infos produit claires, conseils d'âge honnêtes, livraison rapide et des jouets qui durent.",
+            "author": "Aline V.",
+            "context": "Parent of a 2-year-old",
+            "context_nl": "Mama van een peuter",
+            "context_fr": "Maman d'un enfant de 2 ans",
+            "rating": 5
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_1",
+        "testimonial_2",
+        "testimonial_3",
+        "testimonial_4",
+        "testimonial_5",
+        "testimonial_6",
+        "testimonial_7",
+        "testimonial_8",
+        "testimonial_9",
+        "testimonial_10",
+        "testimonial_11",
+        "testimonial_12",
+        "testimonial_13",
+        "testimonial_14",
+        "testimonial_15",
+        "testimonial_16",
+        "testimonial_17",
+        "testimonial_18",
+        "testimonial_19",
+        "testimonial_20",
+        "testimonial_21",
+        "testimonial_22",
+        "testimonial_23",
+        "testimonial_24",
+        "testimonial_25"
+      ],
+      "settings": {
+        "eyebrow": "Loved by families",
+        "heading": "What parents say",
+        "text": "<p>Real experiences from families who shop with us.</p>",
+        "background_color": "#F7F3EC",
+        "card_color": "#FFFFFF",
+        "text_color": "#2B241F",
+        "accent_color": "#B04F38",
+        "vertical_padding": 48
+      }
+    },
+    "loemies_brand_band": {
+      "type": "loemies-brand-band",
+      "blocks": {
+        "safety": {
+          "type": "reason",
+          "settings": {
+            "icon": "safety",
+            "heading": "Useful details first",
+            "text": "See age, materials and play style at a glance when available."
+          }
+        },
+        "delivery": {
+          "type": "reason",
+          "settings": {
+            "icon": "selection",
+            "heading": "A smaller edit",
+            "text": "A focused range makes it easier to compare and choose."
+          }
+        },
+        "service": {
+          "type": "reason",
+          "settings": {
+            "icon": "service",
+            "heading": "Questions welcomed",
+            "text": "Ask us about a product before you decide — we are happy to help."
+          }
+        }
+      },
+      "block_order": [
+        "safety",
+        "delivery",
+        "service"
+      ],
+      "settings": {
+        "eyebrow": "Our approach",
+        "heading": "Less choice. Better explained.",
+        "text": "<p>A considered toy collection that makes age, materials and ways to play easier to compare.</p>",
+        "button_label": "Ask about a product",
+        "button_link": "/pages/contact",
+        "background_color": "#2F6B4F",
+        "accent_color": "#F7DC8D"
+      }
+    },
+    "loemies_newsletter": {
+      "type": "loemies-newsletter",
+      "settings": {
+        "eyebrow": "Stay in the loop",
+        "heading": "New toys and useful gift ideas",
+        "text": "<p>Occasional notes when something genuinely useful joins the collection.</p>",
+        "email_label": "Email address",
+        "email_placeholder": "you@example.com",
+        "button_label": "Sign up",
+        "note": "No daily emails. Unsubscribe whenever you like.",
+        "privacy_label": "Privacy policy",
+        "success_text": "Thank you — you are on the list."
+      }
     }
   },
   "order": [
-    "main"
+    "loemies_hero",
+    "loemies_featured",
+    "loemies_benefits",
+    "loemies_age",
+    "loemies_learning",
+    "loemies_testimonials",
+    "loemies_brand_band",
+    "loemies_newsletter"
   ]
 }

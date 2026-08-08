@@ -1,76 +1,1516 @@
-<header>
-  <h2 class="header__title">
-    {{ shop.name | link_to: routes.root_url }}
-  </h2>
+{% liquid
+  assign display_wordmark = section.settings.wordmark
+  if display_wordmark == blank
+    assign display_wordmark = shop.name
+  endif
 
-  <div class="header__menu">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign search_placeholder = section.settings.search_placeholder | escape
+  if section.settings.search_placeholder == blank or section.settings.search_placeholder == 'What are you looking for?'
+    assign search_placeholder = 'search.placeholder' | t
+  endif
 
-  <div class="header__icons">
-    {% if shop.customer_accounts_enabled %}
-      <shopify-account menu="{{ section.settings.customer_account_menu }}">
-        {{ 'icon-account.svg' | inline_asset_content }}
-      </shopify-account>
-    {% endif %}
+  assign announcement_text = section.settings.announcement_text
+  assign shop_by_age_url = routes.root_url | append: '#shop-by-age'
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+  assign shop_by_play_url = catalog_url | append: '#shop-by-play'
+  assign bestsellers_url = collections['bestsellers'].url | default: catalog_url
+  assign gift_ideas_url = catalog_url | append: '/gift-idea'
+  assign search_display_terms = search.terms
+  assign search_last_character = search_display_terms | slice: -1
+  if search_last_character == '*'
+    assign search_display_length = search_display_terms.size | minus: 1
+    assign search_display_terms = search_display_terms | slice: 0, search_display_length
+  endif
+  if section.settings.use_store_promises
+    capture announcement_text
+      if settings.free_shipping_enabled
+        echo 'sections.promises.free_shipping' | t: threshold: settings.free_shipping_threshold
+      else
+        echo 'sections.promises.tracked_shipping' | t
+      endif
+      echo ' · '
+      echo 'sections.promises.returns' | t: days: settings.return_window_days
+    endcapture
+  endif
+%}
 
-    <a href="{{ routes.cart_url }}">
-      {% if cart.item_count > 0 %}
-        <sup>{{ cart.item_count }}</sup>
+<script src="{{ 'header.js' | asset_url }}" defer></script>
+
+<header class="site-header full-width">
+  {% if section.settings.show_announcement and announcement_text != blank %}
+    <div
+      class="site-header__announcement"
+      style="--announcement-background: {{ section.settings.announcement_background }}; --announcement-color: {{ section.settings.announcement_text_color }};"
+    >
+      <div class="site-header__announcement-inner">
+        {% if section.settings.announcement_link != blank %}
+          <a href="{{ section.settings.announcement_link }}">
+            {{ announcement_text }}
+          </a>
+        {% else %}
+          <div>{{ announcement_text }}</div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="site-header__main">
+    <details class="mobile-menu" data-mobile-menu scroll-lock>
+      <summary class="header-mobile-button">
+        <span class="mobile-menu__open" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="mobile-menu__close" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="visually-hidden">{{ 'sections.header.menu' | t }}</span>
+      </summary>
+
+      <button class="mobile-menu__backdrop" type="button" data-mobile-menu-close aria-label="{{ 'sections.header.close_menu' | t }}"></button>
+
+      <div class="mobile-menu__panel" inert aria-hidden="true">
+        {% if section.settings.show_shop_navigation or section.settings.menu != blank %}
+          <nav aria-label="{{ 'sections.header.mobile_navigation' | t }}">
+            <ul class="mobile-menu__list" role="list">
+              {% if section.settings.show_shop_navigation %}
+                <li>
+                  <details class="mobile-menu__nested">
+                    <summary>
+                      <span>{{ 'sections.header.shop' | t }}</span>
+                      <span class="mobile-menu__toggle" aria-hidden="true">+</span>
+                    </summary>
+                    <ul role="list">
+                      <li><a href="{{ catalog_url }}">{{ 'sections.header.all_toys' | t }}</a></li>
+                      <li><a href="{{ bestsellers_url }}">{{ 'sections.header.bestsellers' | t }}</a></li>
+                      <li><a href="{{ shop_by_age_url }}">{{ 'sections.header.by_age' | t }}</a></li>
+                      <li><a href="{{ shop_by_play_url }}">{{ 'sections.header.by_play' | t }}</a></li>
+                      <li><a href="{{ gift_ideas_url }}">{{ 'sections.header.gift_ideas' | t }}</a></li>
+                    </ul>
+                  </details>
+                </li>
+              {% endif %}
+              {% for link in section.settings.menu.links %}
+                {% if section.settings.show_shop_navigation and link.url == routes.root_url %}{% continue %}{% endif %}
+                {% if section.settings.show_shop_navigation and link.url == routes.all_products_collection_url %}{% continue %}{% endif %}
+                <li>
+                  {% if link.links != blank %}
+                    <details class="mobile-menu__nested">
+                      <summary>
+                        <span>{{ link.title | escape }}</span>
+                        <span class="mobile-menu__toggle" aria-hidden="true">+</span>
+                      </summary>
+                      <ul role="list">
+                        <li>
+                          <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                            {{ 'sections.header.shop_all_menu' | t: menu: link.title }}
+                          </a>
+                        </li>
+                        {% for child_link in link.links %}
+                          <li>
+                            <a href="{{ child_link.url }}"{% if child_link.current %} aria-current="page"{% endif %}>
+                              {{ child_link.title | escape }}
+                            </a>
+                            {% if child_link.links != blank %}
+                              <ul class="mobile-menu__grandchildren" role="list">
+                                {% for grandchild_link in child_link.links %}
+                                  <li>
+                                    <a
+                                      href="{{ grandchild_link.url }}"
+                                      {% if grandchild_link.current %}aria-current="page"{% endif %}
+                                    >
+                                      {{ grandchild_link.title | escape }}
+                                    </a>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </details>
+                  {% else %}
+                    <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                      {{ link.title | escape }}
+                    </a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </nav>
+        {% endif %}
+
+        <div class="mobile-menu__utility">
+          <a
+            href="{{ routes.search_url }}?view=wishlist"
+            data-wishlist-link
+            data-label-template="{{ 'sections.header.wishlist_count' | t: count: '__COUNT__' }}"
+            aria-label="{{ 'sections.header.wishlist_count' | t: count: 0 }}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20.8 5.8a5.3 5.3 0 0 0-7.5 0L12 7.1l-1.3-1.3a5.3 5.3 0 1 0-7.5 7.5L12 22l8.8-8.7a5.3 5.3 0 0 0 0-7.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>{{ 'sections.header.wishlist' | t }} (<span data-wishlist-count>0</span>)</span>
+          </a>
+
+          {% if shop.customer_accounts_enabled %}
+            <a href="{{ routes.account_url }}">
+              {{ 'icon-account.svg' | inline_asset_content }}
+              <span>{{ 'sections.header.account' | t }}</span>
+            </a>
+          {% endif %}
+
+          {% if localization.available_languages.size > 1 or localization.available_countries.size > 1 %}
+            <details class="mobile-localization">
+              <summary>
+                <span>{{ 'sections.header.language' | t }} / {{ 'sections.header.country' | t }}</span>
+                <strong>{{ localization.language.iso_code | upcase }} · {{ localization.country.iso_code }}</strong>
+              </summary>
+              <div class="mobile-localization__options">
+                {% for country in localization.available_countries %}
+                  {% for language in country.available_languages %}
+                    {% liquid
+                      assign mobile_localization_form_id = 'MobileLocalizationForm-' | append: country.iso_code | append: '-' | append: language.iso_code
+                    %}
+                    {% form 'localization', id: mobile_localization_form_id, class: 'mobile-localization__option' %}
+                      <input type="hidden" name="country_code" value="{{ country.iso_code }}">
+                      <input type="hidden" name="language_code" value="{{ language.iso_code }}">
+                      <button
+                        type="submit"
+                        lang="{{ language.iso_code }}"
+                        {% if country.iso_code == localization.country.iso_code and language.iso_code == localization.language.iso_code %}aria-current="true"{% endif %}
+                      >
+                        {{ language.endonym_name | capitalize }} · {{ country.name }}
+                      </button>
+                    {% endform %}
+                  {% endfor %}
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
+        </div>
+      </div>
+    </details>
+
+    <a
+      class="site-header__brand"
+      href="{{ routes.root_url }}"
+      aria-label="{{ 'sections.header.home_label' | t: shop: display_wordmark }}"
+      style="--logo-width: {{ section.settings.logo_width }}px;"
+    >
+      {% if section.settings.logo != blank %}
+        {% assign logo_alt = section.settings.logo.alt | default: display_wordmark %}
+        {% assign logo_sizes = section.settings.logo_width | append: 'px' %}
+        {{ section.settings.logo
+          | image_url: width: 600
+          | image_tag:
+            class: 'site-header__logo',
+            widths: '120, 180, 240, 360, 480, 600',
+            width: section.settings.logo_width,
+            sizes: logo_sizes,
+            alt: logo_alt
+        }}
+      {% else %}
+        <span class="site-header__wordmark">{{ display_wordmark | escape }}</span>
+      {% endif %}
+    </a>
+
+    <form
+      class="header-search"
+      action="{{ routes.search_url }}"
+      method="get"
+      role="search"
+      data-predictive-search
+      data-normalize-search-query
+      data-no-results="{{ 'sections.header.search_no_results' | t }}"
+      data-sold-out="{{ 'products.card.sold_out' | t }}"
+      data-money-format="{{ shop.money_format | strip_html | escape }}"
+    >
+      <label class="visually-hidden" for="HeaderSearchInput">{{ search_placeholder }}</label>
+      <svg class="header-search__leading-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="10.75" cy="10.75" r="6.25" stroke="currentColor" stroke-width="1.75"/>
+        <path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+      <input
+        id="HeaderSearchInput"
+        class="header-search__input"
+        type="search"
+        name="q"
+        value="{{ search_display_terms | escape }}"
+        placeholder="{{ search_placeholder }}"
+        autocomplete="on"
+        enterkeyhint="search"
+        spellcheck="false"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-haspopup="listbox"
+        aria-controls="HeaderPredictiveSearch"
+        aria-expanded="false"
+      >
+      <input type="hidden" name="options[prefix]" value="last">
+      <input type="hidden" name="filter.v.availability" value="1">
+      <button class="header-search__submit" type="submit" name="search-submit" aria-label="{{ 'sections.header.search' | t }}">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="10.75" cy="10.75" r="6.25" stroke="currentColor" stroke-width="1.75"/>
+          <path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+        <span class="header-search__submit-label">{{ 'sections.header.search' | t }}</span>
+      </button>
+      <div
+        id="HeaderPredictiveSearch"
+        class="header-predictive-search"
+        data-predictive-search-panel
+        hidden
+      >
+        <p class="header-predictive-search__status" data-predictive-search-status role="status"></p>
+        <div
+          class="header-predictive-search__results"
+          data-predictive-search-results
+          role="listbox"
+          aria-label="{{ 'sections.header.search_suggestions' | t }}"
+        ></div>
+        <a class="header-predictive-search__all" data-predictive-search-all href="{{ routes.search_url }}">
+          {{ 'sections.header.search_view_all' | t }}
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </form>
+
+    <div class="site-header__actions">
+      <button
+        class="header-pill header-mobile-search-toggle"
+        type="button"
+        data-mobile-search-toggle
+        aria-label="{{ 'sections.header.search' | t }}"
+        aria-controls="HeaderSearchInput"
+        aria-expanded="false"
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="10.75" cy="10.75" r="6.25" stroke="currentColor" stroke-width="1.75"/>
+          <path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      {% if localization.available_languages.size > 1 or localization.available_countries.size > 1 %}
+        <details class="header-language">
+          <summary
+            class="header-pill"
+            aria-label="{{ 'sections.header.choose_language' | t }} / {{ 'sections.header.choose_country' | t }}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3.8 12h16.4M12 3.5c2.2 2.35 3.3 5.18 3.3 8.5S14.2 18.15 12 20.5C9.8 18.15 8.7 15.32 8.7 12S9.8 5.85 12 3.5Z" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>{{ localization.language.iso_code | upcase }} · {{ localization.country.iso_code }}</span>
+            <svg class="header-language__chevron" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+              <path d="m1 1.5 5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </summary>
+          <div class="header-language__menu">
+            {% for country in localization.available_countries %}
+              {% for language in country.available_languages %}
+                {% liquid
+                  assign header_localization_form_id = 'HeaderLocalizationForm-' | append: country.iso_code | append: '-' | append: language.iso_code
+                %}
+                {% form 'localization', id: header_localization_form_id, class: 'header-language__option' %}
+                  <input type="hidden" name="country_code" value="{{ country.iso_code }}">
+                  <input type="hidden" name="language_code" value="{{ language.iso_code }}">
+                  <button
+                    type="submit"
+                    lang="{{ language.iso_code }}"
+                    {% if country.iso_code == localization.country.iso_code and language.iso_code == localization.language.iso_code %}aria-current="true"{% endif %}
+                  >
+                    {{ language.endonym_name | capitalize }} · {{ country.name }}
+                  </button>
+                {% endform %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </details>
       {% endif %}
 
-      {{ 'icon-cart.svg' | inline_asset_content }}
-    </a>
+      {% if shop.customer_accounts_enabled %}
+        <a
+          class="header-pill header-account"
+          href="{{ routes.account_url }}"
+          aria-label="{{ 'sections.header.account' | t }}"
+        >
+          {{ 'icon-account.svg' | inline_asset_content }}
+          <span>{{ 'sections.header.account' | t }}</span>
+        </a>
+      {% endif %}
+
+      <a
+        class="header-pill header-wishlist"
+        href="{{ routes.search_url }}?view=wishlist"
+        data-wishlist-link
+        data-label-template="{{ 'sections.header.wishlist_count' | t: count: '__COUNT__' }}"
+        aria-label="{{ 'sections.header.wishlist_count' | t: count: 0 }}"
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20.8 5.8a5.3 5.3 0 0 0-7.5 0L12 7.1l-1.3-1.3a5.3 5.3 0 1 0-7.5 7.5L12 22l8.8-8.7a5.3 5.3 0 0 0 0-7.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="header-wishlist__label">{{ 'sections.header.wishlist' | t }}</span>
+        <span class="header-wishlist__count" data-wishlist-count aria-hidden="true">0</span>
+      </a>
+
+      <a class="header-pill header-cart" href="{{ routes.cart_url }}" aria-label="{{ 'general.accessibility.cart_count' | t: count: cart.item_count }}">
+        {{ 'icon-cart.svg' | inline_asset_content }}
+        <span class="header-cart__label">{{ 'sections.header.cart' | t }}</span>
+        <span class="header-cart__count" aria-hidden="true">{{ cart.item_count }}</span>
+      </a>
+    </div>
   </div>
+
+  {% if section.settings.show_shop_navigation or section.settings.menu != blank %}
+    <div class="site-header__nav-row">
+      <nav class="desktop-menu" aria-label="{{ 'sections.header.primary_navigation' | t }}">
+        <ul class="desktop-menu__list" role="list">
+          {% if section.settings.show_shop_navigation %}
+            <li>
+              <details class="desktop-menu__dropdown">
+                <summary>
+                  {{ 'sections.header.shop' | t }}
+                  <svg viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                    <path d="m1 1.5 5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </summary>
+                <ul role="list">
+                  <li><a href="{{ catalog_url }}">{{ 'sections.header.all_toys' | t }}</a></li>
+                  <li><a href="{{ bestsellers_url }}">{{ 'sections.header.bestsellers' | t }}</a></li>
+                </ul>
+              </details>
+            </li>
+            <li><a href="{{ shop_by_age_url }}">{{ 'sections.header.by_age' | t }}</a></li>
+            <li><a href="{{ shop_by_play_url }}">{{ 'sections.header.by_play' | t }}</a></li>
+            <li><a href="{{ gift_ideas_url }}">{{ 'sections.header.gift_ideas' | t }}</a></li>
+          {% endif %}
+          {% for link in section.settings.menu.links %}
+            {% if section.settings.show_shop_navigation and link.url == routes.root_url %}{% continue %}{% endif %}
+            {% if section.settings.show_shop_navigation and link.url == routes.all_products_collection_url %}{% continue %}{% endif %}
+            <li>
+              {% if link.links != blank %}
+                <details class="desktop-menu__dropdown">
+                  <summary>
+                    {{ link.title | escape }}
+                    <svg viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                      <path d="m1 1.5 5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </summary>
+                  <ul role="list">
+                    <li class="desktop-menu__parent-link">
+                      <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                        {{ 'sections.header.shop_all_menu' | t: menu: link.title }}
+                      </a>
+                    </li>
+                    {% for child_link in link.links %}
+                      <li>
+                        <a href="{{ child_link.url }}"{% if child_link.current %} aria-current="page"{% endif %}>
+                          {{ child_link.title | escape }}
+                        </a>
+                        {% if child_link.links != blank %}
+                          <ul class="desktop-menu__grandchildren" role="list">
+                            {% for grandchild_link in child_link.links %}
+                              <li>
+                                <a
+                                  href="{{ grandchild_link.url }}"
+                                  {% if grandchild_link.current %}aria-current="page"{% endif %}
+                                >
+                                  {{ grandchild_link.title | escape }}
+                                </a>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </details>
+              {% else %}
+                <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                  {{ link.title | escape }}
+                </a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
 </header>
 
 {% stylesheet %}
-  header {
-    height: 5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  html.mobile-menu-open,
+  body.mobile-menu-open {
+    overscroll-behavior: none;
   }
-  header a {
+
+  .site-header {
+    --header-background: #fdfbf7;
+    --header-surface: #ffffff;
+    --header-ink: #2b241f;
+    --header-muted: #786c61;
+    --header-line: #eadfd2;
+    --header-accent: #b04f38;
+    --header-accent-soft: #f6e6df;
+
     position: relative;
-    text-decoration: none;
-    color: var(--color-foreground);
+    z-index: 30;
+    color: var(--header-ink);
+    background: var(--header-background);
+    border-bottom: 1px solid var(--header-line);
+  }
+
+  .site-header__announcement {
+    color: var(--announcement-color);
+    background: var(--announcement-background);
+  }
+
+  .site-header__announcement-inner {
+    width: min(calc(100% - var(--page-margin) * 2), calc(var(--page-width) - var(--page-margin) * 2));
+    min-height: 2.2rem;
+    margin-inline: auto;
+    font-size: 0.78rem;
+    font-weight: 650;
+    letter-spacing: 0.035em;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .site-header__announcement-inner > *,
+  .site-header__announcement-inner a {
     display: flex;
+    min-height: inherit;
     align-items: center;
     justify-content: center;
+    color: inherit;
+    text-decoration: none;
   }
-  header a sup {
-    position: absolute;
-    left: 100%;
-    overflow: hidden;
-    max-width: var(--page-margin);
+
+  .site-header__announcement-inner a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
-  header svg {
-    width: 2rem;
+
+  .site-header__main {
+    display: grid;
+    width: min(67rem, calc(100% - 2rem));
+    min-height: 4.8rem;
+    align-items: center;
+    padding-top: 0;
+    margin-inline: auto;
+    grid-template-columns: minmax(7.5rem, 0.4fr) minmax(18rem, 29rem) max-content;
+    gap: 1.5rem;
   }
-  header .header__menu,
-  header .header__icons {
+
+  .site-header__brand {
+    display: inline-flex;
+    width: fit-content;
+    max-width: min(var(--logo-width), 100%);
+    align-items: center;
+    color: var(--header-ink);
+    text-decoration: none;
+  }
+
+  .site-header__logo {
+    width: var(--logo-width);
+    max-height: 4.25rem;
+    object-fit: contain;
+  }
+
+  .site-header__wordmark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: var(--font-heading--family);
+    font-size: 1.45rem;
+    font-weight: var(--font-heading--weight);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .site-header__wordmark::before {
+    width: 1.6rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    background: var(--header-accent);
+    border-radius: 999px;
+    box-shadow: 0.7rem -0.45rem 0 -0.25rem #ecd9b8;
+    content: '';
+  }
+
+  .header-search {
+    position: relative;
     display: flex;
-    gap: 1rem;
+    min-width: 0;
+    align-items: center;
+  }
+
+  .header-search__input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 6.2rem 0.75rem 2.75rem;
+    border: 1px solid var(--header-line);
+    border-radius: 999px;
+    background: var(--header-surface);
+    color: var(--header-ink);
+    box-shadow: 0 0.15rem 0.6rem rgba(77, 52, 42, 0.035);
+  }
+
+  .header-search__input::placeholder {
+    color: var(--header-muted);
+    opacity: 1;
+  }
+
+  .header-search__input:focus-visible {
+    border-color: var(--header-accent);
+    outline: 2px solid color-mix(in srgb, var(--header-accent) 34%, transparent);
+    outline-offset: 1px;
+  }
+
+  .header-search__leading-icon {
+    position: absolute;
+    z-index: 1;
+    left: 1rem;
+    width: 1.1rem;
+    color: var(--header-muted);
+    pointer-events: none;
+  }
+
+  .header-search__submit {
+    position: absolute;
+    right: 0.35rem;
+    display: grid;
+    width: auto;
+    min-height: 2.75rem;
+    padding: 0.55rem 1.15rem;
+    border: 1px solid var(--header-ink);
+    border-radius: 999px;
+    background: var(--header-ink);
+    box-shadow: none;
+    color: var(--header-surface);
+    font-size: 0.8rem;
+    font-weight: 800;
+    place-items: center;
+  }
+
+  .header-search__submit:hover {
+    background: var(--header-accent);
+    border-color: var(--header-accent);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .header-search__submit svg {
+    display: none;
+    width: 1.3rem;
+  }
+
+  .header-predictive-search {
+    position: absolute;
+    z-index: 60;
+    top: calc(100% + 0.55rem);
+    right: 0;
+    left: 0;
+    overflow: hidden;
+    border: 1px solid var(--header-line);
+    border-radius: 1rem;
+    background: var(--header-surface);
+    box-shadow: 0 1rem 2.8rem rgba(75, 51, 41, 0.14);
+  }
+
+  .header-predictive-search[hidden] {
+    display: none;
+  }
+
+  .header-predictive-search__status {
+    padding: 0.85rem 1rem;
+    color: var(--header-muted);
+    font-size: 0.82rem;
+  }
+
+  .header-predictive-search__status:empty {
+    display: none;
+  }
+
+  .header-predictive-search__results {
+    display: grid;
+    padding: 0.35rem;
+  }
+
+  .header-predictive-search__item {
+    display: grid;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem;
+    border-radius: 0.7rem;
+    color: var(--header-ink);
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    text-decoration: none;
+  }
+
+  .header-predictive-search__item:hover,
+  .header-predictive-search__item:focus-visible {
+    background: var(--header-accent-soft);
+    outline: none;
+  }
+
+  .header-predictive-search__item img,
+  .header-predictive-search__image-placeholder {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.55rem;
+    background: #eef0e9;
+    object-fit: cover;
+  }
+
+  .header-predictive-search__item strong {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+
+  .header-predictive-search__meta {
+    display: grid;
+    justify-items: end;
+    gap: 0.15rem;
+    color: var(--header-muted);
+    font-size: 0.76rem;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  .header-predictive-search__sold-out {
+    color: #8c2f3b;
+    font-size: 0.7rem;
+    font-weight: 850;
+  }
+
+  .header-predictive-search__all {
+    display: flex;
+    min-height: 2.8rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    border-top: 1px solid var(--header-line);
+    color: var(--header-ink);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .header-predictive-search__all:hover,
+  .header-predictive-search__all:focus-visible {
+    background: var(--header-accent-soft);
+    outline: none;
+  }
+
+  .site-header__actions {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .header-pill {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.58rem 0.85rem;
+    border: 1px solid var(--header-line);
+    border-radius: 999px;
+    background: var(--header-surface);
+    color: var(--header-ink);
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  .header-pill:hover {
+    border-color: color-mix(in srgb, var(--header-accent) 58%, var(--header-line));
+    background: var(--header-accent-soft);
+    text-decoration: none;
+  }
+
+  .header-pill svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  .header-language {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .header-language > summary {
+    min-width: 5.5rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .header-language > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .header-language__chevron {
+    width: 0.55rem !important;
+    transition: transform 150ms ease;
+  }
+
+  .header-language[open] .header-language__chevron {
+    transform: rotate(180deg);
+  }
+
+  .header-language__menu {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.55rem);
+    right: 0;
+    display: grid;
+    width: max-content;
+    min-width: 10rem;
+    gap: 0.2rem;
+    padding: 0.45rem;
+    border: 1px solid var(--header-line);
+    border-radius: 0.85rem;
+    background: var(--header-surface);
+    box-shadow: 0 0.85rem 2.4rem rgba(75, 51, 41, 0.12);
+  }
+
+  .header-language__menu button {
+    width: 100%;
+    min-height: 2.35rem;
+    justify-content: flex-start;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    border-radius: 0.55rem;
+    background: transparent;
+    box-shadow: none;
+    color: var(--header-ink);
+    font-size: 0.84rem;
+    font-weight: 550;
+  }
+
+  .header-language__menu button:hover,
+  .header-language__menu button[aria-current='true'] {
+    background: var(--header-accent-soft);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .header-language__option {
+    margin: 0;
+  }
+
+  .header-account {
+    cursor: pointer;
+  }
+
+  .header-wishlist {
+    position: relative;
+  }
+
+  .header-wishlist__count {
+    display: grid;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding-inline: 0.25rem;
+    border-radius: 999px;
+    background: var(--header-accent-soft);
+    color: var(--header-accent);
+    font-size: 0.66rem;
+    font-weight: 750;
+    line-height: 1;
+    place-items: center;
+  }
+
+  .header-cart {
+    position: relative;
+  }
+
+  .header-cart__count {
+    display: grid;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding-inline: 0.25rem;
+    border-radius: 999px;
+    background: var(--header-accent);
+    color: #ffffff;
+    font-size: 0.66rem;
+    font-weight: 750;
+    line-height: 1;
+    place-items: center;
+  }
+
+  .site-header__nav-row {
+    border-top: 1px solid var(--header-line);
+    background: color-mix(in srgb, var(--header-background) 76%, #ffffff);
+  }
+
+  .desktop-menu {
+    width: min(67rem, calc(100% - 2rem));
+    margin-inline: auto;
+  }
+
+  .desktop-menu__list,
+  .desktop-menu__dropdown ul,
+  .mobile-menu__list,
+  .mobile-menu__nested ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .desktop-menu__list {
+    display: flex;
+    min-height: 3.2rem;
+    align-items: center;
+    justify-content: flex-start;
+    gap: clamp(1.5rem, 3.5vw, 3.25rem);
+  }
+
+  .desktop-menu a,
+  .desktop-menu summary {
+    color: var(--header-ink);
+    font-size: 0.83rem;
+    font-weight: 650;
+    letter-spacing: 0.025em;
+    text-decoration: none;
+  }
+
+  .desktop-menu__list > li > a,
+  .desktop-menu__dropdown > summary {
+    position: relative;
+    padding-block: 0.75rem;
+  }
+
+  .desktop-menu__list > li > a::after,
+  .desktop-menu__dropdown > summary::after {
+    position: absolute;
+    right: 0;
+    bottom: 0.55rem;
+    left: 0;
+    height: 0.12rem;
+    border-radius: 999px;
+    background: var(--header-accent);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 150ms ease;
+  }
+
+  .desktop-menu__list > li > a:hover::after,
+  .desktop-menu__list > li > a[aria-current='page']::after,
+  .desktop-menu__dropdown > summary:hover::after,
+  .desktop-menu__dropdown[open] > summary::after {
+    transform: scaleX(1);
+  }
+
+  .desktop-menu__dropdown {
+    position: relative;
+  }
+
+  .desktop-menu__dropdown > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .desktop-menu__dropdown > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .desktop-menu__dropdown > summary svg {
+    width: 0.58rem;
+    transition: transform 150ms ease;
+  }
+
+  .desktop-menu__dropdown[open] > summary svg {
+    transform: rotate(180deg);
+  }
+
+  .desktop-menu__dropdown > ul {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 0.5rem);
+    left: -0.7rem;
+    width: max-content;
+    min-width: 13rem;
+    padding: 0.55rem;
+    border: 1px solid var(--header-line);
+    border-radius: 0.9rem;
+    background: var(--header-surface);
+    box-shadow: 0 0.9rem 2.6rem rgba(75, 51, 41, 0.12);
+  }
+
+  .desktop-menu__dropdown ul a {
+    display: block;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.55rem;
+  }
+
+  .desktop-menu__dropdown ul a:hover,
+  .desktop-menu__dropdown ul a[aria-current='page'] {
+    background: var(--header-accent-soft);
+  }
+
+  .desktop-menu__parent-link {
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--header-line);
+  }
+
+  .desktop-menu__grandchildren {
+    padding: 0 0 0.35rem 0.8rem !important;
+  }
+
+  .desktop-menu__grandchildren a {
+    color: var(--header-muted);
+    font-size: 0.78rem;
+  }
+
+  .mobile-menu {
+    display: none;
+  }
+
+  .header-mobile-search-toggle {
+    display: none;
+  }
+
+  @media (max-width: 70rem) {
+    .site-header__main {
+      grid-template-columns: minmax(8rem, 0.55fr) minmax(16rem, 1fr) minmax(17rem, 0.8fr);
+      padding-top: 0;
+      gap: 1rem;
+    }
+
+    .header-pill {
+      padding-inline: 0.68rem;
+    }
+
+    .header-account span,
+    .header-wishlist__label,
+    .header-cart__label {
+      display: none;
+    }
+  }
+
+  @media (max-width: 61.99rem) {
+    .site-header__main {
+      min-height: auto;
+      padding-block: 0.7rem 0.8rem;
+      grid-template-columns: 2.75rem minmax(0, 1fr) 6.15rem;
+      grid-template-rows: minmax(2.75rem, auto) auto;
+      gap: 0.65rem 0.75rem;
+    }
+
+    .mobile-menu {
+      position: static;
+      display: block;
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .header-mobile-button {
+      display: grid;
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      border: 1px solid var(--header-line);
+      border-radius: 50%;
+      background: var(--header-surface);
+      color: var(--header-ink);
+      cursor: pointer;
+      list-style: none;
+      place-items: center;
+    }
+
+    .header-mobile-button::-webkit-details-marker {
+      display: none;
+    }
+
+    .header-mobile-button svg {
+      width: 1.35rem;
+    }
+
+    .mobile-menu__close,
+    .mobile-menu[open] .mobile-menu__open {
+      display: none;
+    }
+
+    .mobile-menu[open] .mobile-menu__close {
+      display: block;
+    }
+
+    .mobile-menu__panel {
+      position: absolute;
+      z-index: 40;
+      top: 100%;
+      right: 0;
+      left: 0;
+      max-height: calc(100svh - 7rem);
+      padding: 0.65rem var(--page-margin) 1.5rem;
+      overflow-y: auto;
+      border-top: 1px solid var(--header-line);
+      border-bottom: 1px solid var(--header-line);
+      background: var(--header-background);
+      box-shadow: 0 1rem 2.5rem rgba(75, 51, 41, 0.12);
+    }
+
+    .mobile-menu__backdrop {
+      position: fixed;
+      z-index: 35;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: rgba(43, 36, 31, 0.34);
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .mobile-menu__backdrop:hover {
+      background: rgba(43, 36, 31, 0.34);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .mobile-menu__list > li > a,
+    .mobile-menu__nested > summary {
+      display: flex;
+      min-height: 3.5rem;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--header-line);
+      color: var(--header-ink);
+      font-family: var(--font-heading--family);
+      font-size: 1.05rem;
+      font-weight: var(--font-heading--weight);
+      text-decoration: none;
+    }
+
+    .mobile-menu__nested > summary {
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .mobile-menu__nested > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mobile-menu__toggle {
+      font-family: var(--font-body--family);
+      font-size: 1.4rem;
+      font-weight: 400;
+      transition: transform 150ms ease;
+    }
+
+    .mobile-menu__nested[open] .mobile-menu__toggle {
+      transform: rotate(45deg);
+    }
+
+    .mobile-menu__nested > ul {
+      padding: 0.45rem 0.6rem;
+      border-radius: 0 0 0.75rem 0.75rem;
+      background: var(--header-accent-soft);
+    }
+
+    .mobile-menu__nested li a {
+      display: block;
+      padding: 0.65rem;
+      color: var(--header-ink);
+      text-decoration: none;
+    }
+
+    .mobile-menu__grandchildren {
+      padding: 0 0 0.4rem 0.8rem !important;
+    }
+
+    .mobile-menu__grandchildren a {
+      color: var(--header-muted) !important;
+      font-size: 0.9rem;
+    }
+
+    .mobile-menu__utility {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.25rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid var(--header-line);
+    }
+
+    .mobile-menu__utility > a {
+      display: inline-flex;
+      width: 100%;
+      min-height: 2.75rem;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--header-ink);
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .mobile-menu__utility > a svg {
+      width: 1.2rem;
+    }
+
+    .mobile-localization {
+      display: grid;
+      font-size: 0.82rem;
+      font-weight: 650;
+    }
+
+    .mobile-localization > summary {
+      display: flex;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--header-line);
+      border-radius: 0.75rem;
+      background: var(--header-surface);
+      color: var(--header-ink);
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .mobile-localization > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mobile-localization__options {
+      display: grid;
+      gap: 0.25rem;
+      padding-top: 0.4rem;
+    }
+
+    .mobile-localization__option button {
+      width: 100%;
+      min-height: 2.75rem;
+      justify-content: flex-start;
+      padding: 0.55rem 0.8rem;
+      border: 0;
+      border-radius: 0.6rem;
+      background: transparent;
+      box-shadow: none;
+      color: var(--header-ink);
+      text-align: left;
+    }
+
+    .mobile-localization__option button[aria-current='true'] {
+      background: var(--header-accent-soft);
+      color: var(--header-accent);
+    }
+
+    .mobile-menu__language-status {
+      color: var(--header-muted);
+      font-size: 0.84rem;
+    }
+
+    .site-header__brand {
+      max-width: min(var(--logo-width), 10rem);
+      justify-self: center;
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .site-header__wordmark {
+      font-size: 1.8rem;
+    }
+
+    .header-search {
+      width: 100%;
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .header-search__input {
+      min-height: 2.9rem;
+    }
+
+    .site-header__actions {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .site-header__actions > :not(.header-cart, .header-mobile-search-toggle) {
+      display: none;
+    }
+
+    .header-mobile-search-toggle {
+      display: inline-grid;
+      width: 2.75rem;
+      min-height: 2.75rem;
+      padding: 0;
+      border-radius: 50%;
+      place-items: center;
+    }
+
+    .header-cart {
+      width: 2.75rem;
+      min-height: 2.75rem;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .header-cart__count {
+      position: absolute;
+      top: -0.15rem;
+      right: -0.25rem;
+      min-width: 1.1rem;
+      height: 1.1rem;
+      font-size: 0.58rem;
+    }
+
+    .site-header__nav-row {
+      display: none;
+    }
+  }
+
+  @media (max-width: 28rem) {
+    .site-header__announcement-inner {
+      font-size: 0.72rem;
+    }
+
+    .site-header__main {
+      width: calc(100% - 2rem);
+    }
+  }
+
+  /* Sticky at every width; the negative top equals the announcement bar
+     min-height so it scrolls away and the rest of the header stays pinned. */
+  .shopify-section-group-header-group {
+    position: sticky;
+    z-index: 30;
+    top: -2.2rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .site-header__announcement-inner {
+      min-height: 1.8rem;
+      padding-inline: 1rem;
+      overflow: hidden;
+      font-size: 0.78rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .shopify-section-group-header-group.is-compact .header-search {
+      display: none;
+    }
+
+    .shopify-section-group-header-group.is-search-open .header-search {
+      display: flex;
+    }
+
+    .site-header__announcement-inner > *,
+    .site-header__announcement-inner a {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .shopify-section-group-header-group {
+      top: -1.8rem;
+    }
+
+    .site-header__main {
+      width: calc(100% - 2rem);
+      padding-block: 0.45rem 0.55rem;
+      grid-template-columns: 2.75rem minmax(0, 1fr) 6.15rem;
+      grid-template-rows: 2.75rem auto;
+      gap: 0.5rem 0.75rem;
+    }
+
+    .mobile-menu {
+      display: block;
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .site-header__brand {
+      max-width: min(var(--logo-width), 8.75rem);
+      justify-self: center;
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .site-header__wordmark {
+      font-size: 1.45rem;
+    }
+
+    .site-header__actions {
+      display: flex;
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .site-header__actions > :not(.header-cart, .header-mobile-search-toggle) {
+      display: none;
+    }
+
+    .header-cart {
+      width: 2.75rem;
+      min-height: 2.75rem;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .header-cart__label {
+      display: none !important;
+    }
+
+    .header-cart__count {
+      position: absolute;
+      top: -0.15rem;
+      right: -0.25rem;
+      min-width: 1.1rem;
+      height: 1.1rem;
+      font-size: 0.58rem;
+    }
+
+    .header-search {
+      display: none;
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .header-search__input {
+      min-height: 2.85rem;
+      padding-right: 6rem;
+    }
+
+    .site-header__nav-row {
+      display: none;
+    }
+
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header-pill,
+    .desktop-menu__list > li > a::after,
+    .desktop-menu__dropdown > summary::after,
+    .header-language__chevron,
+    .mobile-menu__toggle {
+      transition: none;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.header",
+  "name": "Header",
+  "enabled_on": {
+    "groups": ["header"]
+  },
   "settings": [
+    {
+      "type": "text",
+      "id": "wordmark",
+      "label": "Text wordmark",
+      "default": "Loemies",
+      "info": "Used when no logo image is selected."
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "min": 80,
+      "max": 260,
+      "step": 10,
+      "unit": "px",
+      "label": "Logo width",
+      "default": 160
+    },
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "Search placeholder",
+      "default": "What are you looking for?"
+    },
     {
       "type": "link_list",
       "id": "menu",
-      "label": "t:labels.menu"
+      "label": "Category menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_shop_navigation",
+      "label": "Add built-in shop navigation",
+      "info": "Adds All toys, Featured toys, By age, By play, and Gift ideas, and hides duplicate Home and Catalog links.",
+      "default": true
     },
     {
       "type": "link_list",
       "id": "customer_account_menu",
-      "label": "t:labels.customer_account_menu",
+      "label": "Customer account menu",
       "default": "customer-account-main-menu"
+    },
+    {
+      "type": "header",
+      "content": "Announcement bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_announcement",
+      "label": "Show announcement",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "use_store_promises",
+      "label": "Use global store promises",
+      "default": true,
+      "info": "Builds this announcement from Theme settings > Store promises."
+    },
+    {
+      "type": "inline_richtext",
+      "id": "announcement_text",
+      "label": "Announcement",
+      "default": "Tracked EU delivery · 30-day returns"
+    },
+    {
+      "type": "url",
+      "id": "announcement_link",
+      "label": "Announcement link"
+    },
+    {
+      "type": "color",
+      "id": "announcement_background",
+      "label": "Announcement background",
+      "default": "#B04F38"
+    },
+    {
+      "type": "color",
+      "id": "announcement_text_color",
+      "label": "Announcement text",
+      "default": "#FDFBF7"
     }
   ]
 }

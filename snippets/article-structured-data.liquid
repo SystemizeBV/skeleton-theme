@@ -1,0 +1,124 @@
+{% comment %}
+  Article and breadcrumb structured data are generated from Shopify's canonical
+  article fields so merchants never need to paste schema scripts into post HTML.
+
+  Accepts:
+  - article: the current article object
+  - blog: the article's blog object
+  - description: the resolved page meta description
+  - site_name: the resolved storefront name
+{% endcomment %}
+
+{% liquid
+  assign schema_description = description | default: article.excerpt_or_content | strip_html | strip_newlines | truncate: 500
+  assign schema_author_name = article.author | default: site_name
+  assign schema_author_url = article.user.homepage
+  assign schema_language = article.metafields.custom.language_code.value | default: request.locale.iso_code
+  assign schema_word_count = article.content | strip_html | split: ' ' | size
+  assign schema_keywords = article.tags | join: ', '
+  assign schema_published_at = article.published_at | date: '%Y-%m-%dT%H:%M:%S%z'
+  assign schema_updated_at = article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z'
+
+  capture schema_home_url
+    echo request.origin
+    echo routes.root_url
+  endcapture
+  capture schema_blog_url
+    echo request.origin
+    echo blog.url
+  endcapture
+  capture schema_article_id
+    echo canonical_url
+    echo '#article'
+  endcapture
+  capture schema_organization_id
+    echo request.origin
+    echo '#organization'
+  endcapture
+
+  if article.image != blank
+    capture schema_image_square
+      echo 'https:'
+      echo article.image | image_url: width: 1200, height: 1200, crop: 'center'
+    endcapture
+    capture schema_image_landscape
+      echo 'https:'
+      echo article.image | image_url: width: 1200, height: 900, crop: 'center'
+    endcapture
+    capture schema_image_wide
+      echo 'https:'
+      echo article.image | image_url: width: 1200, height: 675, crop: 'center'
+    endcapture
+  endif
+%}
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": {{ schema_article_id | json }},
+        "url": {{ canonical_url | json }},
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": {{ canonical_url | json }}
+        },
+        "headline": {{ article.title | json }},
+        "description": {{ schema_description | json }},
+        {% if article.published_at != blank %}"datePublished": {{ schema_published_at | json }},{% endif %}
+        {% if article.updated_at != blank %}"dateModified": {{ schema_updated_at | json }},{% endif %}
+        "wordCount": {{ schema_word_count | json }},
+        "inLanguage": {{ schema_language | json }},
+        "articleSection": {{ blog.title | json }},
+        "author": {
+          "@type": {% if article.author != blank %}"Person"{% else %}"Organization"{% endif %},
+          "name": {{ schema_author_name | json }}{% if schema_author_url != blank %},
+          "url": {{ schema_author_url | json }}{% endif %}
+        },
+        "publisher": {
+          "@type": "Organization",
+          "@id": {{ schema_organization_id | json }},
+          "name": {{ site_name | json }},
+          "url": {{ request.origin | json }}
+        },
+        "isPartOf": {
+          "@type": "Blog",
+          "@id": {{ schema_blog_url | append: '#blog' | json }},
+          "name": {{ blog.title | json }},
+          "url": {{ schema_blog_url | json }}
+        }{% if article.image != blank %},
+        "image": [
+          {{ schema_image_wide | json }},
+          {{ schema_image_landscape | json }},
+          {{ schema_image_square | json }}
+        ]{% endif %}{% if schema_keywords != blank %},
+        "keywords": {{ schema_keywords | json }}{% endif %}
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": {{ canonical_url | append: '#breadcrumb' | json }},
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": {{ 'general.accessibility.home' | t | json }},
+            "item": {{ schema_home_url | json }}
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": {{ blog.title | json }},
+            "item": {{ schema_blog_url | json }}
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": {{ article.title | json }},
+            "item": {{ canonical_url | json }}
+          }
+        ]
+      }
+    ]
+  }
+</script>

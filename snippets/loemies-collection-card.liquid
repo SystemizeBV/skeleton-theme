@@ -1,0 +1,65 @@
+{% doc %}
+  Renders one collection card for the curated category index.
+
+  @param {collection} collection_item - Collection shown by the card.
+  @param {number} card_index - One-based position used for image priority.
+  @param {string} image_sizes - Responsive image sizes hint.
+  @param {boolean} show_descriptions - Whether to show collection copy.
+  @param {boolean} show_product_counts - Whether to show the product count.
+  @param {string} [shopify_attributes] - Theme editor block attributes.
+{% enddoc %}
+
+{% liquid
+  assign collection_image = collection_item.featured_image
+  if collection_image == blank
+    assign collection_image = collection_item.products.first.featured_image
+  endif
+
+  assign collection_image_loading = 'lazy'
+  assign collection_image_fetchpriority = 'auto'
+  if card_index <= 2
+    assign collection_image_loading = 'eager'
+    assign collection_image_fetchpriority = 'high'
+  endif
+%}
+
+<article class="loemies-collection-card"{% if shopify_attributes != blank %} {{ shopify_attributes }}{% endif %}>
+  <a class="loemies-collection-card__link" href="{{ collection_item.url }}">
+    <div class="loemies-collection-card__media">
+      {% if collection_image != blank %}
+        {{ collection_image
+          | image_url: width: 1400
+          | image_tag:
+            class: 'loemies-collection-card__image',
+            widths: '180, 240, 320, 360, 400, 440, 480, 540, 640, 720, 960, 1200, 1400',
+            sizes: image_sizes,
+            loading: collection_image_loading,
+            fetchpriority: collection_image_fetchpriority,
+            alt: ''
+        }}
+      {% else %}
+        <div class="loemies-collection-card__fallback" aria-hidden="true"></div>
+      {% endif %}
+    </div>
+
+    <div class="loemies-collection-card__content">
+      <h2 class="loemies-collection-card__title">{{ collection_item.title | escape }}</h2>
+
+      {% if show_descriptions and collection_item.description != blank %}
+        <p class="loemies-collection-card__description">
+          {{ collection_item.description | strip_html | truncatewords: 18 }}
+        </p>
+      {% endif %}
+
+      {% if show_product_counts %}
+        <p class="loemies-collection-card__count">
+          {{ 'sections.catalog.product_count' | t: count: collection_item.products_count }}
+        </p>
+      {% endif %}
+
+      <span class="loemies-collection-card__action">
+        {{ 'sections.catalog.view_category' | t }} <span aria-hidden="true">&rarr;</span>
+      </span>
+    </div>
+  </a>
+</article>

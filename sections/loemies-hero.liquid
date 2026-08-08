@@ -1,0 +1,255 @@
+{% liquid
+  assign first_collection = section.settings.first_collection
+  # The `t` filter HTML-escapes its output, so escape the raw branch here and
+  # print `first_title` without a second escape.
+  assign first_title_source = section.settings.first_title | default: first_collection.title
+  assign first_title = first_title_source | escape
+  if first_title_source == blank or first_title_source == 'Playtime picks'
+    assign first_title = 'sections.home.hero.playtime_picks' | t
+  endif
+  assign first_url = first_collection.url | default: section.settings.first_link | default: routes.all_products_collection_url
+
+  assign second_collection = section.settings.second_collection
+  # The `t` filter HTML-escapes its output, so escape the raw branch here and
+  # print `second_title` without a second escape.
+  assign second_title_source = section.settings.second_title | default: second_collection.title
+  assign second_title = second_title_source | escape
+  if second_title_source == blank or second_title_source == 'Everyday favorites'
+    assign second_title = 'sections.home.hero.everyday_favorites' | t
+  endif
+  assign second_url = second_collection.url | default: section.settings.second_link | default: routes.all_products_collection_url
+
+  # The `t` filter HTML-escapes its output, so escape the raw branch here and
+  # print `hero_eyebrow` without a second escape.
+  assign hero_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == 'Wooden & Montessori toys · 3 months – 6 years' or section.settings.eyebrow == 'Wooden & Montessori toys for little explorers'
+    assign hero_eyebrow = 'sections.home.hero.eyebrow' | t
+  endif
+  assign hero_tile_label = section.settings.tile_label | escape
+  if section.settings.tile_label == 'Collection'
+    assign hero_tile_label = 'collections.title' | t
+  endif
+%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    margin-block-end: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  @media (max-width: 39.99rem) {
+    #shopify-section-{{ section.id }} {
+      margin-block-end: 1.5rem;
+    }
+  }
+{% endstyle %}
+
+<section
+  class="loemies-hero full-width loemies-hero--media-{{ section.settings.media_position }}{% unless section.settings.show_collection_tiles %} loemies-hero--without-tiles{% endunless %}"
+  style="
+    --loemies-hero-background: {{ section.settings.background_color }};
+    --loemies-heading-color: {{ section.settings.text_color }};
+    --loemies-body-color: {{ section.settings.text_color }};
+    --loemies-button-background: {{ section.settings.button_color }};
+    --loemies-button-color: {{ section.settings.button_text_color }};
+    --loemies-button-shadow: {{ section.settings.button_shadow_color }};
+    --loemies-focus-color: {{ section.settings.text_color }};
+    --loemies-media-background: {{ section.settings.media_background_color }};
+    --loemies-first-tile: {{ section.settings.first_tile_color }};
+    --loemies-second-tile: {{ section.settings.second_tile_color }};
+    --loemies-hero-radius: {{ section.settings.corner_radius }}px;
+    --loemies-hero-padding: {{ section.settings.vertical_padding }}px;
+  "
+>
+  <div class="loemies-hero__inner">
+    <div class="loemies-hero__bento">
+      <div class="loemies-hero__main">
+        {% if hero_eyebrow != blank %}
+          <p class="loemies-hero__eyebrow">{{ hero_eyebrow }}</p>
+        {% endif %}
+        {% content_for 'blocks' %}
+      </div>
+
+      {% if section.settings.show_collection_tiles %}
+        <a class="loemies-hero-tile loemies-hero-tile--first" href="{{ first_url }}">
+        <span class="loemies-hero-tile__arrow" aria-hidden="true">&rsaquo;</span>
+        <span class="loemies-hero-tile__label">{{ hero_tile_label }}</span>
+        <strong>{{ first_title }}</strong>
+        {% if first_collection != blank %}
+          <small>{{ 'sections.catalog.product_count' | t: count: first_collection.products_count }}</small>
+        {% endif %}
+        <svg class="loemies-hero-tile__art" viewBox="0 0 120 70" aria-hidden="true">
+          <path d="M12 74a48 48 0 0 1 96 0" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+          <path d="M30 74a30 30 0 0 1 60 0" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+        </svg>
+        </a>
+
+        <a class="loemies-hero-tile loemies-hero-tile--second" href="{{ second_url }}">
+        <span class="loemies-hero-tile__arrow" aria-hidden="true">&rsaquo;</span>
+        <span class="loemies-hero-tile__label">{{ hero_tile_label }}</span>
+        <strong>{{ second_title }}</strong>
+        {% if second_collection != blank %}
+          <small>{{ 'sections.catalog.product_count' | t: count: second_collection.products_count }}</small>
+        {% endif %}
+        <svg class="loemies-hero-tile__art loemies-hero-tile__art--cloud" viewBox="0 0 130 75" aria-hidden="true">
+          <path d="M22 60c0-10 8-18 18-18 3-15 16-26 32-26 17 0 31 12 33 29 9 1 16 8 16 17 0 10-8 18-18 18H41c-11 0-19-8-19-20Z" fill="currentColor"/>
+        </svg>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+
+{% schema %}
+{
+  "name": "Loemies hero",
+  "blocks": [{ "type": "@theme" }],
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "For little explorers"
+    },
+    {
+      "type": "select",
+      "id": "media_position",
+      "label": "Artwork position on desktop",
+      "default": "right",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Top spacing",
+      "min": 24,
+      "max": 96,
+      "step": 8,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "corner_radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 32,
+      "step": 4,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Collection tiles"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_tiles",
+      "label": "Show collection tiles",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tile_label",
+      "label": "Tile label",
+      "default": "Collection"
+    },
+    {
+      "type": "collection",
+      "id": "first_collection",
+      "label": "First collection"
+    },
+    {
+      "type": "text",
+      "id": "first_title",
+      "label": "First tile title override"
+    },
+    {
+      "type": "url",
+      "id": "first_link",
+      "label": "First tile fallback link"
+    },
+    {
+      "type": "collection",
+      "id": "second_collection",
+      "label": "Second collection"
+    },
+    {
+      "type": "text",
+      "id": "second_title",
+      "label": "Second tile title override"
+    },
+    {
+      "type": "url",
+      "id": "second_link",
+      "label": "Second tile fallback link"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Main card",
+      "default": "#ECD9B8"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "media_background_color",
+      "label": "Artwork background",
+      "default": "#ECD9B8"
+    },
+    {
+      "type": "color",
+      "id": "first_tile_color",
+      "label": "First tile",
+      "default": "#C4E4C9"
+    },
+    {
+      "type": "color",
+      "id": "second_tile_color",
+      "label": "Second tile",
+      "default": "#BEDCF1"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button",
+      "default": "#B04F38"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_shadow_color",
+      "label": "Button hover",
+      "default": "#96432F"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies hero",
+      "blocks": [
+        { "type": "loemies-heading" },
+        { "type": "loemies-rich-text" },
+        { "type": "loemies-button-row" },
+        { "type": "loemies-hero-image" }
+      ]
+    }
+  ]
+}
+{% endschema %}

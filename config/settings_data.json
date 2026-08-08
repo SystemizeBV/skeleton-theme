@@ -1,12 +1,27 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
-  "current": {}
+  "current": {
+    "type_heading_font": "nunito_n9",
+    "type_body_font": "nunito_n4",
+    "max_page_width": "80rem",
+    "min_page_margin": 64,
+    "section_spacing": 64,
+    "card_corner_radius": 16,
+    "button_corner_radius": 40,
+    "input_corner_radius": 12,
+    "site_name": "Loemies",
+    "homepage_meta_title": "Purposeful Toys & Children's Products | Loemies",
+    "homepage_meta_description": "Explore thoughtfully chosen toys and children's products for play, discovery and quiet moments, with clear details for every item.",
+    "free_shipping_enabled": true,
+    "free_shipping_threshold": "€50",
+    "free_shipping_threshold_amount": 50,
+    "return_window_days": 30,
+    "max_items_per_product": 10,
+    "color_cream": "#F7F3EC",
+    "color_blush": "#F5C8CF",
+    "color_lavender": "#DCD2F0",
+    "color_sage": "#C4E4C9",
+    "color_butter": "#F7DC8D",
+    "color_ink": "#2B241F",
+    "color_plum": "#B04F38"
+  }
 }

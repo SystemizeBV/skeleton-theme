@@ -11,10 +11,55 @@
   "sections": {
     "main": {
       "type": "product",
-      "settings": {}
+      "settings": {
+        "show_breadcrumbs": true,
+        "show_vendor": false,
+        "show_product_type": true,
+        "enable_sticky_summary": true,
+        "show_dynamic_checkout": false,
+        "show_sku": false,
+        "product_note": "",
+        "use_store_promises": true,
+        "delivery_heading": "Dispatched within 1–2 business days",
+        "delivery_text": "€6.99 tracked shipping · free over €50",
+        "show_upsells": true,
+        "upsell_eyebrow": "A thoughtful extra",
+        "upsell_heading": "Pairs well with this",
+        "upsell_text": "Useful additions chosen to complement this product.",
+        "upsell_maximum": 2,
+        "upsell_quick_add": true,
+        "upsell_background": "#FFF8F2",
+        "upsell_text_color": "#2B241F",
+        "upsell_accent": "#B04F38",
+        "details_heading": "About this product",
+        "show_reviews": true,
+        "reviews_eyebrow": "",
+        "reviews_heading": "Reviews",
+        "reviews_intro": "Genuine experiences shared by customers who use this product.",
+        "review_form_heading": "Write a review",
+        "review_form_intro": "Tell other families what you think. Your review will be checked before it is published.",
+        "benefit_one": "30-day returns",
+        "benefit_two": "Safe and secure payment",
+        "benefit_three": "Personal service from the Loemies team",
+        "show_payment_icons": false,
+        "payment_label": "Pay safely with"
+      }
+    },
+    "related": {
+      "type": "loemies-related-products",
+      "settings": {
+        "eyebrow": "Keep exploring",
+        "heading": "You may also like",
+        "vertical_padding": 48,
+        "background_color": "#F7F3EC",
+        "card_color": "#FFFFFF",
+        "text_color": "#2B241F",
+        "accent_color": "#B04F38"
+      }
     }
   },
   "order": [
-    "main"
+    "main",
+    "related"
   ]
 }

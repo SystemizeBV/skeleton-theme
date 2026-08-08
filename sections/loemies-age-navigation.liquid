@@ -1,0 +1,199 @@
+{% liquid
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign age_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'By age'
+    assign age_eyebrow = 'sections.age_navigation.eyebrow' | t
+  endif
+  assign age_heading = section.settings.heading | escape
+  if section.settings.heading == blank or section.settings.heading == 'Shop by age'
+    assign age_heading = 'sections.age_navigation.heading' | t
+  endif
+  assign age_text = section.settings.text
+  if age_text == blank or age_text == "<p>The right toys for every stage, based on the makers' age recommendations.</p>"
+    capture age_text
+      echo '<p>'
+      echo 'sections.age_navigation.text' | t
+      echo '</p>'
+    endcapture
+  endif
+%}
+
+<section id="shop-by-age" class="loemies-age full-width" aria-labelledby="LoemiesAge-{{ section.id }}">
+  <div class="loemies-age__inner">
+    <header class="loemies-home-heading">
+      {% if age_eyebrow != blank %}
+        <p class="loemies-home-heading__eyebrow">{{ age_eyebrow }}</p>
+      {% endif %}
+      <h2 id="LoemiesAge-{{ section.id }}">{{ age_heading }}</h2>
+      {% if age_text != blank %}
+        <div class="loemies-home-heading__text">{{ age_text }}</div>
+      {% endif %}
+    </header>
+
+    <nav class="loemies-age__grid" aria-label="{{ age_heading }}">
+      {% for block in section.blocks %}
+        {% liquid
+          # The `t` filter HTML-escapes its output, so escape the raw branch here
+          # and print `age_label` without a second escape.
+          assign age_label = block.settings.label | escape
+          case block.settings.label
+            when '0–3 months'
+              assign age_label = 'sections.age_navigation.zero_three' | t
+            when '6 months – 1 year'
+              assign age_label = 'sections.age_navigation.six_to_one' | t
+            when '12+ months'
+              assign age_label = 'sections.age_navigation.twelve_months' | t
+            when '3+ months'
+              assign age_label = 'sections.age_navigation.three_months' | t
+            when '6+ months'
+              assign age_label = 'sections.age_navigation.six_months' | t
+            when '1+ year'
+              assign age_label = 'sections.age_navigation.one_year' | t
+            when '2+ years'
+              assign age_label = 'sections.age_navigation.two_years' | t
+            when '3+ years'
+              assign age_label = 'sections.age_navigation.three_years' | t
+            when '5+ years'
+              assign age_label = 'sections.age_navigation.five_years' | t
+            when '0–6 months'
+              assign age_label = 'sections.age_navigation.zero_six' | t
+            when '6–12 months'
+              assign age_label = 'sections.age_navigation.six_twelve' | t
+            when '1–2 years'
+              assign age_label = 'sections.age_navigation.one_two' | t
+            when '2–3 years'
+              assign age_label = 'sections.age_navigation.two_three' | t
+            when '3 years and up'
+              assign age_label = 'sections.age_navigation.three_plus' | t
+          endcase
+        %}
+        <a
+          class="loemies-age-card"
+          href="{{ block.settings.link | default: routes.all_products_collection_url }}"
+          style="--loemies-age-card-color: {{ block.settings.background_color }};"
+          {{ block.shopify_attributes }}
+        >
+          <span class="loemies-age-card__art" aria-hidden="true">
+            {% case block.settings.icon %}
+              {% when 'stack' %}
+                <svg viewBox="0 0 64 64">
+                  <ellipse cx="32" cy="56" rx="24" ry="6" fill="#2F6B4F"/>
+                  <ellipse cx="32" cy="44" rx="19" ry="8" fill="#FFFFFF"/>
+                  <ellipse cx="32" cy="31" rx="14" ry="7" fill="#2F6B4F"/>
+                  <ellipse cx="32" cy="19" rx="9" ry="6" fill="#FFFFFF"/>
+                  <circle cx="32" cy="9" r="5" fill="#2F6B4F"/>
+                </svg>
+              {% when 'blocks' %}
+                <svg viewBox="0 0 64 64">
+                  <rect x="8" y="34" width="22" height="22" rx="4" fill="#FFFFFF"/>
+                  <rect x="34" y="34" width="22" height="22" rx="4" fill="#2F6B4F"/>
+                  <rect x="21" y="8" width="22" height="22" rx="4" fill="#2F6B4F"/>
+                  <circle cx="32" cy="19" r="5" fill="#FFFFFF"/>
+                </svg>
+              {% when 'animal' %}
+                <svg viewBox="0 0 64 64">
+                  <path d="M14 34c0-10 8-17 18-17 7 0 11 4 12 9h9l-6 8v6c0 6-6 10-15 10s-18-6-18-16Z" fill="#FFFFFF"/>
+                  <circle cx="35" cy="24" r="2.5" fill="#2F6B4F"/>
+                  <circle cx="20" cy="54" r="6" fill="#2F6B4F"/>
+                  <circle cx="44" cy="54" r="6" fill="#2F6B4F"/>
+                </svg>
+              {% when 'puzzle' %}
+                <svg viewBox="0 0 64 64">
+                  <path d="M14 24h10a7 7 0 1 1 14 0h10v10a7 7 0 1 0 0 14v10H14V24Z" fill="#FFFFFF"/>
+                  <circle cx="26" cy="40" r="3.5" fill="#2F6B4F"/>
+                </svg>
+              {% else %}
+                <svg viewBox="0 0 64 64">
+                  <circle cx="32" cy="22" r="16" fill="#FFFFFF"/>
+                  <circle cx="26" cy="18" r="4" fill="#2F6B4F"/>
+                  <rect x="27.5" y="36" width="9" height="20" rx="4.5" fill="#2F6B4F"/>
+                  <circle cx="32" cy="59" r="4" fill="#FFFFFF"/>
+                </svg>
+            {% endcase %}
+          </span>
+          <strong>{{ age_label }}</strong>
+        </a>
+      {% endfor %}
+    </nav>
+  </div>
+</section>
+
+
+{% schema %}
+{
+  "name": "Loemies shop by age",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "By age"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Shop by age"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>The right toys for every stage, based on the makers' age recommendations.</p>"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "age",
+      "name": "Age group",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "0–6 months"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Illustration",
+          "default": "rattle",
+          "options": [
+            { "value": "rattle", "label": "Rattle" },
+            { "value": "stack", "label": "Stack" },
+            { "value": "blocks", "label": "Blocks" },
+            { "value": "animal", "label": "Animal" },
+            { "value": "puzzle", "label": "Puzzle" }
+          ]
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Background",
+          "default": "#F5C8CF"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies shop by age",
+      "blocks": [
+        { "type": "age", "settings": { "label": "3+ months", "icon": "rattle", "background_color": "#F5C8CF" } },
+        { "type": "age", "settings": { "label": "6+ months", "icon": "stack", "background_color": "#F7DC8D" } },
+        { "type": "age", "settings": { "label": "1+ year", "icon": "blocks", "background_color": "#BEDCF1" } },
+        { "type": "age", "settings": { "label": "2+ years", "icon": "animal", "background_color": "#C4E4C9" } },
+        { "type": "age", "settings": { "label": "3+ years", "icon": "puzzle", "background_color": "#DCD2F0" } },
+        { "type": "age", "settings": { "label": "5+ years", "icon": "blocks", "background_color": "#F9CDB0" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

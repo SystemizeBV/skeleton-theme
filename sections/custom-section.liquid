@@ -1,7 +1,23 @@
 <div class="custom-section full-width">
   {% if section.settings.background_image %}
+    {% liquid
+      assign background_loading = 'lazy'
+      assign background_fetchpriority = 'auto'
+      if section.index == 1
+        assign background_loading = 'eager'
+        assign background_fetchpriority = 'high'
+      endif
+    %}
     <div class="custom-section__background">
-      {{ section.settings.background_image | image_url: width: 2000 | image_tag }}
+      {{ section.settings.background_image
+        | image_url: width: 2000
+        | image_tag:
+          widths: '480, 720, 960, 1200, 1440, 1680, 2000',
+          sizes: '100vw',
+          loading: background_loading,
+          fetchpriority: background_fetchpriority,
+          alt: ''
+      }}
     </div>
   {% endif %}
 
@@ -26,9 +42,10 @@
   .custom-section__background img {
     position: absolute;
     width: 100%;
-    height: auto;
+    height: 100%;
     top: 50%;
     left: 50%;
+    object-fit: cover;
     transform: translate(-50%, -50%);
   }
   .custom-section__content {

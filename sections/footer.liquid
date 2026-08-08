@@ -1,56 +1,1042 @@
-<footer>
-  <div class="footer__copyright">
-    &copy;
-    {{ 'now' | date: '%Y' }}
-    {{ shop.name | link_to: routes.root_url }}, {{ powered_by_link }}
-  </div>
+{% liquid
+  assign display_wordmark = section.settings.wordmark
+  if display_wordmark == blank
+    assign display_wordmark = shop.name
+  endif
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
 
-  <div class="footer__links">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+  assign footer_tagline = section.settings.tagline
+  if footer_tagline == blank or footer_tagline == 'Soft, safe, and lovingly chosen for your little one.' or footer_tagline == 'Thoughtfully chosen for purposeful play and curious little ones.'
+    assign footer_tagline = 'sections.footer.tagline' | t
+  endif
 
-  <div class="footer__payment">
-    {% if section.settings.show_payment_icons %}
-      {% for type in shop.enabled_payment_types %}
-        {{ type | payment_type_svg_tag }}
-      {% endfor %}
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign footer_country_name = section.settings.country_name | escape
+  if section.settings.country_name == blank or section.settings.country_name == 'Belgium'
+    assign footer_country_name = 'sections.footer.country_belgium' | t
+  endif
+
+  assign footer_vat_label = section.settings.vat_label | escape
+  if section.settings.vat_label == blank or section.settings.vat_label == 'VAT' or section.settings.vat_label == 'BTW'
+    assign footer_vat_label = 'sections.footer.vat_label' | t
+  endif
+
+  assign footer_market_message = section.settings.market_message | escape
+  if section.settings.market_message == blank or section.settings.market_message == 'Ordering will be activated when this market is ready.' or section.settings.market_message == 'Ordering will be enabled when this market is ready.'
+    assign footer_market_message = 'sections.footer.market_message' | t
+  endif
+
+  assign shop_menu = section.settings.menu
+  assign use_shop_menu = false
+  if shop_menu != blank and shop_menu.links.size > 1
+    assign use_shop_menu = true
+  endif
+
+  assign customer_service_menu = section.settings.customer_service_menu
+
+  assign about_url = section.settings.about_url
+  if about_url == blank and pages['about-us'] != blank
+    assign about_url = pages['about-us'].url
+  elsif about_url == blank and pages['about'] != blank
+    assign about_url = pages['about'].url
+  elsif about_url == blank and pages['our-story'] != blank
+    assign about_url = pages['our-story'].url
+  endif
+
+  assign contact_url = blank
+  if pages['contact'] != blank
+    assign contact_url = pages['contact'].url
+  endif
+
+  assign footer_contact_url = contact_url
+  if footer_contact_url == blank and section.settings.business_email != blank
+    capture footer_contact_url
+      echo 'mailto:'
+      echo section.settings.business_email
+    endcapture
+  endif
+
+  assign faq_url = section.settings.faq_url
+  if faq_url == blank and pages['faq'] != blank
+    assign faq_url = pages['faq'].url
+  elsif faq_url == blank and pages['faqs'] != blank
+    assign faq_url = pages['faqs'].url
+  elsif faq_url == blank and pages['frequently-asked-questions'] != blank
+    assign faq_url = pages['frequently-asked-questions'].url
+  endif
+
+  assign shipping_returns_url = section.settings.shipping_returns_url
+  assign shipping_url = shipping_returns_url
+  if shipping_url == blank and pages['shipping-and-returns'] != blank
+    assign shipping_url = pages['shipping-and-returns'].url
+  elsif shipping_url == blank and pages['shipping'] != blank
+    assign shipping_url = pages['shipping'].url
+  elsif shipping_url == blank and shop.shipping_policy.body != blank
+    assign shipping_url = shop.shipping_policy.url
+  endif
+
+  assign returns_url = section.settings.returns_url
+  if returns_url == blank and shipping_returns_url != blank
+    assign returns_url = shipping_returns_url
+  elsif returns_url == blank and pages['returns-and-refunds'] != blank
+    assign returns_url = pages['returns-and-refunds'].url
+  elsif returns_url == blank and pages['returns'] != blank
+    assign returns_url = pages['returns'].url
+  elsif returns_url == blank and shop.refund_policy.body != blank
+    assign returns_url = shop.refund_policy.url
+  endif
+
+  assign payment_url = section.settings.payment_url
+  if payment_url == blank and pages['payment-methods'] != blank
+    assign payment_url = pages['payment-methods'].url
+  elsif payment_url == blank and pages['payments'] != blank
+    assign payment_url = pages['payments'].url
+  endif
+
+  assign imprint_url = section.settings.imprint_url
+
+  assign has_help_links = false
+  if customer_service_menu != blank or contact_url != blank or faq_url != blank or shipping_url != blank or returns_url != blank or payment_url != blank
+    assign has_help_links = true
+  endif
+
+  assign has_legal_links = false
+  for policy in shop.policies
+    if policy.body != blank
+      assign has_legal_links = true
+      break
+    endif
+  endfor
+  if imprint_url != blank
+    assign has_legal_links = true
+  endif
+%}
+
+<footer class="site-footer full-width" lang="{{ request.locale.iso_code }}">
+  {% if section.settings.legal_name != blank %}
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "OnlineStore",
+        "name": {{ display_wordmark | json }},
+        "url": {{ shop.url | append: routes.root_url | json }},
+        "email": {{ section.settings.business_email | json }},
+        "identifier": {{ section.settings.enterprise_number | default: section.settings.vat_number | json }},
+        "vatID": {{ section.settings.vat_number | json }},
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": {{ section.settings.street_address | json }},
+          "postalCode": {{ section.settings.postal_code | json }},
+          "addressLocality": {{ section.settings.city | json }},
+          "addressCountry": {{ section.settings.country_code | json }}
+        },
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": ["BE", "NL"],
+          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+          "merchantReturnDays": {{ settings.return_window_days | default: 30 | json }}
+        },
+        "parentOrganization": {
+          "@type": "Organization",
+          "name": {{ section.settings.legal_name | json }}
+        }
+      }
+    </script>
+  {% endif %}
+
+  <div class="site-footer__inner">
+    {% comment %}
+      Suppressed on the homepage (its own benefit section covers this) and on
+      collection pages, where shipping messaging mid-browse reads as clutter.
+    {% endcomment %}
+    {% if section.settings.show_trust_bar and request.page_type != 'index' and request.page_type != 'collection' %}
+      <ul class="site-footer__trust" role="list" aria-label="{{ 'sections.footer.shopping_assurances' | t }}">
+        <li>
+          {% if shipping_url != blank %}<a href="{{ shipping_url }}">{% else %}<span>{% endif %}
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <circle cx="7" cy="18" r="2" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="18" cy="18" r="2" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+            {% if settings.free_shipping_enabled %}
+              <strong>{{ 'sections.promises.free_shipping' | t: threshold: settings.free_shipping_threshold }}</strong>
+              <small>{{ 'sections.promises.shipping_detail' | t: threshold: settings.free_shipping_threshold }}</small>
+            {% else %}
+              <strong>{{ 'sections.promises.tracked_shipping' | t }}</strong>
+              <small>{{ 'sections.promises.tracked_shipping_detail' | t }}</small>
+            {% endif %}
+          {% if shipping_url != blank %}</a>{% else %}</span>{% endif %}
+        </li>
+        <li>
+          {% if returns_url != blank %}<a href="{{ returns_url }}">{% else %}<span>{% endif %}
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M8 7H4V3M4.5 7.5A8 8 0 1 1 4 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <strong>{{ 'sections.promises.returns' | t: days: settings.return_window_days }}</strong>
+            <small>{{ 'sections.promises.returns_detail' | t: days: settings.return_window_days }}</small>
+          {% if returns_url != blank %}</a>{% else %}</span>{% endif %}
+        </li>
+        <li>
+          {% if payment_url != blank %}<a href="{{ payment_url }}">{% else %}<span>{% endif %}
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M3 9h18M7 15h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <strong>{{ 'sections.promises.secure_payment' | t }}</strong>
+            <small>{{ 'sections.promises.payment_detail' | t }}</small>
+          {% if payment_url != blank %}</a>{% else %}</span>{% endif %}
+        </li>
+      </ul>
     {% endif %}
+
+    <div class="site-footer__lead">
+      <div class="site-footer__brand">
+        <a class="site-footer__wordmark" href="{{ routes.root_url }}">
+          <svg aria-hidden="true" width="30" height="22" viewBox="0 0 30 22" focusable="false">
+            <ellipse cx="12" cy="13" rx="11" ry="8" fill="currentColor"></ellipse>
+            <circle cx="21" cy="9" r="7" fill="var(--color-butter)"></circle>
+          </svg>
+          <span>{{ display_wordmark | escape }}</span>
+        </a>
+
+        {% if footer_tagline != blank %}
+          <div class="site-footer__tagline">{{ footer_tagline }}</div>
+        {% endif %}
+
+        {% if section.settings.business_email != blank %}
+          <a class="site-footer__email" href="mailto:{{ section.settings.business_email | escape }}">
+            {{ section.settings.business_email | escape }}
+          </a>
+        {% endif %}
+      </div>
+
+      <aside class="site-footer__support" aria-labelledby="FooterSupport-{{ section.id }}">
+        <span class="site-footer__support-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M7 8.5A4.5 4.5 0 0 1 11.5 4h9A4.5 4.5 0 0 1 25 8.5v8a4.5 4.5 0 0 1-4.5 4.5h-5.25L9 27v-6.35A4.5 4.5 0 0 1 7 17V8.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M12 11h8M12 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="site-footer__support-copy">
+          <p class="site-footer__support-eyebrow">{{ 'sections.footer.support_eyebrow' | t }}</p>
+          <h2 id="FooterSupport-{{ section.id }}">{{ 'sections.footer.support_heading' | t }}</h2>
+          <p>{{ 'sections.footer.support_text' | t }}</p>
+        </div>
+        <div class="site-footer__support-actions">
+          {% if footer_contact_url != blank %}
+            <a class="site-footer__support-primary" href="{{ footer_contact_url | escape }}">
+              {{ 'sections.footer.support_action' | t }}
+              <span aria-hidden="true">&rarr;</span>
+            </a>
+          {% endif %}
+          <a class="site-footer__support-secondary" href="{{ catalog_url }}">
+            {{ 'sections.footer.browse_action' | t }}
+          </a>
+        </div>
+      </aside>
+    </div>
+
+    <div class="site-footer__grid">
+
+      <nav class="site-footer__nav" aria-label="{{ 'sections.footer.shop' | t }}">
+        <h2>{{ 'sections.footer.shop' | t }}</h2>
+        <ul role="list">
+          {% if use_shop_menu %}
+            {% for link in shop_menu.links %}
+              <li>
+                <a href="{% if link.url contains '#shopifyReshowConsentBanner' %}{{ routes.root_url }}#shopifyReshowConsentBanner{% else %}{{ link.url }}{% endif %}"{% if link.current %} aria-current="page"{% endif %}>
+                  {{ link.title | escape }}
+                </a>
+              </li>
+            {% endfor %}
+          {% else %}
+            <li><a href="{{ routes.root_url }}">{{ 'sections.footer.home' | t }}</a></li>
+            <li><a href="{{ catalog_url }}">{{ 'sections.footer.all_products' | t }}</a></li>
+            {% if about_url != blank %}
+              <li><a href="{{ about_url }}">{{ 'sections.footer.about' | t }}</a></li>
+            {% endif %}
+            <li><a href="{{ routes.search_url }}">{{ 'sections.footer.search' | t }}</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      {% if has_help_links %}
+        <nav class="site-footer__nav" aria-label="{{ 'sections.footer.customer_service' | t }}">
+          <h2>{{ 'sections.footer.customer_service' | t }}</h2>
+          <ul role="list">
+            {% if customer_service_menu != blank %}
+              {% for link in customer_service_menu.links %}
+                <li>
+                  <a href="{% if link.url contains '#shopifyReshowConsentBanner' %}{{ routes.root_url }}#shopifyReshowConsentBanner{% else %}{{ link.url }}{% endif %}"{% if link.current %} aria-current="page"{% endif %}>
+                    {{ link.title | escape }}
+                  </a>
+                </li>
+              {% endfor %}
+            {% else %}
+              {% if contact_url != blank %}
+                <li><a href="{{ contact_url }}">{{ 'sections.footer.contact' | t }}</a></li>
+              {% endif %}
+              {% if faq_url != blank %}
+                <li><a href="{{ faq_url }}">{{ 'sections.footer.faq' | t }}</a></li>
+              {% endif %}
+              {% if shipping_url != blank and shipping_url == returns_url %}
+                <li><a href="{{ shipping_url }}">{{ 'sections.footer.shipping_returns' | t }}</a></li>
+              {% else %}
+                {% if shipping_url != blank %}
+                  <li><a href="{{ shipping_url }}">{{ 'sections.footer.shipping' | t }}</a></li>
+                {% endif %}
+                {% if returns_url != blank %}
+                  <li><a href="{{ returns_url }}">{{ 'sections.footer.returns' | t }}</a></li>
+                {% endif %}
+              {% endif %}
+              {% if payment_url != blank %}
+                <li><a href="{{ payment_url }}">{{ 'sections.footer.payment_information' | t }}</a></li>
+              {% endif %}
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+
+      <nav class="site-footer__nav" aria-label="{{ 'sections.footer.account' | t }}">
+        <h2>{{ 'sections.footer.account' | t }}</h2>
+        <ul role="list">
+          <li><a href="{{ routes.account_url }}">{{ 'sections.footer.account' | t }}</a></li>
+          <li><a href="{{ routes.cart_url }}">{{ 'sections.footer.cart' | t }}</a></li>
+        </ul>
+      </nav>
+
+      {% if has_legal_links %}
+        <nav class="site-footer__nav site-footer__legal-nav" aria-label="{{ 'sections.footer.legal' | t }}">
+          <h2>{{ 'sections.footer.legal' | t }}</h2>
+          <ul role="list">
+            {% for policy in shop.policies %}
+              {% liquid
+                assign policy_is_duplicate_service_link = false
+                if customer_service_menu == blank
+                  if policy.url == shipping_url or policy.url == returns_url
+                    assign policy_is_duplicate_service_link = true
+                  endif
+                endif
+              %}
+              {% if policy.body != blank and policy_is_duplicate_service_link == false %}
+                <li>
+                  <a
+                    href="{% if policy.url contains '#shopifyReshowConsentBanner' %}{{ routes.root_url }}#shopifyReshowConsentBanner{% else %}{{ policy.url }}{% endif %}"
+                    {% if policy.url == request.path %}aria-current="page"{% endif %}
+                  >
+                    {{ policy.title | escape }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+            {% if imprint_url != blank %}
+              <li><a href="{{ imprint_url }}">{{ 'sections.footer.imprint' | t }}</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+
+      {% if section.settings.show_payment_icons and shop.enabled_payment_types != empty and request.page_type != 'product' and request.page_type != 'cart' %}
+        <div class="site-footer__payment-column">
+          <h2>{{ 'sections.footer.safe_payment' | t }}</h2>
+          <ul class="site-footer__payments" role="list" aria-label="{{ 'sections.footer.accepted_payments' | t }}">
+            {% for type in shop.enabled_payment_types %}
+              <li>{{ type | payment_type_svg_tag }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="site-footer__signature" aria-hidden="true">{{ display_wordmark | escape }}</div>
+
+    <div class="site-footer__bottom">
+      <p class="site-footer__copyright">
+        &copy; {{ 'now' | date: '%Y' }} {{ display_wordmark | escape }}
+        {% if section.settings.country_code != blank %}
+          <span aria-hidden="true">&middot;</span> {{ section.settings.country_code | escape }}
+        {% endif %}
+        {% if section.settings.show_powered_by %}
+          <span aria-hidden="true">&middot;</span> {{ powered_by_link }}
+        {% endif %}
+      </p>
+
+      {% if section.settings.legal_name != blank or section.settings.enterprise_number != blank or section.settings.vat_number != blank or section.settings.street_address != blank %}
+        <p class="site-footer__business-details">
+          {% if section.settings.legal_name != blank %}<span>{{ section.settings.legal_name | escape }}</span>{% endif %}
+          {% if section.settings.enterprise_number != blank %}
+            <span>{{ 'sections.footer.enterprise_number_label' | t }} {{ section.settings.enterprise_number | escape }}</span>
+          {% endif %}
+          {% if section.settings.vat_number != blank %}
+            <span>{{ footer_vat_label }} {{ section.settings.vat_number | escape }}</span>
+          {% endif %}
+          {% if section.settings.street_address != blank %}<span>{{ section.settings.street_address | escape }}</span>{% endif %}
+          {% if section.settings.postal_code != blank or section.settings.city != blank %}
+            <span>{{ section.settings.postal_code | escape }} {{ section.settings.city | escape }}</span>
+          {% endif %}
+          {% if footer_country_name != blank %}<span>{{ footer_country_name }}</span>{% endif %}
+        </p>
+      {% endif %}
+
+      {% if section.settings.show_market_message and footer_market_message != blank %}
+        <p class="site-footer__market-message">{{ footer_market_message }}</p>
+      {% endif %}
+    </div>
   </div>
 </footer>
 
 {% stylesheet %}
-  footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
+  .site-footer {
+    --footer-surface: #285c48;
+    --footer-deep: #214d3c;
+    --footer-ink: #fffaf2;
+    --footer-muted: rgba(255, 250, 242, 0.74);
+    --footer-line: rgba(255, 250, 242, 0.17);
+    --footer-accent: #f7dc8d;
+
+    overflow: hidden;
+    border-top: 0;
+    background: var(--footer-surface);
+    color: var(--footer-ink);
   }
-  footer a {
+
+  .site-footer__inner {
+    width: min(calc(100% - var(--page-margin) * 2), calc(var(--page-width) - var(--page-margin) * 2));
+    margin-inline: auto;
+  }
+
+  .site-footer__trust {
+    display: grid;
+    margin: 0;
+    padding: 1.35rem 2.5rem;
+    border-bottom: 1px solid var(--footer-line);
+    background: var(--footer-deep);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+  }
+
+  .site-footer__trust li + li {
+    border-left: 1px solid var(--footer-line);
+  }
+
+  .site-footer__trust a,
+  .site-footer__trust li > span {
+    display: grid;
+    min-height: 3rem;
+    align-items: center;
+    padding-inline: 1.5rem;
+    color: var(--footer-ink);
+    grid-template-columns: 2rem minmax(0, 1fr);
+    column-gap: 0.75rem;
     text-decoration: none;
-    color: var(--color-foreground);
   }
-  footer .footer__links,
-  footer .footer__payment {
+
+  .site-footer__trust li:first-child a,
+  .site-footer__trust li:first-child > span {
+    padding-left: 0;
+  }
+
+  .site-footer__trust svg {
+    width: 1.65rem;
+    grid-row: 1 / span 2;
+    color: var(--footer-accent);
+  }
+
+  .site-footer__trust strong {
+    align-self: end;
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+
+  .site-footer__trust small {
+    align-self: start;
+    color: var(--footer-muted);
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .site-footer__trust a:hover strong {
+    color: var(--footer-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .site-footer__lead {
+    display: grid;
+    align-items: center;
+    gap: clamp(2rem, 6vw, 5.5rem);
+    padding: clamp(3.5rem, 8vw, 6.5rem) 2.5rem clamp(3rem, 6vw, 4.75rem);
+    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 0.95fr);
+  }
+
+  .site-footer__grid {
+    display: grid;
+    align-items: start;
+    gap: clamp(2rem, 4vw, 4rem);
+    padding: clamp(2.75rem, 5vw, 4rem) 2.5rem;
+    border-top: 1px solid var(--footer-line);
+    grid-template-columns: repeat(5, minmax(8rem, 1fr));
+  }
+
+  .site-footer__wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--footer-ink);
+    font-family: var(--font-heading--family);
+    font-size: clamp(2.4rem, 5vw, 4.25rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.6;
+    text-decoration: none;
+  }
+
+  .site-footer__wordmark svg {
+    width: clamp(3rem, 5vw, 4.75rem);
+    height: auto;
+    flex: 0 0 auto;
+    color: var(--footer-accent);
+  }
+
+  .site-footer__tagline {
+    max-width: 32rem;
+    margin-top: 1.25rem;
+    color: var(--footer-muted);
+    font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+    line-height: 1.65;
+  }
+
+  .site-footer__tagline a {
+    color: var(--footer-accent);
+  }
+
+  .site-footer__email {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    margin-top: 1.35rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--footer-line);
+    border-radius: 999rem;
+    color: var(--footer-ink);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+
+  .site-footer__email:hover {
+    border-color: var(--footer-accent);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .site-footer__support {
+    position: relative;
+    display: grid;
+    min-height: 18rem;
+    overflow: hidden;
+    padding: clamp(1.5rem, 4vw, 2.4rem);
+    border-radius: 1.5rem;
+    background: var(--footer-accent);
+    box-shadow: 0 1.25rem 3rem rgba(21, 51, 39, 0.24);
+    color: #2b241f;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1.15rem;
+  }
+
+  .site-footer__support::after {
+    position: absolute;
+    right: -3.5rem;
+    bottom: -4rem;
+    width: 10rem;
+    aspect-ratio: 1;
+    border: 1.75rem solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    content: '';
+    pointer-events: none;
+  }
+
+  .site-footer__support-icon {
+    display: grid;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--footer-deep);
+    place-items: center;
+  }
+
+  .site-footer__support-icon svg {
+    width: 1.7rem;
+  }
+
+  .site-footer__support-copy {
+    position: relative;
+    z-index: 1;
+  }
+
+  .site-footer__support-eyebrow {
+    margin: 0 0 0.35rem;
+    color: #8f422f;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .site-footer__support h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    line-height: 1.15;
+  }
+
+  .site-footer__support-copy > p:last-child {
+    max-width: 34rem;
+    margin: 0.7rem 0 0;
+    color: #53483e;
+    line-height: 1.6;
+  }
+
+  .site-footer__support-actions {
+    position: relative;
+    z-index: 1;
     display: flex;
-    gap: 1rem;
+    align-self: end;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    gap: 0.75rem;
+  }
+
+  .site-footer__support-actions a {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1.1rem;
+    border-radius: 999rem;
+    font-size: 0.85rem;
+    font-weight: 850;
+    text-decoration: none;
+    transition: transform 150ms ease;
+  }
+
+  .site-footer__support-primary {
+    gap: 0.45rem;
+    background: var(--footer-deep);
+    color: #ffffff;
+  }
+
+  .site-footer__support-secondary {
+    border: 1px solid rgba(43, 36, 31, 0.35);
+    color: #2b241f;
+  }
+
+  .site-footer__support-actions a:hover {
+    transform: translateY(-0.1rem);
+  }
+
+  .site-footer__nav h2,
+  .site-footer__payment-column h2 {
+    margin-bottom: 0.85rem;
+    color: var(--footer-accent);
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .site-footer__nav ul,
+  .site-footer__payments {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer__nav ul {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .site-footer__nav a {
+    display: inline-block;
+    padding-block: 0.1rem;
+    color: var(--footer-ink);
+    font-size: 1.03rem;
+    font-weight: 700;
+    line-height: 1.6;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .site-footer__nav a:hover,
+  .site-footer__nav a[aria-current='page'] {
+    color: var(--footer-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 0.08em;
+  }
+
+  .site-footer__payments {
+    display: flex;
+    align-items: start;
+    flex-wrap: wrap;
+    justify-content: start;
+    gap: 0.5rem;
+  }
+
+  .site-footer a:focus-visible {
+    outline: 0.18rem solid var(--footer-accent);
+    outline-offset: 0.2rem;
+  }
+
+  .site-footer__support a:focus-visible {
+    outline-color: var(--footer-deep);
+  }
+
+  .site-footer__payments li {
+    display: inline-flex;
+    width: fit-content;
+    overflow: hidden;
+    border: 1px solid var(--footer-line);
+    border-radius: 0.375rem;
+    background: #ffffff;
+  }
+
+  .site-footer__payments svg {
+    width: 2.6rem;
+    height: auto;
+  }
+
+  .site-footer__signature {
+    overflow: hidden;
+    padding: clamp(1.5rem, 4vw, 3.5rem) 2.5rem 0;
+    border-top: 1px solid var(--footer-line);
+    color: rgba(255, 250, 242, 0.1);
+    font-family: var(--font-heading--family);
+    font-size: clamp(5rem, 15vw, 12rem);
+    font-weight: 900;
+    letter-spacing: -0.075em;
+    line-height: 0.72;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .site-footer__bottom {
+    padding: 2rem 2.5rem 2.5rem;
+    border-top: 1px solid var(--footer-line);
+    color: var(--footer-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .site-footer__bottom p + p {
+    margin-top: 0.2rem;
+  }
+
+  .site-footer__copyright {
+    font-weight: 700;
+  }
+
+  .site-footer__business-details span + span::before {
+    margin-inline: 0.4rem;
+    content: '\00b7';
+  }
+
+  .site-footer__market-message {
+    font-style: italic;
+  }
+
+  @media (max-width: 67.99rem) {
+    .site-footer__lead {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .site-footer__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .site-footer__support {
+      min-height: 15rem;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .site-footer__inner {
+      width: 100%;
+    }
+
+    .site-footer__grid {
+      gap: 1.75rem 1.25rem;
+      padding: 2.5rem clamp(1rem, 5vw, 2.5rem);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .site-footer__lead {
+      gap: 2.25rem;
+      padding: 3.25rem clamp(1rem, 5vw, 2.5rem);
+    }
+
+    .site-footer__wordmark {
+      font-size: clamp(2.5rem, 13vw, 3.5rem);
+    }
+
+    .site-footer__support {
+      min-height: 0;
+      border-radius: 1.2rem;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .site-footer__support-icon {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .site-footer__support-actions {
+      margin-top: 1rem;
+    }
+
+    .site-footer__trust {
+      padding: 0 clamp(1rem, 5vw, 2.5rem);
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .site-footer__trust li + li {
+      border-top: 1px solid var(--footer-line);
+      border-left: 0;
+    }
+
+    .site-footer__trust a,
+    .site-footer__trust li > span,
+    .site-footer__trust li:first-child a,
+    .site-footer__trust li:first-child > span {
+      min-height: 4.5rem;
+      padding: 0.75rem 0;
+    }
+
+    .site-footer__payment-column {
+      grid-column: 1 / -1;
+    }
+
+    .site-footer__nav a {
+      display: flex;
+      min-height: 2.75rem;
+      align-items: center;
+      padding-block: 0.45rem;
+    }
+
+    .site-footer__payments {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .site-footer__signature {
+      padding-inline: 1rem;
+      font-size: clamp(4.5rem, 25vw, 8rem);
+      text-align: left;
+    }
+
+    .site-footer__bottom {
+      padding: 1.15rem clamp(1rem, 5vw, 2.5rem) calc(1.75rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (max-width: 18rem) {
+    .site-footer__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .site-footer__brand,
+    .site-footer__payment-column {
+      grid-column: auto;
+    }
+
+    .site-footer__business-details span {
+      display: block;
+    }
+
+    .site-footer__business-details span + span::before {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer__email,
+    .site-footer__nav a,
+    .site-footer__support-actions a {
+      transition: none;
+    }
+
+    .site-footer__support-actions a:hover {
+      transform: none;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.footer",
+  "name": "Footer",
+  "enabled_on": {
+    "groups": ["footer"]
+  },
   "settings": [
+    {
+      "type": "header",
+      "content": "Brand"
+    },
+    {
+      "type": "text",
+      "id": "wordmark",
+      "label": "Text wordmark",
+      "default": "Loemies"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "tagline",
+      "label": "Brand message",
+      "default": "Soft, safe, and lovingly chosen for your little one."
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
     {
       "type": "link_list",
       "id": "menu",
-      "label": "t:labels.menu"
+      "label": "Shop menu",
+      "default": "footer",
+      "info": "A built-in shop menu is shown while this menu contains one link or fewer."
+    },
+    {
+      "type": "url",
+      "id": "about_url",
+      "label": "About page"
+    },
+    {
+      "type": "link_list",
+      "id": "customer_service_menu",
+      "label": "Customer service menu",
+      "info": "When blank, available Shopify policy and contact links are shown automatically."
+    },
+    {
+      "type": "url",
+      "id": "shipping_returns_url",
+      "label": "Shipping and returns page"
+    },
+    {
+      "type": "url",
+      "id": "returns_url",
+      "label": "Dedicated returns page",
+      "info": "Optional. When blank, the combined shipping page or Shopify refund policy is used."
+    },
+    {
+      "type": "url",
+      "id": "faq_url",
+      "label": "FAQ page"
+    },
+    {
+      "type": "url",
+      "id": "payment_url",
+      "label": "Payment information page"
+    },
+    {
+      "type": "url",
+      "id": "imprint_url",
+      "label": "Imprint or legal notice page"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_trust_bar",
+      "label": "Show shipping, returns, and payment assurances",
+      "default": true
     },
     {
       "type": "checkbox",
       "id": "show_payment_icons",
-      "label": "t:labels.show_payment_icons",
+      "label": "Show enabled payment methods",
       "default": true
+    },
+    {
+      "type": "header",
+      "content": "Business details"
+    },
+    {
+      "type": "text",
+      "id": "legal_name",
+      "label": "Legal company name",
+      "default": "Systemize BV"
+    },
+    {
+      "type": "text",
+      "id": "enterprise_number",
+      "label": "Belgian enterprise number",
+      "default": "1004.376.305"
+    },
+    {
+      "type": "text",
+      "id": "business_email",
+      "label": "Public business email",
+      "default": "support@loemies.com"
+    },
+    {
+      "type": "text",
+      "id": "vat_label",
+      "label": "VAT label",
+      "default": "BTW"
+    },
+    {
+      "type": "text",
+      "id": "vat_number",
+      "label": "VAT number",
+      "default": "BE 1004.376.305"
+    },
+    {
+      "type": "text",
+      "id": "street_address",
+      "label": "Street address",
+      "default": "Taboralaan 6"
+    },
+    {
+      "type": "text",
+      "id": "postal_code",
+      "label": "Postal code",
+      "default": "2820"
+    },
+    {
+      "type": "text",
+      "id": "city",
+      "label": "City",
+      "default": "Bonheiden"
+    },
+    {
+      "type": "text",
+      "id": "country_name",
+      "label": "Country name",
+      "default": "Belgium"
+    },
+    {
+      "type": "text",
+      "id": "country_code",
+      "label": "Market country code",
+      "default": "BE"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_market_message",
+      "label": "Show market status message",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "market_message",
+      "label": "Market status message",
+      "default": "Ordering will be activated when this market is ready."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_powered_by",
+      "label": "Show Powered by Shopify",
+      "default": false
     }
   ]
 }

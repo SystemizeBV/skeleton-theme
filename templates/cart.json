@@ -11,7 +11,55 @@
   "sections": {
     "main": {
       "type": "cart",
-      "settings": {}
+      "blocks": {
+        "upsell": {
+          "type": "upsell",
+          "settings": {
+            "eyebrow": "Complete the play",
+            "heading": "A useful addition",
+            "text": "Chosen to complement what is already in your cart.",
+            "maximum": 2,
+            "quick_add": true,
+            "automatic_fallback": false,
+            "background": "#FFF8F2",
+            "text_color": "#2B241F",
+            "accent": "#B04F38"
+          }
+        },
+        "delivery": {
+          "type": "benefit",
+          "settings": {
+            "icon": "delivery",
+            "title": "Free tracked shipping over €50",
+            "text": "Tracking included with every parcel"
+          }
+        },
+        "returns": {
+          "type": "benefit",
+          "settings": {
+            "icon": "returns",
+            "title": "Easy returns",
+            "text": "A simple, friendly process"
+          }
+        },
+        "secure": {
+          "type": "benefit",
+          "settings": {
+            "icon": "secure",
+            "title": "Secure payment",
+            "text": "Your details stay protected"
+          }
+        }
+      },
+      "block_order": [
+        "upsell",
+        "delivery",
+        "returns",
+        "secure"
+      ],
+      "settings": {
+        "show_payment_icons": false
+      }
     }
   },
   "order": [

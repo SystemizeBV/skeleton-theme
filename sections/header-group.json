@@ -1,22 +1,25 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
   "type": "header",
-  "name": "t:general.header",
+  "name": "Header group",
   "sections": {
     "header": {
       "type": "header",
-      "settings": {}
+      "settings": {
+        "wordmark": "Loemies",
+        "logo": "",
+        "logo_width": 160,
+        "search_placeholder": "What are you looking for?",
+        "menu": "main-menu",
+        "show_shop_navigation": true,
+        "customer_account_menu": "customer-account-main-menu",
+        "show_announcement": true,
+        "use_store_promises": true,
+        "announcement_text": "Free tracked shipping over €50 · 30-day returns",
+        "announcement_link": "",
+        "announcement_background": "#B04F38",
+        "announcement_text_color": "#FDFBF7"
+      }
     }
   },
-  "order": [
-    "header"
-  ],
+  "order": ["header"]
 }

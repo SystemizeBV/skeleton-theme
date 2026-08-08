@@ -1,70 +1,562 @@
-{% comment %}
-  This section is used in the search template to render search results for
-  products, articles, and pages.
+{% liquid
+  assign results_per_page = section.settings.results_per_page
+  assign display_terms = search.terms | strip | remove: '*'
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign search_eyebrow = section.settings.eyebrow | escape
+  if section.settings.eyebrow == blank or section.settings.eyebrow == 'Shop'
+    assign search_eyebrow = 'search.content.eyebrow' | t
+  endif
+  assign search_heading = section.settings.heading | escape
+  if section.settings.heading == blank or section.settings.heading == 'Search'
+    assign search_heading = 'search.title' | t
+  endif
+  assign search_form_label = section.settings.form_label | escape
+  if section.settings.form_label == blank or section.settings.form_label == 'Search by product name or SKU.'
+    assign search_form_label = 'search.content.form_label' | t
+  endif
+  assign search_placeholder = section.settings.placeholder | escape
+  if section.settings.placeholder == blank or section.settings.placeholder == 'What are you looking for?'
+    assign search_placeholder = 'search.content.placeholder' | t
+  endif
+  assign search_button_label = section.settings.button_label | escape
+  if section.settings.button_label == blank or section.settings.button_label == 'Search'
+    assign search_button_label = 'search.submit' | t
+  endif
+  assign search_start_text = section.settings.start_text | escape
+  if section.settings.start_text == blank or section.settings.start_text == 'Type a search term to get started.'
+    assign search_start_text = 'search.content.start_text' | t
+  endif
+  assign search_empty_heading = section.settings.empty_heading | escape
+  if section.settings.empty_heading == blank or section.settings.empty_heading == "We couldn't find a match"
+    assign search_empty_heading = 'search.empty_heading' | t
+  endif
+  assign search_empty_text = section.settings.empty_text | escape
+  if section.settings.empty_text == blank or section.settings.empty_text == 'Check the spelling, try a broader word, or browse everything we have chosen.'
+    assign search_empty_text = 'search.empty_text' | t
+  endif
+  assign search_empty_link_label = section.settings.empty_link_label | escape
+  if section.settings.empty_link_label == blank or section.settings.empty_link_label == 'Browse all products'
+    assign search_empty_link_label = 'search.empty_link' | t
+  endif
+  assign search_collections_eyebrow = section.settings.collections_eyebrow | escape
+  if section.settings.collections_eyebrow == blank or section.settings.collections_eyebrow == 'Browse instead'
+    assign search_collections_eyebrow = 'search.collections_eyebrow' | t
+  endif
+  assign search_collections_heading = section.settings.collections_heading | escape
+  if section.settings.collections_heading == blank or section.settings.collections_heading == 'Explore a category'
+    assign search_collections_heading = 'search.collections_heading' | t
+  endif
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/search
-{% endcomment %}
-
-<h1>{{ 'search.title' | t }}</h1>
-
-<form action="{{ routes.search_url }}" method="get" role="search">
-  <input
-    type="search"
-    size="50"
-    name="q"
-    value="{{ search.terms | escape }}"
-    placeholder="{{ 'search.placeholder' | t }}"
-  >
-  <button type="submit">{{ 'search.submit' | t }}</button>
-</form>
+  assign search_sort_by = search.sort_by | default: search.default_sort_by
+  assign normalized_terms = display_terms | downcase
+  assign help_result_url = blank
+  assign help_result_title = blank
+  assign help_result_text = blank
+  if normalized_terms contains 'return' or normalized_terms contains 'refund' or normalized_terms contains 'retour' or normalized_terms contains 'terug'
+    if shop.refund_policy.body != blank
+      assign help_result_url = shop.refund_policy.url
+      assign help_result_title = 'search.help.returns_title' | t
+      assign help_result_text = 'search.help.returns_text' | t
+    endif
+  elsif normalized_terms contains 'shipping' or normalized_terms contains 'delivery' or normalized_terms contains 'verzend' or normalized_terms contains 'levering' or normalized_terms contains 'livraison' or normalized_terms contains 'expédition'
+    if shop.shipping_policy.body != blank
+      assign help_result_url = shop.shipping_policy.url
+      assign help_result_title = 'search.help.shipping_title' | t
+      assign help_result_text = 'search.help.shipping_text' | t
+    endif
+  elsif normalized_terms contains 'contact' or normalized_terms contains 'support' or normalized_terms contains 'help' or normalized_terms contains 'hulp' or normalized_terms contains 'aide'
+    if pages['contact'] != blank
+      assign help_result_url = pages['contact'].url
+      assign help_result_title = 'search.help.contact_title' | t
+      assign help_result_text = 'search.help.contact_text' | t
+    endif
+  endif
+  assign displayed_result_count = search.results_count
+  if help_result_url != blank
+    assign displayed_result_count = displayed_result_count | plus: 1
+  endif
+  assign active_filter_count = 0
+  for filter in search.filters
+    assign active_filter_count = active_filter_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value != nil or filter.max_value.value != nil
+        assign active_filter_count = active_filter_count | plus: 1
+      endif
+    endif
+  endfor
+%}
 
 {% if search.performed %}
-  {% if search.results_count == 0 %}
-    <p>{{ 'search.no_results_html' | t: terms: search.terms }}</p>
-  {% else %}
-    <p>{{ 'search.results_for_html' | t: terms: search.terms, count: search.results_count }}</p>
-
-    <div class="search-results">
-      {% paginate search.results by 20 %}
-        {% # Search result items may be an article, a page, or a product. %}
-        {% for result in search.results %}
-          <div class="search-result">
-            {% assign featured_image = result.featured_image | default: result.image %}
-            {% if featured_image %}
-              {% render 'image', class: 'search-result__image', image: featured_image, url: result.url, width: 400 %}
-            {% endif %}
-            <div class="search-result__content">
-              <p>
-                {{ result.title | link_to: result.url }}
-                {% if result.price %}
-                  {{ result.price | money_with_currency }}
-                {% endif %}
-              </p>
-            </div>
-          </div>
-        {% endfor %}
-
-        {{ paginate | default_pagination }}
-      {% endpaginate %}
-    </div>
-  {% endif %}
+  <script>
+    (() => {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('filter.v.availability')) {
+        url.searchParams.set('filter.v.availability', '1');
+        window.location.replace(url.toString());
+      }
+    })();
+  </script>
 {% endif %}
 
-{% stylesheet %}
-  .search-results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-  .search-results .prev,
-  .search-results .page,
-  .search-results .next {
-    grid-column: 1 / -1;
-  }
-{% endstylesheet %}
+<section
+  class="loemies-search full-width"
+  style="--search-background: {{ section.settings.background_color }}; --search-card: {{ section.settings.card_color }}; --search-accent: {{ section.settings.accent_color }}; --loemies-featured-card: {{ section.settings.card_color }}; --loemies-featured-text: var(--color-ink); --loemies-featured-accent: var(--color-brand-soft);"
+>
+  <div class="loemies-search__inner">
+    <nav class="loemies-search__breadcrumbs" aria-label="{{ 'general.accessibility.breadcrumb' | t }}">
+      <a href="{{ routes.root_url }}">{{ 'general.accessibility.home' | t }}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ 'search.title' | t }}</span>
+    </nav>
+
+    <header class="loemies-search__header">
+      {% if search_eyebrow != blank %}
+        <p class="loemies-search__eyebrow">{{ search_eyebrow }}</p>
+      {% endif %}
+
+      <h1>{{ search_heading }}</h1>
+
+      <form class="loemies-search__form" action="{{ routes.search_url }}" method="get" role="search" data-normalize-search-query>
+        <label class="visually-hidden" for="SearchInput-{{ section.id }}">{{ search_form_label }}</label>
+        <div class="loemies-search__field">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="10.75" cy="10.75" r="6.25" stroke="currentColor" stroke-width="1.75"/>
+            <path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+          <input
+            id="SearchInput-{{ section.id }}"
+            type="search"
+            name="q"
+            value="{{ display_terms | escape }}"
+            placeholder="{{ search_placeholder }}"
+            autocomplete="on"
+            enterkeyhint="search"
+            spellcheck="false"
+            required
+          >
+        </div>
+        <input type="hidden" name="options[prefix]" value="last">
+        <input type="hidden" name="filter.v.availability" value="1">
+        <button type="submit" name="search-submit">
+          <span>{{ search_button_label }}</span>
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4 10h12m-4.5-4.5L16 10l-4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+
+      {% unless search.performed %}
+        <p class="loemies-search__helper">{{ search_start_text }}</p>
+      {% endunless %}
+    </header>
+
+    {% if search.performed %}
+      {% if search.results_count > 0 or help_result_url != blank %}
+        <div class="loemies-search__results-heading" aria-live="polite">
+          <div>
+            <p class="loemies-search__results-eyebrow">{{ 'search.results_eyebrow' | t }}</p>
+            <h2>{{ 'search.match_count' | t: count: displayed_result_count, terms: display_terms }}</h2>
+          </div>
+        </div>
+
+        {% if search.filters.size > 0 or search.sort_options.size > 0 %}
+          <form class="loemies-search__tools" action="{{ routes.search_url }}" method="get">
+            <input type="hidden" name="q" value="{{ search.terms | escape }}">
+            <input type="hidden" name="options[prefix]" value="last">
+            <input type="hidden" name="filter.v.availability" value="1">
+            <details class="loemies-search__filters" data-search-filters>
+              <summary>
+                <span>
+                  {{ 'sections.catalog.filters_and_sorting' | t }}
+                  {% if active_filter_count > 0 %}<strong>{{ active_filter_count }}</strong>{% endif %}
+                </span>
+                <span>{{ 'search.match_count' | t: count: displayed_result_count, terms: display_terms }}</span>
+              </summary>
+              <div class="loemies-search__filter-panel">
+                {% for filter in search.filters %}
+                  {% case filter.type %}
+                    {% when 'list' %}
+                      <fieldset class="loemies-search__filter-group">
+                        <legend>{{ filter.label | escape }}</legend>
+                        <div class="loemies-search__filter-options">
+                          {% for value in filter.values %}
+                            <label{% if value.count == 0 and value.active == false %} class="is-disabled"{% endif %}>
+                              <input
+                                type="checkbox"
+                                name="{{ value.param_name | escape }}"
+                                value="{{ value.value | escape }}"
+                                {% if value.active %}checked{% endif %}
+                                {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                              >
+                              <span>{{ value.label | escape }}</span>
+                              <small>{{ value.count }}</small>
+                            </label>
+                          {% endfor %}
+                        </div>
+                      </fieldset>
+                    {% when 'boolean' %}
+                      <fieldset class="loemies-search__filter-group">
+                        <legend>{{ filter.label | escape }}</legend>
+                        <div class="loemies-search__filter-options">
+                          {% if filter.true_value.label != blank %}
+                            <label{% if filter.true_value.count == 0 and filter.true_value.active == false %} class="is-disabled"{% endif %}>
+                              <input type="checkbox" name="{{ filter.param_name | escape }}" value="{{ filter.true_value.value | escape }}" {% if filter.true_value.active %}checked{% endif %} {% if filter.true_value.count == 0 and filter.true_value.active == false %}disabled{% endif %}>
+                              <span>{{ filter.true_value.label | escape }}</span>
+                              <small>{{ filter.true_value.count }}</small>
+                            </label>
+                          {% endif %}
+                        </div>
+                      </fieldset>
+                    {% when 'price_range' %}
+                      <fieldset class="loemies-search__filter-group">
+                        <legend>{{ filter.label | escape }}</legend>
+                        <div class="loemies-search__price-fields">
+                          <label>
+                            <span>{{ 'sections.catalog.price_from' | t }}</span>
+                            <input name="{{ filter.min_value.param_name | escape }}" type="number" min="0" step="0.01" placeholder="0" {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100.0 }}"{% endif %}>
+                          </label>
+                          <label>
+                            <span>{{ 'sections.catalog.price_to' | t }}</span>
+                            <input name="{{ filter.max_value.param_name | escape }}" type="number" min="0" step="0.01" max="{{ filter.range_max | divided_by: 100.0 }}" placeholder="{{ filter.range_max | divided_by: 100.0 }}" {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100.0 }}"{% endif %}>
+                          </label>
+                        </div>
+                      </fieldset>
+                  {% endcase %}
+                {% endfor %}
+
+                {% if search.sort_options.size > 0 %}
+                  <label class="loemies-search__sort">
+                    <span>{{ 'sections.catalog.sort.label' | t }}</span>
+                    <select name="sort_by">
+                      {% for option in search.sort_options %}
+                        <option value="{{ option.value | escape }}"{% if option.value == search_sort_by %} selected{% endif %}>{{ option.name | escape }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                {% endif %}
+
+                <div class="loemies-search__filter-actions">
+                  <button type="submit">{{ 'sections.catalog.apply' | t }}</button>
+                  {% if active_filter_count > 0 or search_sort_by != search.default_sort_by %}
+                    <a href="{{ routes.search_url }}?q={{ search.terms | url_encode }}&options%5Bprefix%5D=last&filter.v.availability=1">{{ 'sections.catalog.reset' | t }}</a>
+                  {% endif %}
+                </div>
+              </div>
+            </details>
+
+            {% if active_filter_count > 0 %}
+              <div class="loemies-search__active-filters" aria-label="{{ 'sections.catalog.active_filters' | t }}">
+                {% for filter in search.filters %}
+                  {% for value in filter.active_values %}
+                    <a href="{{ value.url_to_remove }}">{{ value.label | escape }} <span aria-hidden="true">×</span></a>
+                  {% endfor %}
+                  {% if filter.type == 'price_range' %}
+                    {% if filter.min_value.value != nil or filter.max_value.value != nil %}
+                      <a href="{{ filter.url_to_remove }}">{{ filter.label | escape }} <span aria-hidden="true">×</span></a>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </form>
+        {% endif %}
+
+        {% paginate search.results by results_per_page %}
+          <div class="loemies-search__grid">
+            {% if help_result_url != blank and paginate.current_page == 1 %}
+              <article class="search-card search-card--page search-card--help">
+                <a class="search-card__link" href="{{ help_result_url }}">
+                  <div class="search-card__media search-card__help-media" aria-hidden="true">
+                    <svg viewBox="0 0 64 64" fill="none">
+                      <path d="M16 12h32a4 4 0 0 1 4 4v32a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="3"/>
+                      <path d="M22 24h20M22 32h20M22 40h12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                    <span class="search-card__badge">{{ 'search.help.badge' | t }}</span>
+                  </div>
+                  <div class="search-card__content">
+                    <h3>{{ help_result_title }}</h3>
+                    <p class="search-card__excerpt">{{ help_result_text }}</p>
+                    <span class="search-card__read-more">{{ 'search.help.view' | t }} <span aria-hidden="true">&rarr;</span></span>
+                  </div>
+                </a>
+              </article>
+            {% endif %}
+            {% for result in search.results %}
+              {% liquid
+                assign result_image = result.featured_image | default: result.image
+                assign result_type = result.object_type
+                assign result_label = result_type | escape
+                if result_type == 'product'
+                  assign result_label = result.type | default: result.vendor | escape
+                  if result_type == blank
+                    assign result_label = 'search.result_type.product' | t
+                  endif
+                elsif result_type == 'article'
+                  assign result_label = 'search.result_type.article' | t
+                elsif result_type == 'page'
+                  assign result_label = 'search.result_type.page' | t
+                endif
+                assign result_image_loading = 'lazy'
+                assign result_image_fetchpriority = 'auto'
+                if forloop.index <= 2
+                  assign result_image_loading = 'eager'
+                  assign result_image_fetchpriority = 'high'
+                endif
+              %}
+
+              {% if result_type == 'product' %}
+                {% content_for 'block', type: 'loemies-product-card', id: 'search-product-card', closest.product: result, image_sizes: '(min-width: 1200px) 251px, (min-width: 992px) calc((100vw - 196px) / 4), (min-width: 768px) calc((100vw - 174px) / 3), (min-width: 369px) calc((100vw - 48px) / 2), calc(100vw - 34px)', image_loading: result_image_loading, image_fetchpriority: result_image_fetchpriority, image_deferred: false, heading_tag: 'h3' %}
+              {% else %}
+                <article class="search-card search-card--{{ result_type | handle }}">
+                <a class="search-card__link" href="{{ result.url }}">
+                  <div class="search-card__media">
+                    {% if result_image != blank %}
+                      {% assign result_alt = result_image.alt | default: result.title %}
+                      {{ result_image
+                        | image_url: width: 1000
+                        | image_tag:
+                          class: 'search-card__image',
+                          widths: '180, 240, 320, 360, 400, 440, 480, 540, 640, 720, 960, 1000',
+                          sizes: '(min-width: 1200px) 251px, (min-width: 992px) calc((100vw - 196px) / 4), (min-width: 768px) calc((100vw - 174px) / 3), (min-width: 752px) calc((100vw - 78px) / 3), calc((100vw - 48px) / 2)',
+                          loading: result_image_loading,
+                          fetchpriority: result_image_fetchpriority,
+                          alt: result_alt
+                      }}
+                    {% else %}
+                      <div class="search-card__placeholder" aria-hidden="true">
+                        <span></span>
+                      </div>
+                    {% endif %}
+
+                    {% if section.settings.show_result_type %}
+                      <span class="search-card__badge">{{ result_label }}</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="search-card__content">
+                    <h3>{{ result.title | escape }}</h3>
+
+                    {% assign result_excerpt = result.content | strip_html | truncatewords: 18 %}
+                    {% if result_excerpt != blank %}
+                      <p class="search-card__excerpt">{{ result_excerpt }}</p>
+                    {% endif %}
+                    <span class="search-card__read-more">{{ 'search.view_result' | t: type: result_label }} <span aria-hidden="true">&rarr;</span></span>
+                  </div>
+                </a>
+                </article>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {% if paginate.pages > 1 %}
+            <nav class="loemies-pagination" aria-label="{{ 'general.accessibility.search_result_pages' | t }}">
+              {% if paginate.previous %}
+                <a class="loemies-pagination__direction" href="{{ paginate.previous.url }}" aria-label="{{ 'general.accessibility.previous_page' | t }}">&larr; <span>{{ 'general.pagination.previous' | t }}</span></a>
+              {% else %}
+                <span class="loemies-pagination__direction is-disabled" aria-hidden="true">&larr; <span>{{ 'general.pagination.previous' | t }}</span></span>
+              {% endif %}
+
+              <div class="loemies-pagination__pages">
+                {% for part in paginate.parts %}
+                  {% if part.is_link %}
+                    <a href="{{ part.url }}" aria-label="{{ 'general.accessibility.go_to_page' | t: page: part.title }}">{{ part.title }}</a>
+                  {% elsif part.title == paginate.current_page %}
+                    <span aria-current="page">{{ part.title }}</span>
+                  {% else %}
+                    <span>{{ part.title }}</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+
+              {% if paginate.next %}
+                <a class="loemies-pagination__direction" href="{{ paginate.next.url }}" aria-label="{{ 'general.accessibility.next_page' | t }}"><span>{{ 'general.pagination.next' | t }}</span> &rarr;</a>
+              {% else %}
+                <span class="loemies-pagination__direction is-disabled" aria-hidden="true"><span>{{ 'general.pagination.next' | t }}</span> &rarr;</span>
+              {% endif %}
+            </nav>
+          {% endif %}
+        {% endpaginate %}
+      {% else %}
+        <div class="loemies-search__empty" aria-live="polite">
+          <div class="loemies-search__empty-art" aria-hidden="true">
+            <span></span>
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="27" cy="27" r="15" stroke="currentColor" stroke-width="4"/>
+              <path d="m38 38 13 13" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="loemies-search__empty-copy">
+            <p class="loemies-search__empty-eyebrow">{{ 'search.empty_eyebrow' | t }}</p>
+            <h2>{{ search_empty_heading }}</h2>
+            <p>{{ search_empty_text }}</p>
+            {% if search_empty_link_label != blank %}
+              <a class="button" href="{{ section.settings.empty_link | default: catalog_url }}">
+                {{ search_empty_link_label }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    {% if section.settings.show_collection_links %}
+      <div class="loemies-search__collections">
+        <div class="loemies-search__collections-header">
+          <p>{{ search_collections_eyebrow }}</p>
+          <h2>{{ search_collections_heading }}</h2>
+        </div>
+
+        <div class="loemies-search__collection-links">
+          {% assign search_collection_handles = 'all-toys,bestsellers,building-blocks,kids-room,montessori-learning,outdoor-family-games,pretend-play,puzzles-shape-sorters,sensory-activity,stacking-toys' | split: ',' %}
+          {% for search_collection_handle in search_collection_handles %}
+            {% assign suggested_collection = collections[search_collection_handle] %}
+            {% if suggested_collection != blank %}
+              {% assign available_collection_count = 0 %}
+              {% for suggested_product in suggested_collection.products limit: 50 %}
+                {% if suggested_product.available %}
+                  {% assign available_collection_count = available_collection_count | plus: 1 %}
+                {% endif %}
+              {% endfor %}
+              <a href="{{ suggested_collection.url }}">
+                <span>{{ suggested_collection.title | escape }}</span>
+                <small>{{ available_collection_count }}</small>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
 
 {% schema %}
 {
-  "name": "t:general.search",
-  "settings": []
+  "name": "Search results",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Shop"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Search"
+    },
+    {
+      "type": "text",
+      "id": "form_label",
+      "label": "Search form label",
+      "default": "Search by product name or SKU."
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "Search placeholder",
+      "default": "What are you looking for?"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Search"
+    },
+    {
+      "type": "text",
+      "id": "start_text",
+      "label": "Before-search helper",
+      "default": "Type a search term to get started."
+    },
+    {
+      "type": "range",
+      "id": "results_per_page",
+      "label": "Results per page",
+      "min": 8,
+      "max": 32,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "checkbox",
+      "id": "show_result_type",
+      "label": "Show result type",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Collection links"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_links",
+      "label": "Show collection links",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "collections_eyebrow",
+      "label": "Eyebrow",
+      "default": "Browse instead"
+    },
+    {
+      "type": "text",
+      "id": "collections_heading",
+      "label": "Heading",
+      "default": "Explore a category"
+    },
+    {
+      "type": "header",
+      "content": "No results"
+    },
+    {
+      "type": "text",
+      "id": "empty_heading",
+      "label": "Heading",
+      "default": "We couldn't find a match"
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Text",
+      "default": "Check the spelling, try a broader word, or browse everything we have chosen."
+    },
+    {
+      "type": "text",
+      "id": "empty_link_label",
+      "label": "Button label",
+      "default": "Browse all products"
+    },
+    {
+      "type": "url",
+      "id": "empty_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#B04F38"
+    }
+  ]
 }
 {% endschema %}

@@ -1,0 +1,293 @@
+{% liquid
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign categories_eyebrow = section.settings.eyebrow | escape
+  assign categories_heading = section.settings.heading | escape
+  if section.settings.eyebrow == 'Categories'
+    assign categories_eyebrow = 'sections.home.categories.eyebrow' | t
+  endif
+  if section.settings.heading == 'Shop by category'
+    assign categories_heading = 'sections.home.categories.heading' | t
+  endif
+%}
+
+<section
+  id="LoemiesCategories"
+  class="loemies-categories full-width"
+  {% if categories_heading != blank %}
+    aria-labelledby="LoemiesCategories-{{ section.id }}"
+  {% else %}
+    aria-label="{{ 'sections.catalog.browse_categories' | t }}"
+  {% endif %}
+  style="
+    --loemies-categories-background: {{ section.settings.background_color }};
+    --loemies-categories-text: {{ section.settings.text_color }};
+    --loemies-categories-accent: {{ section.settings.accent_color }};
+    --loemies-categories-padding: {{ section.settings.vertical_padding }}px;
+  "
+>
+  <div class="loemies-categories__inner">
+    <header class="loemies-categories__heading">
+      {% if categories_eyebrow != blank %}
+        <p class="loemies-categories__eyebrow">{{ categories_eyebrow }}</p>
+      {% endif %}
+      {% if categories_heading != blank %}
+        <h2 id="LoemiesCategories-{{ section.id }}">{{ categories_heading }}</h2>
+      {% endif %}
+      {% if section.settings.text != blank %}
+        <div class="loemies-categories__text">{{ section.settings.text }}</div>
+      {% endif %}
+    </header>
+
+    <nav class="loemies-categories__bento" aria-label="{{ categories_heading }}">
+      {% for block in section.blocks %}
+        {% liquid
+          assign tile_collection = block.settings.collection
+          # The `t` filter HTML-escapes its output, so escape the raw branch here
+          # and print `tile_title` without a second escape.
+          assign tile_title_source = block.settings.title | default: tile_collection.title
+          assign tile_title_source = tile_title_source | replace: '&amp;', '&'
+          assign tile_title = tile_title_source | escape
+          if tile_title_source == blank
+            assign tile_title = 'sections.catalog.view_category' | t
+          endif
+          assign tile_url = block.settings.link | default: tile_collection.url | default: routes.all_products_collection_url
+          assign tile_description = block.settings.description
+          if tile_description == blank and tile_collection != blank
+            assign tile_description = tile_collection.description | strip_html | truncatewords: 22
+          endif
+
+          if tile_collection.handle == 'sensory-activity' and tile_title_source contains 'Sensory'
+            assign tile_title = 'sections.home.categories.sensory' | t
+            if tile_description == 'Hands-on toys for movement, fine-motor practice and open-ended discovery.'
+              assign tile_description = 'sections.home.categories.sensory_text' | t
+            endif
+          elsif tile_collection.handle == 'building-blocks' and tile_title_source contains 'Building'
+            assign tile_title = 'sections.home.categories.building' | t
+          elsif tile_collection.handle == 'montessori-learning'
+            if tile_title_source contains 'Montessori' or tile_title_source contains 'Learning'
+              assign tile_title = 'sections.home.categories.montessori' | t
+            endif
+          elsif tile_collection.handle == 'outdoor-family-games'
+            if tile_title_source contains 'Outdoor' or tile_title_source contains 'Family'
+              assign tile_title = 'sections.home.categories.outdoor' | t
+            endif
+          endif
+
+
+          assign tile_image = block.settings.image | default: tile_collection.image
+          if tile_image == blank and tile_collection != blank
+            for tile_product in tile_collection.products limit: 4
+              if tile_product.featured_image != blank
+                assign tile_image = tile_product.featured_image
+                break
+              endif
+            endfor
+          endif
+        %}
+        <a
+          class="loemies-category-tile loemies-category-tile--{{ block.settings.card_size }} loemies-category-tile--motif-{{ block.settings.motif_style }}"
+          href="{{ tile_url }}"
+          style="--loemies-category-color: {{ block.settings.background_color }}; --loemies-category-card-text: {{ block.settings.text_color }};"
+          {{ block.shopify_attributes }}
+        >
+          {% if tile_image != blank %}
+            <span class="loemies-category-tile__media" aria-hidden="true">
+              {{ tile_image
+                | image_url: width: 900
+                | image_tag:
+                  widths: '240, 320, 400, 480, 640, 720, 900',
+                  sizes: '(min-width: 768px) 22rem, 12rem',
+                  loading: 'lazy',
+                  alt: ''
+              }}
+            </span>
+          {% endif %}
+          <span class="loemies-category-tile__arrow" aria-hidden="true">&rsaquo;</span>
+          <strong>{{ tile_title }}</strong>
+          {% if block.settings.show_description and tile_description != blank %}
+            <span class="loemies-category-tile__description">{{ tile_description }}</span>
+          {% endif %}
+          {% if block.settings.show_product_count and tile_collection != blank %}
+            <small>{{ 'sections.catalog.product_count' | t: count: tile_collection.products_count }}</small>
+          {% endif %}
+          {% if tile_image == blank and block.settings.motif_style != 'none' %}
+            <span class="loemies-category-tile__motif" aria-hidden="true"></span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </nav>
+
+    {% if section.settings.menu != blank %}
+      <nav class="loemies-categories__chips" aria-label="{{ section.settings.menu.title | escape }}">
+        {% for link in section.settings.menu.links %}
+          <a href="{{ link.url }}">
+            {{ link.title | escape }}
+            {% if link.type == 'collection_link' %}
+              <span>{{ link.object.products_count }}</span>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+  </div>
+</section>
+
+
+{% schema %}
+{
+  "name": "Loemies categories",
+  "max_blocks": 8,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Categories"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Shop by category"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Additional category links"
+    },
+    {
+      "type": "header",
+      "content": "Layout and colors"
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical spacing",
+      "min": 0,
+      "max": 96,
+      "step": 8,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Eyebrow",
+      "default": "#B04F38"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image override",
+          "info": "Optional. Uses the collection image or first product image when empty."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title override"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "info": "Uses the collection description when left empty."
+        },
+        {
+          "type": "checkbox",
+          "id": "show_description",
+          "label": "Show description",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_product_count",
+          "label": "Show product count",
+          "default": true
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Custom link",
+          "info": "Optional. Overrides the selected collection link; leave empty to use the collection."
+        },
+        {
+          "type": "select",
+          "id": "card_size",
+          "label": "Card size",
+          "default": "standard",
+          "options": [
+            { "value": "standard", "label": "Standard" },
+            { "value": "wide", "label": "Wide" },
+            { "value": "featured", "label": "Featured" }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "motif_style",
+          "label": "Decoration",
+          "default": "circle",
+          "options": [
+            { "value": "circle", "label": "Circle" },
+            { "value": "arch", "label": "Arch" },
+            { "value": "blob", "label": "Soft blob" },
+            { "value": "blob-tilted", "label": "Tilted blob" },
+            { "value": "none", "label": "None" }
+          ]
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Background",
+          "default": "#F9CDB0"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Text",
+          "default": "#2B241F"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies categories",
+      "blocks": [
+        { "type": "category", "settings": { "title": "Playtime favorites", "description": "Thoughtful toys for everyday moments of wonder.", "show_description": true, "card_size": "featured", "motif_style": "circle", "background_color": "#F9CDB0" } },
+        { "type": "category", "settings": { "title": "Wooden toys", "card_size": "wide", "motif_style": "arch", "background_color": "#DCD2F0" } },
+        { "type": "category", "settings": { "title": "Little explorers", "card_size": "standard", "motif_style": "blob", "background_color": "#F7DC8D" } },
+        { "type": "category", "settings": { "title": "Everyday play", "card_size": "standard", "motif_style": "blob-tilted", "background_color": "#C4E4C9" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

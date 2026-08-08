@@ -1,0 +1,228 @@
+{% comment %}
+  "You may also like" recommendations for the product page, using Shopify's
+  Search & Discovery related-products intent. The section renders empty on the
+  initial request; the inline script fetches this same section through
+  routes.product_recommendations_url (which populates `recommendations`) and
+  injects the rendered cards. The whole section hides itself when no
+  recommendations are returned or the request fails.
+
+  Cards reuse the Loemies product card block; product-card.css is loaded here
+  because the product template does not ship it by default. Cards render with
+  image_deferred: false so they use native lazy loading and never depend on
+  deferred-images.js (not loaded on product pages).
+{% endcomment %}
+
+{{ 'product-card.css' | asset_url | stylesheet_tag }}
+
+<section
+  class="loemies-related full-width"
+  data-related-products
+  {% if product != blank %}
+    data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit=8&intent=related"
+  {% endif %}
+  style="
+    --loemies-featured-background: {{ section.settings.background_color }};
+    --loemies-featured-card: {{ section.settings.card_color }};
+    --loemies-featured-text: {{ section.settings.text_color }};
+    --loemies-featured-accent: {{ section.settings.accent_color }};
+    --loemies-related-padding: {{ section.settings.vertical_padding }}px;
+  "
+>
+  <div class="loemies-related__inner" data-related-content>
+    {% if recommendations.performed? and recommendations.products_count > 0 %}
+      <header class="loemies-related__header">
+        {% liquid
+          # The `t` filter HTML-escapes its output, so escape the raw branches
+          # here and print these variables without a second escape.
+          assign related_eyebrow = section.settings.eyebrow | escape
+          if section.settings.eyebrow == 'Keep exploring'
+            assign related_eyebrow = 'sections.related.eyebrow' | t
+          endif
+          assign related_heading = section.settings.heading | escape
+          if section.settings.heading == 'You may also like'
+            assign related_heading = 'sections.related.heading' | t
+          endif
+        %}
+        {% if related_eyebrow != blank %}
+          <p class="loemies-related__eyebrow">{{ related_eyebrow }}</p>
+        {% endif %}
+        {% if related_heading != blank %}
+          <h2 class="loemies-related__heading">{{ related_heading }}</h2>
+        {% endif %}
+      </header>
+      <div class="loemies-related__grid">
+        {% liquid
+          # Colorways ship as separate products whose titles share the part
+          # before the first colon — show at most one card per family so the
+          # row reads as four ideas, not one product four times.
+          # Seed with the viewed product's own family so the row never
+          # recommends a colorway of the product already on screen.
+          assign current_family = product.title | split: ':' | first | strip | downcase
+          assign related_family_keys = '|' | append: current_family | append: '|'
+          assign related_rendered = 0
+        %}
+        {% for recommended_product in recommendations.products %}
+          {% liquid
+            assign family_key = recommended_product.title | split: ':' | first | strip | downcase
+            assign family_token = '|' | append: family_key | append: '|'
+            if related_family_keys contains family_token
+              continue
+            endif
+
+            # Recommendations are only useful when their relationship is
+            # understandable. Prefer a matching product type; if either item
+            # lacks one, require a shared age/play/material tag instead of
+            # accepting Shopify's occasionally broad fallback suggestions.
+            assign recommendation_relevant = false
+            if product.type != blank and recommended_product.type == product.type
+              assign recommendation_relevant = true
+            else
+              for relevance_tag in product.tags
+                if relevance_tag == 'Age 0-3 months' or relevance_tag == 'Age 6-12 months' or relevance_tag == 'Age 12 months+' or relevance_tag == 'Age 18 months+' or relevance_tag == 'Age 1+' or relevance_tag == 'Age 2+' or relevance_tag == 'Age 3+' or relevance_tag == 'Fine Motor Skills' or relevance_tag == 'Sensory Play' or relevance_tag == 'Imaginative Play' or relevance_tag == 'Outdoor Play' or relevance_tag == 'Wooden Toys' or relevance_tag == 'FSC Wood' or relevance_tag == 'Made in EU'
+                  if recommended_product.tags contains relevance_tag
+                    assign recommendation_relevant = true
+                    break
+                  endif
+                endif
+              endfor
+            endif
+            unless recommendation_relevant
+              continue
+            endunless
+
+            assign related_family_keys = related_family_keys | append: family_token
+            assign related_rendered = related_rendered | plus: 1
+          %}
+          {% if related_rendered <= 4 %}
+            {% content_for 'block', type: 'loemies-product-card', id: 'product-card', closest.product: recommended_product, heading_tag: 'h3', image_loading: 'lazy', image_deferred: false %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<noscript>
+  <style>
+    #shopify-section-{{ section.id }} {
+      display: none;
+    }
+  </style>
+</noscript>
+
+<script>
+  (() => {
+    document.querySelectorAll('[data-related-products][data-url]').forEach((container) => {
+      if (container.dataset.relatedLoaded === 'true') return;
+      container.dataset.relatedLoaded = 'true';
+
+      const hideSection = () => {
+        const wrapper = container.closest('.shopify-section') || container;
+        wrapper.style.display = 'none';
+      };
+
+      if (!window.fetch || !('DOMParser' in window)) {
+        hideSection();
+        return;
+      }
+
+      fetch(container.dataset.url, {
+        credentials: 'same-origin',
+        headers: { Accept: 'text/html' },
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error(String(response.status));
+          return response.text();
+        })
+        .then((markup) => {
+          const fragment = new DOMParser().parseFromString(markup, 'text/html');
+          const content = fragment.querySelector('[data-related-content]');
+
+          if (!content || !content.querySelector('.loemies-product-card')) {
+            hideSection();
+            return;
+          }
+
+          const target = container.querySelector('[data-related-content]');
+          if (!target) {
+            hideSection();
+            return;
+          }
+
+          target.innerHTML = content.innerHTML;
+          container.classList.add('is-loaded');
+
+          // Let product-card.js bind quick-add and wishlist controls on the
+          // injected cards; it already listens for this event at document level.
+          container.dispatchEvent(new Event('shopify:section:load', { bubbles: true }));
+        })
+        .catch(hideSection);
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Loemies related products",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Keep exploring"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "You may also like"
+    },
+    {
+      "type": "header",
+      "content": "Layout and colors"
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical spacing",
+      "min": 0,
+      "max": 96,
+      "step": 8,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#F7F3EC"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Cards",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#2B241F"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Eyebrow",
+      "default": "#B04F38"
+    }
+  ],
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "presets": [
+    {
+      "name": "Loemies related products"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,98 @@
+{% doc %}
+  Renders a compact complementary-product card.
+
+  @param {product} upsell_product - Product offered as an add-on.
+  @param {string} context - Either `product` or `cart`.
+  @param {boolean} enable_quick_add - Whether simple products can be added directly.
+  @param {number} [source_product_id] - Cart product that supplied this recommendation.
+{% enddoc %}
+
+{% liquid
+  assign upsell_variant = upsell_product.selected_or_first_available_variant
+  assign upsell_title = upsell_product.metafields.custom.card_title.value | default: upsell_product.title
+  assign upsell_form_id = 'UpsellForm-' | append: context | append: '-' | append: upsell_product.id
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign upsell_detail = upsell_product.metafields.custom.card_detail.value | escape
+  assign upsell_price_min_money = upsell_product.price_min | money
+
+  if upsell_product.metafields.custom.card_detail.value == blank
+    if upsell_product.tags contains 'FSC Wood'
+      assign upsell_detail = 'products.card.fsc_wood' | t
+    elsif upsell_product.tags contains 'Made in EU'
+      assign upsell_detail = 'products.card.made_in_eu' | t
+    elsif upsell_product.type != blank
+      assign upsell_detail = upsell_product.type | escape
+    endif
+  endif
+%}
+
+{% if upsell_product != blank and upsell_product.available %}
+  <article
+    class="loemies-upsell-card"
+    data-upsell-handle="{{ upsell_product.handle | escape }}"
+    {% if source_product_id != blank %}data-upsell-source-id="{{ source_product_id }}"{% endif %}
+  >
+    <a class="loemies-upsell-card__image-link" href="{{ upsell_product.url }}" aria-label="{{ upsell_title | escape }}">
+      <div class="loemies-upsell-card__image-wrap">
+        {% if upsell_product.featured_image != blank %}
+          {{ upsell_product.featured_image
+            | image_url: width: 320
+            | image_tag:
+              class: 'loemies-upsell-card__image',
+              widths: '96, 144, 192, 240, 320',
+              sizes: '88px',
+              loading: 'lazy',
+              alt: ''
+          }}
+        {% else %}
+          <span class="loemies-upsell-card__image-fallback" aria-hidden="true"></span>
+        {% endif %}
+      </div>
+    </a>
+
+    <div class="loemies-upsell-card__content">
+      {% if upsell_detail != blank %}
+        <p class="loemies-upsell-card__detail">{{ upsell_detail }}</p>
+      {% endif %}
+      <h3><a href="{{ upsell_product.url }}">{{ upsell_title | escape }}</a></h3>
+      <p class="loemies-upsell-card__price">
+        {% if upsell_product.price_varies %}
+          {{ 'products.card.from_price' | t: price: upsell_price_min_money }}
+        {% else %}
+          {{ upsell_variant.price | money }}
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="loemies-upsell-card__action">
+      {% if enable_quick_add and upsell_product.has_only_default_variant %}
+        {% if context == 'cart' %}
+          <button
+            type="button"
+            data-cart-upsell-add
+            data-variant-id="{{ upsell_variant.id }}"
+            data-loading-label="{{ 'products.upsell.adding' | t }}"
+          >
+            {{ 'products.upsell.add' | t }}
+          </button>
+        {% else %}
+          {% form 'product', upsell_product, id: upsell_form_id, class: 'loemies-upsell-card__form', data-quick-add-form: '' %}
+            <input type="hidden" name="id" value="{{ upsell_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button
+              type="submit"
+              name="add"
+              data-quick-add-submit
+              aria-label="{{ 'products.card.add_product' | t: product: upsell_title }}"
+            >
+              {{ 'products.upsell.add' | t }}
+            </button>
+          {% endform %}
+        {% endif %}
+      {% else %}
+        <a href="{{ upsell_product.url }}">{{ 'products.card.choose_options' | t }}</a>
+      {% endif %}
+    </div>
+  </article>
+{% endif %}

@@ -3,10 +3,122 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 {%- liquid
-  assign og_title = page_title | default: shop.name
+  assign site_name = settings.site_name | default: shop.name
+  assign meta_title = page_title | default: site_name
+  assign meta_description = page_description | default: shop.description
+  assign has_custom_tag_meta = false
+  assign joined_current_tags = current_tags | join: ', '
+
+  if request.page_type == 'index'
+    if settings.homepage_meta_title != blank
+      assign meta_title = settings.homepage_meta_title
+      if meta_title == 'Wooden, Montessori & Sensory Toys | Loemies' or meta_title == "Purposeful Toys & Children's Products | Loemies"
+        assign meta_title = 'seo.home_title' | t
+      endif
+    endif
+    if settings.homepage_meta_description != blank
+      assign meta_description = settings.homepage_meta_description
+      if meta_description == 'Shop a focused collection of wooden, Montessori, sensory and pretend-play toys, with clear product details and free shipping over €49.' or meta_description == "Explore thoughtfully chosen toys and children's products for play, discovery and quiet moments, with clear details for every item."
+        assign meta_description = 'seo.home_description' | t
+      endif
+    endif
+  endif
+
+  if request.page_type == 'collection' and current_tags.size > 0
+    assign primary_catalog_tag = current_tags.first
+    case primary_catalog_tag
+      when 'Age 0-3 months'
+        assign meta_title = 'sections.catalog.titles.age_zero_three' | t
+        assign meta_description = 'sections.catalog.descriptions.age_zero_three' | t
+        assign has_custom_tag_meta = true
+      when 'Age 6-12 months'
+        assign meta_title = 'sections.catalog.titles.age_six_to_one' | t
+        assign meta_description = 'sections.catalog.descriptions.age_six_to_one' | t
+        assign has_custom_tag_meta = true
+      when 'Age 18 months+'
+        assign meta_title = 'sections.catalog.titles.age_eighteen_months' | t
+        assign meta_description = 'sections.catalog.descriptions.age_eighteen_months' | t
+        assign has_custom_tag_meta = true
+      when 'Age 12 months+'
+        assign meta_title = 'sections.catalog.titles.age_twelve_months' | t
+        assign meta_description = 'sections.catalog.descriptions.age_twelve_months' | t
+        assign has_custom_tag_meta = true
+      when 'Age 1+'
+        assign meta_title = 'sections.catalog.titles.age_one' | t
+        assign meta_description = 'sections.catalog.descriptions.age_one' | t
+        assign has_custom_tag_meta = true
+      when 'Age 2+'
+        assign meta_title = 'sections.catalog.titles.age_two' | t
+        assign meta_description = 'sections.catalog.descriptions.age_two' | t
+        assign has_custom_tag_meta = true
+      when 'Age 3+'
+        assign meta_title = 'sections.catalog.titles.age_three' | t
+        assign meta_description = 'sections.catalog.descriptions.age_three' | t
+        assign has_custom_tag_meta = true
+      when 'Fine Motor Skills'
+        assign meta_title = 'sections.catalog.titles.fine_motor' | t
+        assign meta_description = 'sections.catalog.descriptions.fine_motor' | t
+        assign has_custom_tag_meta = true
+      when 'Sensory Play'
+        assign meta_title = 'sections.catalog.titles.sensory' | t
+        assign meta_description = 'sections.catalog.descriptions.sensory' | t
+        assign has_custom_tag_meta = true
+      when 'Imaginative Play'
+        assign meta_title = 'sections.catalog.titles.pretend' | t
+        assign meta_description = 'sections.catalog.descriptions.pretend' | t
+        assign has_custom_tag_meta = true
+      when 'Outdoor Play'
+        assign meta_title = 'sections.catalog.titles.active' | t
+        assign meta_description = 'sections.catalog.descriptions.active' | t
+        assign has_custom_tag_meta = true
+      when 'Gift Idea'
+        assign meta_title = 'sections.catalog.titles.gifts' | t
+        assign meta_description = 'sections.catalog.descriptions.gifts' | t
+        assign has_custom_tag_meta = true
+    endcase
+  endif
+
+  if request.page_type == 'search'
+    if template.suffix == 'wishlist'
+      # The wishlist reuses the search template; title it after the page's H1
+      # instead of Shopify's default "Search".
+      assign meta_title = 'sections.wishlist.title' | t
+    elsif search.terms contains '*'
+      # Wildcard searches (e.g. from predictive search) end in "*"; the
+      # visible H1 already strips it, so mirror that in the <title>.
+      assign clean_search_terms = search.terms | strip | remove: '*'
+      assign meta_title = meta_title | replace: search.terms, clean_search_terms
+    endif
+  endif
+
+  assign og_title = meta_title
   assign og_url = canonical_url | default: request.origin
   assign og_type = 'website'
-  assign og_description = page_description | default: shop.description | default: shop.name
+  assign og_description = meta_description | default: site_name
+  assign og_image = page_image | default: settings.social_sharing_image
+  assign content_language = request.locale.iso_code
+
+  if request.page_type == 'article' and article.metafields.custom.language_code.value != blank
+    assign content_language = article.metafields.custom.language_code.value
+  endif
+
+  # Facebook expects territory-qualified locales (en_US, nl_BE); this store is
+  # Belgium-first, so bare language codes map to their Belgian variants.
+  assign og_locale = content_language | replace: '-', '_'
+  unless og_locale contains '_'
+    case og_locale
+      when 'en'
+        assign og_locale = 'en_US'
+      when 'nl'
+        assign og_locale = 'nl_BE'
+      when 'fr'
+        assign og_locale = 'fr_BE'
+    endcase
+  endunless
+
+  if request.page_type == 'index' and og_image == blank
+    assign og_image = collections['bestsellers'].products.first.featured_image
+  endif
 
   if request.page_type == 'product'
     assign og_type = 'product'
@@ -19,7 +131,7 @@
 
 <meta
   property="og:site_name"
-  content="{{ shop.name }}"
+  content="{{ site_name | escape }}"
 >
 <meta
   property="og:url"
@@ -27,7 +139,7 @@
 >
 <meta
   property="og:title"
-  content="{{ og_title | escape }}"
+  content="{{ og_title | escape_once }}"
 >
 <meta
   property="og:type"
@@ -35,26 +147,76 @@
 >
 <meta
   property="og:description"
-  content="{{ og_description | escape }}"
+  content="{{ og_description | escape_once }}"
 >
+<meta
+  property="og:locale"
+  content="{{ og_locale | escape }}"
+>
+{%- for language in localization.available_languages -%}
+  {%- unless language.iso_code == request.locale.iso_code -%}
+    {%- liquid
+      assign alternate_og_locale = language.iso_code | replace: '-', '_'
+      unless alternate_og_locale contains '_'
+        case alternate_og_locale
+          when 'en'
+            assign alternate_og_locale = 'en_US'
+          when 'nl'
+            assign alternate_og_locale = 'nl_BE'
+          when 'fr'
+            assign alternate_og_locale = 'fr_BE'
+        endcase
+      endunless
+    -%}
+    <meta
+      property="og:locale:alternate"
+      content="{{ alternate_og_locale | escape }}"
+    >
+  {%- endunless -%}
+{%- endfor -%}
 
-{%- if page_image -%}
+{%- if og_image -%}
   <meta
     property="og:image"
-    content="http:{{ page_image | image_url }}"
+    content="https:{{ og_image | image_url }}"
   >
   <meta
     property="og:image:secure_url"
-    content="https:{{ page_image | image_url }}"
+    content="https:{{ og_image | image_url }}"
   >
   <meta
     property="og:image:width"
-    content="{{ page_image.width }}"
+    content="{{ og_image.width }}"
   >
   <meta
     property="og:image:height"
-    content="{{ page_image.height }}"
+    content="{{ og_image.height }}"
   >
+{%- endif -%}
+
+{%- if request.page_type == 'article' and article.published_at != blank -%}
+  <meta
+    property="article:published_time"
+    content="{{ article.published_at | date: '%Y-%m-%dT%H:%M:%S%z' }}"
+  >
+{%- endif -%}
+{%- if request.page_type == 'article' -%}
+  <meta
+    property="article:modified_time"
+    content="{{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' }}"
+  >
+  {%- if article.author != blank -%}
+    <meta
+      property="article:author"
+      content="{{ article.author | escape }}"
+    >
+  {%- endif -%}
+  {%- for tag in article.tags -%}
+    <meta
+      property="article:tag"
+      content="{{ tag | escape }}"
+    >
+  {%- endfor -%}
 {%- endif -%}
 
 {%- if request.page_type == 'product' -%}
@@ -70,6 +232,113 @@
     property="og:price:currency"
     content="{{ cart.currency.iso_code }}"
   >
+
+  {%- liquid
+    assign breadcrumb_collection = product.collections.first
+    capture breadcrumb_home_url
+      echo request.origin
+      echo routes.root_url
+    endcapture
+  -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "@id": {{ canonical_url | append: '#breadcrumb' | json }},
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": {{ 'general.accessibility.home' | t | json }},
+          "item": {{ breadcrumb_home_url | json }}
+        },
+        {%- if breadcrumb_collection -%}
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": {{ breadcrumb_collection.title | json }},
+          "item": {{ request.origin | append: breadcrumb_collection.url | json }}
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": {{ product.title | json }},
+          "item": {{ canonical_url | json }}
+        }
+        {%- else -%}
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": {{ product.title | json }},
+          "item": {{ canonical_url | json }}
+        }
+        {%- endif %}
+      ]
+    }
+  </script>
+{%- endif -%}
+
+{%- if request.page_type == 'collection' and collection != blank -%}
+  {%- liquid
+    capture breadcrumb_home_url
+      echo request.origin
+      echo routes.root_url
+    endcapture
+  -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "@id": {{ canonical_url | append: '#breadcrumb' | json }},
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": {{ 'general.accessibility.home' | t | json }},
+          "item": {{ breadcrumb_home_url | json }}
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": {{ collection.title | json }},
+          "item": {{ request.origin | append: collection.url | json }}
+        }
+      ]
+    }
+  </script>
+{%- endif -%}
+
+{%- if request.page_type == 'index' -%}
+  {%- liquid
+    capture schema_home_url
+      echo request.origin
+      echo routes.root_url
+    endcapture
+    capture schema_search_target
+      echo request.origin
+      echo routes.search_url
+      echo '?q={search_term_string}'
+    endcapture
+  -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": {{ request.origin | append: '/#website' | json }},
+      "name": {{ site_name | json }},
+      "url": {{ schema_home_url | json }},
+      "inLanguage": {{ request.locale.iso_code | json }},
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {{ schema_search_target | json }},
+        "query-input": "required name=search_term_string"
+      }
+    }
+  </script>
+{%- endif -%}
+
+{%- if request.page_type == 'article' -%}
+  {% render 'article-structured-data', article: article, blog: blog, description: meta_description, site_name: site_name %}
 {%- endif -%}
 
 <meta
@@ -78,18 +347,32 @@
 >
 <meta
   name="twitter:title"
-  content="{{ og_title | escape }}"
+  content="{{ og_title | escape_once }}"
 >
 <meta
   name="twitter:description"
-  content="{{ og_description | escape }}"
+  content="{{ og_description | escape_once }}"
 >
+{%- if og_image -%}
+  <meta
+    property="og:image:alt"
+    content="{{ og_image.alt | default: og_title | escape_once }}"
+  >
+  <meta
+    name="twitter:image"
+    content="https:{{ og_image | image_url }}"
+  >
+  <meta
+    name="twitter:image:alt"
+    content="{{ og_image.alt | default: og_title | escape_once }}"
+  >
+{%- endif -%}
 
 <title>
-  {{ page_title }}
-  {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
-  {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
-  {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+  {{ meta_title }}
+  {%- if current_tags and has_custom_tag_meta == false %} &ndash; {{ 'seo.tagged' | t: tags: joined_current_tags }}{% endif -%}
+  {%- if current_page != 1 %} &ndash; {{ 'seo.page' | t: page: current_page }}{% endif -%}
+  {%- unless request.page_type == 'index' or meta_title contains site_name %} &ndash; {{ site_name }}{% endunless -%}
 </title>
 
 <link
@@ -97,9 +380,15 @@
   href="{{ canonical_url }}"
 >
 
-{% if page_description %}
+{% if meta_description != blank %}
   <meta
     name="description"
-    content="{{ page_description | escape }}"
+    content="{{ meta_description | escape_once }}"
   >
+{% endif %}
+
+{% if settings.favicon != blank %}
+  <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64, height: 64 }}">
+{% else %}
+  <link rel="icon" type="image/svg+xml" href="{{ 'favicon.svg' | asset_url }}">
 {% endif %}

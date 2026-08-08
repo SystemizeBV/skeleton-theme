@@ -1,160 +1,70 @@
-<h1 align="center" style="position: relative;">
-  <br>
-    <img src="./assets/shoppy-x-ray.svg" alt="logo" width="200">
-  <br>
-  Shopify Skeleton Theme
-</h1>
+# Loemies Shopify theme
 
-A minimal, carefully structured Shopify theme designed to help you quickly get started. Designed with modularity, maintainability, and Shopify's best practices in mind.
+Loemies is a custom Shopify Online Store 2.0 theme with a playful, pastel-led identity and a polished retail foundation. The design pairs soft cream, blush, lavender, sage, and butter with high-contrast ink and plum for readable, confident storefront UI.
 
-<p align="center">
-  <a href="./LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License"></a>
-  <a href="./actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Shopify/skeleton-theme/actions/workflows/ci.yml/badge.svg"></a>
-</p>
+## Brand foundation
 
-## Getting started
+- Merchant-editable color palette, typography, page width, spacing, and corner radii
+- Poppins display typography paired with Work Sans body copy by default
+- Responsive, no-JavaScript navigation built with native HTML disclosure elements
+- Logo upload with an automatic shop-name wordmark fallback
+- Search, customer account, cart count, footer navigation, and payment support
+- Semantic landmarks, a keyboard skip link, visible focus states, and reduced-motion support
 
-### Prerequisites
+All global brand controls are available in **Online Store → Themes → Customize → Theme settings**. Header and footer content is configured in its corresponding section group.
 
-Before starting, ensure you have the latest Shopify CLI installed:
+## Local development with Shopify CLI
 
-- [Shopify CLI](https://shopify.dev/docs/api/shopify-cli) – helps you download, upload, preview themes, and streamline your workflows
+Node.js and a Shopify development store are required. Commands can use the current Shopify CLI through `npx`, so no global install is necessary.
 
-If you use VS Code:
-
-- [Shopify Liquid VS Code Extension](https://shopify.dev/docs/storefronts/themes/tools/shopify-liquid-vscode) – provides syntax highlighting, linting, inline documentation, and auto-completion specifically designed for Liquid templates
-
-### Clone
-
-Clone this repository using Git or Shopify CLI:
+Start an authenticated local preview for the Loemies development store:
 
 ```bash
-git clone git@github.com:Shopify/skeleton-theme.git
-# or
-shopify theme init
+npx @shopify/cli@4.5.2 theme dev \
+  --store y1a0kp-n0.myshopify.com \
+  --host 0.0.0.0
 ```
 
-### Preview
+The explicit host is required when the development server runs inside a VM. Shopify CLI may also request the store's customer-facing storefront password; enter it at the prompt or provide it through a local secret, and never commit it to the theme.
 
-Preview this theme using Shopify CLI:
+Run Shopify's theme checks:
 
 ```bash
-shopify theme dev
+npx @shopify/cli@4.5.2 theme check
 ```
 
-## Theme architecture
+Upload a safe, unpublished preview theme:
 
 ```bash
-.
-├── assets          # Stores static assets (CSS, JS, images, fonts, etc.)
-├── blocks          # Reusable, nestable, customizable UI components
-├── config          # Global theme settings and customization options
-├── layout          # Top-level wrappers for pages (layout templates)
-├── locales         # Translation files for theme internationalization
-├── sections        # Modular full-width page components
-├── snippets        # Reusable Liquid code or HTML fragments
-└── templates       # Templates combining sections to define page structures
+npx @shopify/cli@4.5.2 theme push --unpublished --store y1a0kp-n0.myshopify.com
 ```
 
-To learn more, refer to the [theme architecture documentation](https://shopify.dev/docs/storefronts/themes/architecture).
+The CLI opens an authentication flow on first use. Avoid pushing to the live theme until the unpublished preview has been reviewed across mobile and desktop breakpoints.
 
-### Templates
+## Project structure
 
-[Templates](https://shopify.dev/docs/storefronts/themes/architecture/templates#template-types) control what's rendered on each type of page in a theme.
+```text
+assets/      Global CSS and theme assets
+blocks/      Reusable theme blocks
+config/      Theme settings schema and saved defaults
+layout/      Storefront document layout
+locales/     Storefront and editor translations
+sections/    Merchant-editable page, header, and footer sections
+snippets/    Shared Liquid fragments
+templates/   Shopify JSON and Liquid templates
+```
 
-The Skeleton Theme scaffolds [JSON templates](https://shopify.dev/docs/storefronts/themes/architecture/templates/json-templates) to make it easy for merchants to customize their store.
+## Quality checks
 
-None of the template types are required, and not all of them are included in the Skeleton Theme. Refer to the [template types reference](https://shopify.dev/docs/storefronts/themes/architecture/templates#template-types) for a full list.
+Before handing off a change:
 
-### Sections
+1. Run `npx @shopify/cli@4.5.2 theme check`.
+2. Preview with real products, menus, accounts, and cart states.
+3. Test keyboard navigation, zoom, and small-screen layout.
+4. Confirm any merchant-edited color combinations retain sufficient contrast.
 
-[Sections](https://shopify.dev/docs/storefronts/themes/architecture/sections) are Liquid files that allow you to create reusable modules of content that can be customized by merchants. They can also include blocks which allow merchants to add, remove, and reorder content within a section.
+## Provenance
 
-Sections are made customizable by including a `{% schema %}` in the body. For more information, refer to the [section schema documentation](https://shopify.dev/docs/storefronts/themes/architecture/sections/section-schema).
+Loemies is purpose-built on Shopify's open-source [Skeleton Theme](https://github.com/Shopify/skeleton-theme), rather than Dawn. Skeleton provides the lean Shopify-native architecture; the visual system and storefront components in this repository are custom Loemies work.
 
-### Blocks
-
-[Blocks](https://shopify.dev/docs/storefronts/themes/architecture/blocks) let developers create flexible layouts by breaking down sections into smaller, reusable pieces of Liquid. Each block has its own set of settings, and can be added, removed, and reordered within a section.
-
-Blocks are made customizable by including a `{% schema %}` in the body. For more information, refer to the [block schema documentation](https://shopify.dev/docs/storefronts/themes/architecture/blocks/theme-blocks/schema).
-
-## Schemas
-
-When developing components defined by schema settings, we recommend these guidelines to simplify your code:
-
-- **Single property settings**: For settings that correspond to a single CSS property, use CSS variables:
-
-  ```liquid
-  <div class="collection" style="--gap: {{ block.settings.gap }}px">
-    ...
-  </div>
-
-  {% stylesheet %}
-    .collection {
-      gap: var(--gap);
-    }
-  {% endstylesheet %}
-
-  {% schema %}
-  {
-    "settings": [{
-      "type": "range",
-      "label": "gap",
-      "id": "gap",
-      "min": 0,
-      "max": 100,
-      "unit": "px",
-      "default": 0,
-    }]
-  }
-  {% endschema %}
-  ```
-
-- **Multiple property settings**: For settings that control multiple CSS properties, use CSS classes:
-
-  ```liquid
-  <div class="collection {{ block.settings.layout }}">
-    ...
-  </div>
-
-  {% stylesheet %}
-    .collection--full-width {
-      /* multiple styles */
-    }
-    .collection--narrow {
-      /* multiple styles */
-    }
-  {% endstylesheet %}
-
-  {% schema %}
-  {
-    "settings": [{
-      "type": "select",
-      "id": "layout",
-      "label": "layout",
-      "values": [
-        { "value": "collection--full-width", "label": "t:options.full" },
-        { "value": "collection--narrow", "label": "t:options.narrow" }
-      ]
-    }]
-  }
-  {% endschema %}
-  ```
-
-## CSS & JavaScript
-
-For CSS and JavaScript, we recommend using the [`{% stylesheet %}`](https://shopify.dev/docs/api/liquid/tags#stylesheet) and [`{% javascript %}`](https://shopify.dev/docs/api/liquid/tags/javascript) tags. They can be included multiple times, but the code will only appear once.
-
-### `critical.css`
-
-The Skeleton Theme explicitly separates essential CSS necessary for every page into a dedicated `critical.css` file.
-
-## Contributing
-
-We're excited for your contributions to the Skeleton Theme! This repository aims to remain as lean, lightweight, and fundamental as possible, and we kindly ask your contributions to align with this intention.
-
-Visit our [CONTRIBUTING.md](./CONTRIBUTING.md) for a detailed overview of our process, guidelines, and recommendations.
-
-## License
-
-Skeleton Theme is open-sourced under the [MIT](./LICENSE.md) License.
+The upstream Skeleton Theme is distributed under the MIT License. See [LICENSE.md](./LICENSE.md).

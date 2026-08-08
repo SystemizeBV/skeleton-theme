@@ -1,0 +1,193 @@
+#MainContent .loemies-policy-clarifier {
+  width: min(calc(100% - var(--page-margin) * 2), 52rem);
+  margin: clamp(2.5rem, 7vw, 5.5rem) auto 0;
+  padding: clamp(1.15rem, 3vw, 1.65rem);
+  border: 1px solid color-mix(in srgb, var(--color-brand) 42%, var(--color-border));
+  border-radius: var(--radius-card);
+  background: var(--color-brand-soft);
+  color: var(--color-body);
+}
+
+#MainContent .loemies-policy-clarifier h2 {
+  margin: 0 0 0.75rem;
+  color: var(--color-ink);
+  font-size: clamp(1.15rem, 3vw, 1.4rem);
+  line-height: 1.25;
+}
+
+#MainContent .loemies-policy-clarifier ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+#MainContent .loemies-policy-clarifier li + li {
+  margin-top: 0.4rem;
+}
+
+#MainContent .loemies-policy-clarifier + .shopify-policy__container {
+  margin-top: 1rem;
+}
+
+#MainContent .shopify-policy__container {
+  position: relative;
+  width: min(calc(100% - var(--page-margin) * 2), 52rem);
+  max-width: none;
+  margin: clamp(2.5rem, 7vw, 5.5rem) auto;
+  padding: clamp(1.4rem, 4vw, 3.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-body);
+}
+
+#MainContent .shopify-policy__container::before {
+  position: absolute;
+  top: 0;
+  right: clamp(1.4rem, 4vw, 3.5rem);
+  left: clamp(1.4rem, 4vw, 3.5rem);
+  height: 0.3rem;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, var(--color-brand), var(--color-peach), var(--color-lavender), var(--color-sage));
+  content: '';
+}
+
+.shopify-policy__title {
+  padding: clamp(0.8rem, 2vw, 1.4rem) 0 clamp(1.5rem, 3vw, 2.25rem);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.shopify-policy__title h1 {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--color-ink);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.03;
+}
+
+.shopify-policy__body {
+  padding-top: clamp(1.6rem, 4vw, 2.75rem);
+  font-size: clamp(0.96rem, 1.5vw, 1.04rem);
+  line-height: 1.75;
+}
+
+.shopify-policy__body .rte {
+  color: var(--color-body);
+}
+
+.shopify-policy__body :is(h2, h3, h4) {
+  margin-top: 2.2em;
+  margin-bottom: 0.65em;
+  color: var(--color-ink);
+  line-height: 1.2;
+}
+
+.shopify-policy__body h2 {
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.shopify-policy__body h3 {
+  font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+}
+
+.shopify-policy__body :is(p, ul, ol, table, blockquote) + :is(p, ul, ol, table, blockquote) {
+  margin-top: 1rem;
+}
+
+.shopify-policy__body :is(ul, ol) {
+  padding-left: 1.4rem;
+}
+
+.shopify-policy__body li + li {
+  margin-top: 0.45rem;
+}
+
+.shopify-policy__body a {
+  color: var(--color-brand-dark);
+  font-weight: 700;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+}
+
+.shopify-policy__body a:hover {
+  color: var(--color-brand);
+}
+
+.shopify-policy__body a:focus-visible {
+  border-radius: 0.2rem;
+  outline: 0.15rem solid currentcolor;
+  outline-offset: 0.2rem;
+}
+
+.shopify-policy__body blockquote {
+  padding: 1rem 1.2rem;
+  border-left: 0.25rem solid var(--color-brand);
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+  background: var(--color-brand-soft);
+}
+
+.shopify-policy__body table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shopify-policy__body :is(th, td) {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.shopify-policy__body th {
+  background: var(--color-surface-alt);
+  color: var(--color-ink);
+}
+
+.shopify-policy__body hr {
+  margin-block: 2rem;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 47.99rem) {
+  #MainContent .loemies-policy-clarifier {
+    width: calc(100% - 2rem);
+    margin-top: 1.5rem;
+    padding: 1rem 1.1rem;
+    border-radius: 0.85rem;
+  }
+
+  #MainContent .shopify-policy__container {
+    width: calc(100% - 2rem);
+    margin-block: 1.5rem 3rem;
+    padding: 1.25rem;
+    border-radius: 0.85rem;
+  }
+
+  #MainContent .shopify-policy__container::before {
+    right: 1.25rem;
+    left: 1.25rem;
+  }
+
+  .shopify-policy__title {
+    padding-top: 0.75rem;
+  }
+
+  .shopify-policy__body {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shopify-policy__body a {
+    transition: none;
+  }
+}

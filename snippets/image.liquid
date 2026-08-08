@@ -13,6 +13,11 @@
   @param {number} [width] - The highest resolution width of the image to be rendered
   @param {number} [height] - The highest resolution height of the image to be rendered
   @param {string} [crop] - The crop position of the image
+  @param {string} [widths] - Responsive source widths
+  @param {string} [sizes] - Responsive image sizes hint
+  @param {string} [loading] - Native loading mode
+  @param {string} [fetchpriority] - Browser fetch priority
+  @param {string} [alt] - Alternative text override
 
   @example
   {% render 'image', image: product.featured_image %}
@@ -32,6 +37,11 @@
     assign width = width | default: image.width
   endunless
 
+  assign image_widths = widths | default: '120, 240, 360, 480, 720, 960, 1200'
+  assign image_sizes = sizes | default: '100vw'
+  assign image_loading = loading | default: 'lazy'
+  assign image_fetchpriority = fetchpriority | default: 'auto'
+
   if url
     assign wrapper = 'a'
   else
@@ -45,7 +55,15 @@
     href="{{ url }}"
   {% endif %}
 >
-  {{ image | image_url: width: width, height: height, crop: crop | image_tag }}
+  {{ image
+    | image_url: width: width, height: height, crop: crop
+    | image_tag:
+      widths: image_widths,
+      sizes: image_sizes,
+      loading: image_loading,
+      fetchpriority: image_fetchpriority,
+      alt: alt
+  }}
 </{{ wrapper }}>
 
 {% stylesheet %}

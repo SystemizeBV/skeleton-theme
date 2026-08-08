@@ -1,0 +1,101 @@
+<dialog
+  class="loemies-cart-notification"
+  data-cart-notification
+  data-cart-label-template="{{ 'general.accessibility.cart_count' | t: count: '__COUNT__' }}"
+  data-cart-error="{{ 'products.upsell.error' | t }}"
+  data-money-format="{{ shop.money_format | strip_html | escape }}"
+  data-free-shipping-threshold="{% if settings.free_shipping_enabled %}{{ settings.free_shipping_threshold_amount | default: 0 | times: 100 }}{% else %}0{% endif %}"
+  {% if settings.free_shipping_enabled %}
+    data-shipping-below-template="{{ 'cart.free_shipping_remaining' | t }}"
+    data-shipping-above="{{ 'cart.free_shipping_unlocked' | t }}"
+  {% else %}
+    data-shipping-static="{{ 'sections.promises.tracked_shipping_detail' | t }}"
+  {% endif %}
+  aria-labelledby="CartNotificationTitle"
+>
+  <button
+    class="loemies-cart-notification__backdrop"
+    type="button"
+    data-cart-notification-close
+    tabindex="-1"
+    aria-label="{{ 'cart.notification.close' | t }}"
+  ></button>
+
+  <aside class="loemies-cart-notification__panel">
+    <header class="loemies-cart-notification__header">
+      <div>
+        <span class="loemies-cart-notification__check" aria-hidden="true">✓</span>
+        <h2 id="CartNotificationTitle" tabindex="-1">{{ 'cart.notification.added' | t }}</h2>
+      </div>
+      <button
+        class="loemies-cart-notification__close"
+        type="button"
+        data-cart-notification-close
+        aria-label="{{ 'cart.notification.close' | t }}"
+      >
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </header>
+
+    <div class="loemies-cart-notification__item">
+      <div class="loemies-cart-notification__image-wrap">
+        <img
+          data-cart-notification-image
+          src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
+          alt=""
+          width="112"
+          height="112"
+          hidden
+        >
+      </div>
+      <div>
+        <h3 data-cart-notification-product></h3>
+        <p data-cart-notification-variant hidden></p>
+        <p class="loemies-cart-notification__item-price">
+          <span data-cart-notification-quantity></span>
+          <span aria-hidden="true">×</span>
+          <span data-cart-notification-price></span>
+        </p>
+      </div>
+    </div>
+
+    <p class="loemies-cart-notification__error" data-cart-notification-error role="alert" hidden></p>
+
+    <div class="loemies-cart-notification__total">
+      <span>{{ 'cart.notification.total' | t }}</span>
+      <strong data-cart-notification-total></strong>
+    </div>
+
+    <p class="loemies-cart-notification__shipping" data-cart-notification-shipping hidden></p>
+
+    <div class="loemies-cart-notification__actions">
+      {%- # routes.root_url has no trailing slash on localized paths (/nl), so append with a separator and collapse the double slash on the default locale. -%}
+      {%- assign checkout_url = routes.root_url | append: '/checkout' | replace: '//', '/' -%}
+      <a class="loemies-cart-notification__checkout" href="{{ checkout_url }}">
+        {{ 'cart.checkout' | t }}
+      </a>
+      <a class="loemies-cart-notification__view-cart" href="{{ routes.cart_url }}">
+        {{ 'cart.notification.view_cart' | t }}
+      </a>
+      <button class="loemies-cart-notification__continue" type="button" data-cart-notification-close>
+        {{ 'cart.notification.continue' | t }}
+      </button>
+    </div>
+  </aside>
+</dialog>
+
+{% style %}
+  .loemies-cart-notification__shipping {
+    margin-block-start: 0.55rem;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .loemies-cart-notification__shipping.is-unlocked {
+    color: var(--color-brand);
+  }
+{% endstyle %}

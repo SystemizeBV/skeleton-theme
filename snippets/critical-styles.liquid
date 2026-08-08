@@ -1,0 +1,327 @@
+{% doc %}
+  Critical CSS inlined from the former assets/critical.css for render-path
+  performance: an inline style block cannot block rendering on a network
+  request the way the external stylesheet did. This snippet is the single
+  source of truth for the critical styles — edit them here.
+
+  @example
+  {% render 'critical-styles' %}
+{% enddoc %}
+{% style %}
+  /** Critical CSS shared by every Loemies storefront page. */
+
+  /* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    margin: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-style: var(--font-body--style);
+    font-weight: var(--font-body--weight);
+    line-height: 1.6;
+    color: var(--color-body);
+    background: var(--color-cream);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
+    overflow: hidden;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--style-border-radius-inputs);
+  }
+
+  textarea {
+    min-height: 8rem;
+    resize: vertical;
+  }
+
+  dialog {
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading--family);
+    font-style: var(--font-heading--style);
+    font-weight: var(--font-heading--weight);
+    color: var(--color-ink);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+  }
+
+  h3 {
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+  }
+
+  p:empty {
+    display: none;
+  }
+
+  :is(p, h1, h2, h3, h4, h5, h6):first-child,
+  :empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+    margin-block-start: 0;
+  }
+
+  :is(p, h1, h2, h3, h4, h5, h6):last-child,
+  :where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+    margin-block-end: 0;
+  }
+
+  a {
+    color: var(--color-brand);
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 0.08em;
+  }
+
+  a:hover {
+    text-decoration-thickness: 0.13em;
+  }
+
+  button,
+  .button,
+  input[type='button'],
+  input[type='submit'] {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.4rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--color-surface);
+    cursor: pointer;
+    background: var(--color-brand);
+    border: 1px solid var(--color-brand);
+    border-radius: var(--style-border-radius-buttons);
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease;
+  }
+
+  button:hover,
+  .button:hover,
+  input[type='button']:hover,
+  input[type='submit']:hover {
+    background: var(--color-brand-dark);
+    box-shadow: var(--shadow-small);
+    transform: translateY(-2px);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    color: var(--color-ink);
+    background: var(--color-butter);
+  }
+
+  main {
+    flex: 1 0 auto;
+  }
+
+  main:focus {
+    outline: 0;
+  }
+
+  main > .shopify-section {
+    margin-block: var(--section-spacing);
+  }
+
+  main > .shopify-section:first-child {
+    margin-block-start: 0;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  .skip-to-content-link {
+    position: fixed;
+    z-index: 1000;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--color-surface);
+    text-decoration: none;
+    background: var(--color-ink);
+    border-radius: var(--style-border-radius-buttons);
+    box-shadow: var(--shadow-small);
+    transform: translateY(-200%);
+    transition: transform 150ms ease;
+  }
+
+  .skip-to-content-link:focus {
+    transform: translateY(0);
+  }
+
+  /**
+   * Section grid supporting constrained and full-width children.
+   */
+  .shopify-section {
+    --content-width: min(
+      calc(var(--page-width) - var(--page-margin) * 2),
+      calc(100% - var(--page-margin) * 2)
+    );
+    --content-margin: minmax(var(--page-margin), 1fr);
+    --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
+
+    position: relative;
+    display: grid;
+    width: 100%;
+    grid-template-columns: var(--content-grid);
+  }
+
+  .shopify-section > * {
+    grid-column: 2;
+  }
+
+  .shopify-section > .full-width {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 47.99rem) {
+    main > .shopify-section {
+      margin-block: calc(var(--section-spacing) * 0.72);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+
+  /* Native product review rating, shared by product pages and product cards. */
+  .loemies-rating {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.45rem;
+    color: inherit;
+    font-size: 0.78rem;
+    font-weight: 750;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .loemies-rating__stars {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    color: color-mix(in srgb, var(--color-rating) 25%, transparent);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .loemies-rating__fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    color: var(--color-rating);
+    white-space: nowrap;
+  }
+
+  .loemies-rating[href]:hover .loemies-rating__label {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .loemies-rating[href]:focus-visible {
+    border-radius: 0.25rem;
+    outline: 0.14rem solid currentcolor;
+    outline-offset: 0.2rem;
+  }
+{% endstyle %}

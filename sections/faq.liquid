@@ -1,0 +1,140 @@
+{% liquid
+  assign contact_url = pages['contact'].url
+  assign shipping_url = shop.shipping_policy.url
+  assign returns_url = shop.refund_policy.url
+%}
+
+<article class="loemies-trust-page full-width" aria-labelledby="FaqTitle-{{ section.id }}">
+  <div class="loemies-trust-page__inner">
+    <nav class="loemies-trust-page__breadcrumbs" aria-label="{{ 'general.accessibility.breadcrumb' | t }}">
+      <a href="{{ routes.root_url }}">{{ 'general.accessibility.home' | t }}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ 'sections.faq.title' | t }}</span>
+    </nav>
+
+    <header class="loemies-trust-page__hero">
+      <p>{{ 'sections.faq.eyebrow' | t }}</p>
+      <h1 id="FaqTitle-{{ section.id }}">{{ 'sections.faq.title' | t }}</h1>
+      <div>{{ 'sections.faq.intro' | t }}</div>
+    </header>
+
+    <div class="loemies-faq">
+      <details open>
+        <summary>{{ 'sections.faq.shipping_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.shipping_answer' | t }}</p>{% if shipping_url != blank %}<a href="{{ shipping_url }}">{{ 'sections.faq.shipping_link' | t }}</a>{% endif %}</div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.returns_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.returns_answer' | t: days: settings.return_window_days }}</p>{% if returns_url != blank %}<a href="{{ returns_url }}">{{ 'sections.faq.returns_link' | t }}</a>{% endif %}</div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.return_cost_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.return_cost_answer' | t }}</p>{% if returns_url != blank %}<a href="{{ returns_url }}">{{ 'sections.faq.returns_link' | t }}</a>{% endif %}</div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.damaged_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.damaged_answer' | t }}</p>{% if contact_url != blank %}<a href="{{ contact_url }}">{{ 'sections.faq.contact_link' | t }}</a>{% endif %}</div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.split_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.split_answer' | t }}</p>{% if shipping_url != blank %}<a href="{{ shipping_url }}">{{ 'sections.faq.shipping_link' | t }}</a>{% endif %}</div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.age_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.age_answer' | t }}</p></div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.sold_out_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.sold_out_answer' | t }}</p></div>
+      </details>
+      <details>
+        <summary>{{ 'sections.faq.help_question' | t }}</summary>
+        <div><p>{{ 'sections.faq.help_answer' | t }}</p>{% if contact_url != blank %}<a href="{{ contact_url }}">{{ 'sections.faq.contact_link' | t }}</a>{% endif %}</div>
+      </details>
+    </div>
+
+    {% if page.content != blank %}
+      <div class="loemies-trust-page__merchant-content rte">{{ page.content }}</div>
+    {% endif %}
+  </div>
+</article>
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.shipping_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.shipping_answer' | t | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.returns_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.returns_answer' | t: days: settings.return_window_days | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.return_cost_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.return_cost_answer' | t | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.damaged_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.damaged_answer' | t | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.split_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.split_answer' | t | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.age_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.age_answer' | t | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.sold_out_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.sold_out_answer' | t | strip_html | json }}
+        }
+      },
+      {
+        "@type": "Question",
+        "name": {{ 'sections.faq.help_question' | t | json }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ 'sections.faq.help_answer' | t | strip_html | json }}
+        }
+      }
+    ]
+  }
+</script>
+
+{% schema %}
+{
+  "name": "FAQ",
+  "settings": []
+}
+{% endschema %}

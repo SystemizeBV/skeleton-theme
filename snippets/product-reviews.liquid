@@ -1,0 +1,331 @@
+{% doc %}
+  Renders approved native product reviews, their rating distribution, and a
+  moderated customer submission form. Entries use the product_review metaobject.
+
+  @param {product} product - Product whose reviews are rendered.
+  @param {section} section - Product section settings and identifier.
+  @param {string} reviews_heading - Localized section heading.
+  @param {string} reviews_intro - Localized section introduction.
+  @param {string} review_form_heading - Localized review-form heading.
+  @param {string} review_form_intro - Localized review-form introduction.
+{% enddoc %}
+
+{% liquid
+  assign reviews = product.metafields.custom.reviews.value
+  assign review_count = 0
+  assign review_rating_total = 0
+  assign rating_1_count = 0
+  assign rating_2_count = 0
+  assign rating_3_count = 0
+  assign rating_4_count = 0
+  assign rating_5_count = 0
+
+  for review in reviews
+    assign review_rating = review.rating.value | plus: 0
+    if review_rating >= 1 and review_rating <= 5
+      assign review_count = review_count | plus: 1
+      assign review_rating_total = review_rating_total | plus: review_rating
+      case review_rating
+        when 1
+          assign rating_1_count = rating_1_count | plus: 1
+        when 2
+          assign rating_2_count = rating_2_count | plus: 1
+        when 3
+          assign rating_3_count = rating_3_count | plus: 1
+        when 4
+          assign rating_4_count = rating_4_count | plus: 1
+        when 5
+          assign rating_5_count = rating_5_count | plus: 1
+      endcase
+    endif
+  endfor
+
+  assign review_average = 0
+  assign review_percentage = 0
+  if review_count > 0
+    assign review_average = review_rating_total | times: 1.0 | divided_by: review_count
+    assign review_percentage = review_average | divided_by: 5.0 | times: 100
+  endif
+  assign review_average_rounded = review_average | round: 1
+
+  assign review_form_id = 'ProductReviewForm-' | append: section.id
+%}
+
+<section
+  class="loemies-reviews"
+  id="ProductReviews-{{ section.id }}"
+  aria-labelledby="ProductReviewsHeading-{{ section.id }}"
+  data-native-reviews
+>
+  <div class="loemies-reviews__interactive">
+    <h2 class="loemies-reviews__heading" id="ProductReviewsHeading-{{ section.id }}">
+      {%- if review_count > 0 -%}
+        {{ reviews_heading | escape }} · {{ review_count }}
+      {%- else -%}
+        {{ reviews_heading | escape }}
+      {%- endif -%}
+    </h2>
+
+    {% if review_count > 0 %}
+      <div
+        class="loemies-reviews__summary"
+        aria-label="{{ 'products.reviews.summary_label' | t: average: review_average_rounded, count: review_count }}"
+      >
+        <strong>{{ review_average_rounded }}</strong>
+        <span class="loemies-reviews__rating-details">
+          <span
+            class="loemies-rating__stars"
+            role="img"
+            aria-label="{{ 'products.reviews.stars_label' | t: rating: review_average_rounded }}"
+          >
+            <span aria-hidden="true">★★★★★</span>
+            <span class="loemies-rating__fill" style="width: {{ review_percentage }}%" aria-hidden="true">★★★★★</span>
+          </span>
+          <span>
+            {% if review_count == 1 %}
+              {{ 'products.reviews.count.one' | t }}
+            {% else %}
+              {{ 'products.reviews.count.other' | t: count: review_count }}
+            {% endif %}
+          </span>
+        </span>
+      </div>
+    {% endif %}
+
+    {% if reviews_intro != blank and review_count > 0 %}
+      <p class="loemies-reviews__intro">{{ reviews_intro | escape }}</p>
+    {% endif %}
+
+    <details class="loemies-review-form"{% if request.design_mode %} open{% endif %}>
+      <summary>{{ review_form_heading | escape }}</summary>
+      <div class="loemies-review-form__body">
+        <div class="loemies-review-form__header">
+          <h3>{{ review_form_heading | escape }}</h3>
+          <p>{{ review_form_intro | escape }}</p>
+        </div>
+
+        {% form 'contact', return_to: 'back', id: review_form_id, class: 'loemies-review-form__form' %}
+          <input type="hidden" name="contact[submission_type]" value="Product review">
+          <input type="hidden" name="contact[product]" value="{{ product.title | escape }}">
+          <input type="hidden" name="contact[product_url]" value="{{ shop.url }}{{ product.url }}">
+          <input type="hidden" name="contact[review_status]" value="Pending moderation">
+
+          {% if form.posted_successfully? %}
+            <div class="loemies-review-form__success" role="status" tabindex="-1">
+              <strong>{{ 'products.reviews.form.success_heading' | t }}</strong>
+              <p>{{ 'products.reviews.form.success_message' | t }}</p>
+            </div>
+          {% else %}
+            {% if form.errors %}
+              <div class="loemies-review-form__errors" role="alert">
+                {{ form.errors | default_errors }}
+              </div>
+            {% endif %}
+
+            {% comment %}
+              The form is intentionally short — name, email, rating, and message
+              only — so the first reviewer faces as little friction as possible.
+            {% endcomment %}
+            <div class="loemies-review-form__row">
+              <div class="loemies-review-form__field">
+                <label for="ReviewName-{{ section.id }}">{{ 'products.reviews.form.name' | t }}</label>
+                <input
+                  id="ReviewName-{{ section.id }}"
+                  type="text"
+                  name="contact[reviewer_name]"
+                  value="{% if form.reviewer_name %}{{ form.reviewer_name | escape }}{% elsif customer %}{{ customer.name | escape }}{% endif %}"
+                  autocomplete="name"
+                  required
+                >
+              </div>
+
+              <div class="loemies-review-form__field">
+                <label for="ReviewEmail-{{ section.id }}">{{ 'products.reviews.form.email' | t }}</label>
+                <input
+                  id="ReviewEmail-{{ section.id }}"
+                  type="email"
+                  name="contact[email]"
+                  value="{% if form.email %}{{ form.email | escape }}{% elsif customer %}{{ customer.email | escape }}{% endif %}"
+                  autocomplete="email"
+                  required
+                >
+                <small>{{ 'products.reviews.form.email_help' | t }}</small>
+              </div>
+            </div>
+
+            <fieldset class="loemies-review-form__rating">
+              <legend>{{ 'products.reviews.form.rating' | t }}</legend>
+              <div class="loemies-review-form__rating-options">
+                {% for rating_number in (1..5) reversed %}
+                  <input
+                    id="ReviewRating-{{ section.id }}-{{ rating_number }}"
+                    type="radio"
+                    name="contact[rating]"
+                    value="{{ rating_number }}"
+                    {% if rating_number == 5 %}required{% endif %}
+                  >
+                  <label for="ReviewRating-{{ section.id }}-{{ rating_number }}">
+                    <span aria-hidden="true">★</span>
+                    <span class="visually-hidden">
+                      {{ 'products.reviews.stars_label' | t: rating: rating_number }}
+                    </span>
+                  </label>
+                {% endfor %}
+              </div>
+            </fieldset>
+
+            <div class="loemies-review-form__field">
+              <label for="ReviewMessage-{{ section.id }}">{{ 'products.reviews.form.message' | t }}</label>
+              <textarea
+                id="ReviewMessage-{{ section.id }}"
+                name="contact[body]"
+                rows="6"
+                maxlength="2000"
+                required
+              >{{ form.body | escape }}</textarea>
+            </div>
+
+            <label class="loemies-review-form__consent">
+              <input type="checkbox" name="contact[publication_consent]" value="Granted" required>
+              <span>{{ 'products.reviews.form.consent' | t }}</span>
+            </label>
+
+            <button class="loemies-review-form__submit" type="submit">
+              {{ 'products.reviews.form.submit' | t }}
+            </button>
+
+            <p class="loemies-review-form__moderation-note">
+              {{ 'products.reviews.form.moderation' | t }}
+            </p>
+          {% endif %}
+        {% endform %}
+      </div>
+    </details>
+
+    {% if review_count > 0 %}
+      <div class="loemies-reviews__distribution" aria-label="{{ 'products.reviews.distribution_label' | t }}">
+        <div class="loemies-reviews__histogram">
+          {% for rating_number in (1..5) reversed %}
+          {% liquid
+            case rating_number
+              when 1
+                assign rating_count = rating_1_count
+              when 2
+                assign rating_count = rating_2_count
+              when 3
+                assign rating_count = rating_3_count
+              when 4
+                assign rating_count = rating_4_count
+              when 5
+                assign rating_count = rating_5_count
+            endcase
+
+            assign rating_percentage = 0
+            if review_count > 0
+              assign rating_percentage = rating_count | times: 100.0 | divided_by: review_count
+            endif
+          %}
+            <button
+              class="loemies-reviews__histogram-row"
+              type="button"
+              data-review-rating-filter="{{ rating_number }}"
+              aria-label="{{ 'products.reviews.rating_filter_label' | t: rating: rating_number, count: rating_count }}"
+              aria-pressed="false"
+              {% if rating_count == 0 %}disabled{% endif %}
+            >
+              <span aria-hidden="true">{{ rating_number }} ★</span>
+              <span class="loemies-reviews__histogram-bar" aria-hidden="true">
+                <span style="width: {{ rating_percentage }}%"></span>
+              </span>
+              <span aria-hidden="true">{{ rating_count }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="loemies-reviews__list-layer">
+      {% if review_count > 0 %}
+        <div class="loemies-reviews__toolbar">
+          <label>
+            <span>{{ 'products.reviews.sort.label' | t }}</span>
+            <select data-reviews-sort aria-label="{{ 'products.reviews.sort.aria_label' | t }}">
+              <option value="newest">{{ 'products.reviews.sort.newest' | t }}</option>
+              <option value="highest">{{ 'products.reviews.sort.highest' | t }}</option>
+              <option value="lowest">{{ 'products.reviews.sort.lowest' | t }}</option>
+            </select>
+          </label>
+        </div>
+
+        <ul class="loemies-reviews__list" role="list" data-review-list>
+          {% for review in reviews %}
+            {% liquid
+              assign review_rating = review.rating.value | plus: 0
+              # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+              # here and the localized variables are printed without a second escape.
+              assign reviewer_name = review.reviewer_name.value | escape
+              if review.reviewer_name.value == blank
+                assign reviewer_name = 'products.reviews.anonymous' | t
+              endif
+              assign card_review_percentage = review_rating | times: 20
+            %}
+            {% if review_rating >= 1 and review_rating <= 5 %}
+              <li
+                class="loemies-review-card"
+                data-review-card
+                data-review-rating="{{ review_rating }}"
+                data-review-date="{{ review.review_date.value | default: '1970-01-01' }}"
+                data-review-index="{{ forloop.index0 }}"
+                {% if forloop.index > 5 %}hidden{% endif %}
+              >
+                <div class="loemies-review-card__header">
+                  <span
+                    class="loemies-rating__stars"
+                    role="img"
+                    aria-label="{{ 'products.reviews.stars_label' | t: rating: review_rating }}"
+                  >
+                    <span aria-hidden="true">★★★★★</span>
+                    <span class="loemies-rating__fill" style="width: {{ card_review_percentage }}%" aria-hidden="true">★★★★★</span>
+                  </span>
+                  {% if review.title.value != blank %}
+                    <h3>{{ review.title.value | escape }}</h3>
+                  {% endif %}
+                </div>
+
+                <p class="loemies-review-card__meta">
+                  <strong>{{ reviewer_name }}</strong>
+                  {% if review.location.value != blank %}
+                    <span aria-hidden="true">·</span>
+                    <span>{{ review.location.value | escape }}</span>
+                  {% endif %}
+                  {% if review.review_date.value != blank %}
+                    <span aria-hidden="true">·</span>
+                    <time datetime="{{ review.review_date.value }}">
+                      {{ review.review_date.value | date: format: 'abbreviated_date' }}
+                    </time>
+                  {% endif %}
+                  {% if review.verified_purchase.value == true %}
+                    <span aria-hidden="true">·</span>
+                    <span class="loemies-review-card__badge is-verified">
+                      {{ 'products.reviews.verified' | t }}
+                    </span>
+                  {% endif %}
+                </p>
+
+                <blockquote>{{ review.message.value | escape | newline_to_br }}</blockquote>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+
+        {% if review_count > 5 %}
+          <button class="loemies-reviews__load-more" type="button" data-reviews-load-more>
+            {{ 'products.reviews.load_more' | t }}
+          </button>
+        {% endif %}
+      {% else %}
+        <p class="loemies-reviews__empty">{{ 'products.reviews.empty' | t }}</p>
+      {% endif %}
+    </div>
+  </div>
+</section>

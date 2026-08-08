@@ -1,0 +1,120 @@
+{% doc %}
+  Renders a Loemies call-to-action when both its label and destination are set.
+
+  @example
+  {% content_for 'block', type: 'loemies-button', id: 'button' %}
+{% enddoc %}
+
+{% liquid
+  # The `t` filter HTML-escapes its output, so raw setting branches are escaped
+  # here and the localized variables are printed without a second escape.
+  assign localized_label = block.settings.label | escape
+  if block.settings.label == 'Shop all toys'
+    assign localized_label = 'sections.home.hero.shop_all' | t
+  elsif block.settings.label == 'Find a toy'
+    assign localized_label = 'sections.home.hero.find_toy' | t
+  endif
+%}
+
+{% if localized_label != blank and block.settings.link != blank %}
+  <a
+    class="loemies-button loemies-button--{{ block.settings.style }}"
+    href="{{ block.settings.link }}"
+    {{ block.shopify_attributes }}
+  >
+    <span>{{ localized_label }}</span>
+  </a>
+{% endif %}
+
+{% stylesheet %}
+  .loemies-button {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--style-border-radius-buttons, 999px);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.6;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+  }
+
+  .loemies-button--primary {
+    border-width: 0;
+    background: var(--loemies-button-background, #433448);
+    box-shadow: 0 0.0625rem 0.125rem rgba(43, 36, 31, 0.06);
+    color: var(--loemies-button-color, #ffffff);
+  }
+
+  .loemies-button--secondary {
+    border-color: color-mix(in srgb, var(--loemies-heading-color, #433448) 12%, transparent);
+    background: #ffffff;
+    color: var(--loemies-heading-color, #433448);
+  }
+
+  .loemies-button:hover {
+    transform: translateY(-0.0625rem);
+  }
+
+  .loemies-button--primary:hover {
+    background: var(--loemies-button-shadow, #96432f);
+  }
+
+  .loemies-button--secondary:hover {
+    border-color: currentcolor;
+  }
+
+  .loemies-button:focus-visible {
+    outline: 0.2rem solid var(--loemies-focus-color, #433448);
+    outline-offset: 0.2rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loemies-button {
+      transition: none;
+    }
+
+    .loemies-button:hover {
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loemies button",
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Label",
+      "default": "Shop the collection"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link",
+      "info": "The button is hidden until a link is selected."
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Style",
+      "default": "primary",
+      "options": [
+        { "value": "primary", "label": "Primary" },
+        { "value": "secondary", "label": "Secondary" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Loemies button"
+    }
+  ]
+}
+{% endschema %}

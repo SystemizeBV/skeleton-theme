@@ -1,0 +1,54 @@
+{% liquid
+  assign catalog_url = collections['all-toys'].url | default: routes.all_products_collection_url
+  assign contact_url = pages['contact'].url
+%}
+
+<article class="loemies-trust-page full-width" aria-labelledby="AboutTitle-{{ section.id }}">
+  <div class="loemies-trust-page__inner">
+    <nav class="loemies-trust-page__breadcrumbs" aria-label="{{ 'general.accessibility.breadcrumb' | t }}">
+      <a href="{{ routes.root_url }}">{{ 'general.accessibility.home' | t }}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ 'sections.about.title' | t }}</span>
+    </nav>
+
+    <header class="loemies-trust-page__hero">
+      <p>{{ 'sections.about.eyebrow' | t }}</p>
+      <h1 id="AboutTitle-{{ section.id }}">{{ 'sections.about.title' | t }}</h1>
+      <div>{{ 'sections.about.intro' | t }}</div>
+    </header>
+
+    <div class="loemies-trust-page__cards">
+      <section>
+        <span aria-hidden="true">01</span>
+        <h2>{{ 'sections.about.choice_heading' | t }}</h2>
+        <p>{{ 'sections.about.choice_text' | t }}</p>
+      </section>
+      <section>
+        <span aria-hidden="true">02</span>
+        <h2>{{ 'sections.about.details_heading' | t }}</h2>
+        <p>{{ 'sections.about.details_text' | t }}</p>
+      </section>
+      <section>
+        <span aria-hidden="true">03</span>
+        <h2>{{ 'sections.about.support_heading' | t }}</h2>
+        <p>{{ 'sections.about.support_text' | t }}</p>
+      </section>
+    </div>
+
+    {% if page.content != blank %}
+      <div class="loemies-trust-page__merchant-content rte">{{ page.content }}</div>
+    {% endif %}
+
+    <div class="loemies-trust-page__actions">
+      <a class="button" href="{{ catalog_url }}">{{ 'sections.about.shop_action' | t }}</a>
+      {% if contact_url != blank %}<a href="{{ contact_url }}">{{ 'sections.about.contact_action' | t }}</a>{% endif %}
+    </div>
+  </div>
+</article>
+
+{% schema %}
+{
+  "name": "About Loemies",
+  "settings": []
+}
+{% endschema %}
